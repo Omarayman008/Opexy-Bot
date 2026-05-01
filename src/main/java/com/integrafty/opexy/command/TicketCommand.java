@@ -27,7 +27,8 @@ public class TicketCommand implements SlashCommand {
     @Override
     public SlashCommandData getCommandData() {
         return Commands.slash("setup", "إعداد البوت")
-                .addOption(OptionType.STRING, "category", "الفئة (channels, roles, etc)", true);
+                .addOption(OptionType.STRING, "category", "الفئة (tickets)", true)
+                .addOption(OptionType.CHANNEL, "channel", "الروم المراد إرسال اللوحة فيه (اختياري)", false);
     }
 
     @Override
@@ -76,9 +77,18 @@ public class TicketCommand implements SlashCommand {
         builder.setComponents(container);
         builder.useComponentsV2(true);
 
-        event.getChannel().sendMessage(builder.build()).useComponentsV2(true).queue();
+        net.dv8tion.jda.api.entities.channel.middleman.MessageChannel targetChannel = event.getChannel();
+        if (event.getOption("channel") != null) {
+            targetChannel = event.getOption("channel").getAsChannel().asGuildMessageChannel();
+        } else {
+            // Default to official ticket room if none specified
+            net.dv8tion.jda.api.entities.channel.concrete.TextChannel official = event.getGuild().getTextChannelById("1487143271586074624");
+            if (official != null) targetChannel = official;
+        }
 
-        Container success = EmbedUtil.success("LOGISTICS", "تم إرسال لوحة التذاكر (Ticket Panel) بنجاح!");
+        targetChannel.sendMessage(builder.build()).useComponentsV2(true).queue();
+
+        Container success = EmbedUtil.success("LOGISTICS", "تم إرسال لوحة التذاكر (Ticket Panel) بنجاح في " + targetChannel.getAsMention());
         MessageCreateBuilder successBuilder = new MessageCreateBuilder();
         successBuilder.setComponents(success);
         successBuilder.useComponentsV2(true);

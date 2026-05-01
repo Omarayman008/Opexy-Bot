@@ -39,6 +39,9 @@ public class TicketListener extends ListenerAdapter {
     private final JDA jda;
     private final TicketRepository ticketRepository;
 
+    private static final String TICKET_CATEGORY_ID = "1487143174567628840";
+    private static final String TRANSCRIPT_CHANNEL_ID = "1487147026427940955";
+
     @PostConstruct
     public void init() {
         jda.addEventListener(this);
@@ -127,8 +130,9 @@ public class TicketListener extends ListenerAdapter {
         final String finalCategoryName = categoryName;
         final Color finalEmbedColor = embedColor;
 
-        // Create Text Channel
+        // Create Text Channel in specified Category
         guild.createTextChannel(channelName)
+            .setParent(guild.getCategoryById(TICKET_CATEGORY_ID))
             .addPermissionOverride(guild.getPublicRole(), null, EnumSet.of(Permission.VIEW_CHANNEL))
             .addPermissionOverride(member, EnumSet.of(Permission.VIEW_CHANNEL, Permission.MESSAGE_SEND), null)
             // Note: Admin roles are automatically granted access by Discord if they have Admin permission
