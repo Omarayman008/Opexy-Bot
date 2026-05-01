@@ -1,4 +1,4 @@
-package com.integrafty.opexy.command;
+﻿package com.integrafty.opexy.command;
 
 import com.integrafty.opexy.command.base.SlashCommand;
 import com.integrafty.opexy.utils.EmbedUtil;
