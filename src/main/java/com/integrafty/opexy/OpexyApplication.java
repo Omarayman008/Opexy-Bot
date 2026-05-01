@@ -1,5 +1,6 @@
 package com.integrafty.opexy;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -12,13 +13,20 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 import lombok.extern.slf4j.Slf4j;
-import javax.security.auth.login.LoginException;
 
 @SpringBootApplication
 @Slf4j
 public class OpexyApplication {
 
     public static void main(String[] args) {
+        Dotenv dotenv = Dotenv.configure()
+            .directory("./")
+            .ignoreIfMalformed()
+            .ignoreIfMissing()
+            .load();
+        
+        dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
+        
         SpringApplication.run(OpexyApplication.class, args);
     }
 
