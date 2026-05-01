@@ -35,14 +35,21 @@ public class CommandManager {
                 .map(SlashCommand::getCommandData)
                 .collect(Collectors.toList());
 
-        // Add dummy commands for future features
-        commandDataList.add(Commands.slash("profile", "عرض ملف العضو").addOption(OptionType.USER, "user", "العضو", false));
-        commandDataList.add(Commands.slash("balance", "عرض رصيد العملات"));
-        commandDataList.add(Commands.slash("daily", "مكافأة يومية"));
-
-        jda.updateCommands().addCommands(commandDataList).queue(
-            success -> log.info("Successfully registered all modular commands."),
-            error -> log.error("Failed to register commands.", error)
-        );
+        // Fetch Guild ID from config (or environment)
+        String guildId = System.getenv("DISCORD_GUILD_ID");
+        if (guildId != null && !guildId.isEmpty()) {
+            net.dv8tion.jda.api.entities.Guild guild = jda.getGuildById(guildId);
+            if (guild != null) {
+                guild.updateCommands().addCommands(commandDataList).queue(
+                    success -> log.info("Successfully registered all modular commands to guild: {}", guild.getName()),
+                    error -> log.error("Failed to register commands to guild.", error)
+                );
+            } else {
+                log.warn("Guild with ID {} not found. Falling back to global commands.", guildId);
+                jda.updateCommands().addCommands(commandDataList).queue();
+            }
+        } else {
+            jda.updateCommands().addCommands(commandDataList).queue();
+        }
     }
 }
