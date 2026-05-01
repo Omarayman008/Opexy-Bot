@@ -109,7 +109,6 @@ public class TicketListener extends ListenerAdapter {
             handleTicketModal(event, buttonId);
         }
     }
-    }
 
     private void handleTicketModal(ButtonInteractionEvent event, String buttonId) {
         String categoryId = buttonId.replace("ticket_", "");
