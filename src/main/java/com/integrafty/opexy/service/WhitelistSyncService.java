@@ -29,6 +29,14 @@ public class WhitelistSyncService {
             return;
         }
 
+        // Map type values
+        String mappedType = type;
+        if (type.contains("كراك")) {
+            mappedType = "krack ~ كــراك";
+        } else if (type.contains("أصلية") || type.contains("اصلية")) {
+            mappedType = "original ~ أصــلــية";
+        }
+
         String sql = "INSERT INTO whitelist (discord, mc, version, type, team, tag, admin, created_at, modified_at) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -38,10 +46,10 @@ public class WhitelistSyncService {
             pstmt.setString(1, discord);
             pstmt.setString(2, mc);
             pstmt.setString(3, version);
-            pstmt.setString(4, type);
+            pstmt.setString(4, mappedType);
             pstmt.setString(5, "EMPTY");
             pstmt.setString(6, "مقبول");
-            pstmt.setNull(7, java.sql.Types.VARCHAR); // admin column
+            pstmt.setString(7, "HighCoreMc Bot"); // admin column
             pstmt.setTimestamp(8, Timestamp.from(Instant.now()));
             pstmt.setTimestamp(9, Timestamp.from(Instant.now()));
 
