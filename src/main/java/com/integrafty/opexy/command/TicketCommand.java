@@ -63,9 +63,9 @@ public class TicketCommand implements SlashCommand {
             targetChannel = event.getOption("channel").getAsChannel().asGuildMessageChannel();
         }
 
-        targetChannel.sendMessageComponents(container).useComponentsV2(true).queue();
+        targetChannel.sendMessageComponents(container).queue();
 
         Container success = EmbedUtil.success("الإمـدادات", "تـم إرسـال لـوحـة الـتـذاكـر بـنـجـاح فـي " + targetChannel.getAsMention());
-        event.replyComponents(success).setEphemeral(true).useComponentsV2(true).queue();
+        event.replyComponents(success).setEphemeral(true).queue();
     }
 }
