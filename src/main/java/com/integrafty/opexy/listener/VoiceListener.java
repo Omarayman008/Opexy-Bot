@@ -38,8 +38,9 @@ public class VoiceListener extends ListenerAdapter {
     private final VoiceRoomRepository voiceRoomRepository;
 
     // TODO: Move these to database/config
-    private static final String JOIN_TO_CREATE_ID = "123456789012345678"; // Placeholder
-    private static final String VOICE_CATEGORY_ID = "123456789012345678"; // Placeholder
+    private static final String JOIN_TO_CREATE_ID = "1499728555754520667";
+    private static final String VOICE_CATEGORY_ID = "1486872074369892392";
+    private static final String VOICE_DASHBOARD_ID = "1486872077263835157";
 
     @PostConstruct
     public void init() {
@@ -134,9 +135,31 @@ public class VoiceListener extends ListenerAdapter {
         String id = event.getComponentId();
         if (!id.startsWith("voice_")) return;
 
-        VoiceChannel channel = event.getChannel().asVoiceChannel();
-        Optional<VoiceRoomEntity> roomOpt = voiceRoomRepository.findByChannelId(channel.getId());
+        VoiceChannel channel = null;
+        if (event.getChannelType().isAudio()) {
+            channel = event.getChannel().asVoiceChannel();
+        } else {
+            // Find user's room from repository
+            Optional<VoiceRoomEntity> ownedRoom = voiceRoomRepository.findByOwnerId(event.getUser().getId())
+                    .stream()
+                    .filter(r -> event.getGuild().getVoiceChannelById(r.getChannelId()) != null)
+                    .findFirst();
+            
+            if (ownedRoom.isPresent()) {
+                channel = event.getGuild().getVoiceChannelById(ownedRoom.get().getChannelId());
+            }
+        }
 
+        if (channel == null) {
+            Container error = EmbedUtil.error("VOICE", "لا تملك غرفة نشطة للتحكم بها حالياً.");
+            MessageCreateBuilder errorBuilder = new MessageCreateBuilder();
+            errorBuilder.setComponents(error);
+            errorBuilder.useComponentsV2(true);
+            event.reply(errorBuilder.build()).setEphemeral(true).useComponentsV2(true).queue();
+            return;
+        }
+
+        Optional<VoiceRoomEntity> roomOpt = voiceRoomRepository.findByChannelId(channel.getId());
         if (roomOpt.isEmpty()) {
             Container error = EmbedUtil.error("VOICE", "هذه الغرفة ليست مسجلة في النظام.");
             MessageCreateBuilder errorBuilder = new MessageCreateBuilder();
