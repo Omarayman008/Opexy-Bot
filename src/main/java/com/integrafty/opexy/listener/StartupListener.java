@@ -2,18 +2,23 @@ package com.integrafty.opexy.listener;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.components.container.Container;
+import com.integrafty.opexy.utils.EmbedUtil;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class StartupListener extends ListenerAdapter {
 
     private final JDA jda;
@@ -121,58 +126,58 @@ public class StartupListener extends ListenerAdapter {
             "┗ <#1487143271586074624> • تواصل مع الإدارة مباشرة\n\n" +
             "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬";
 
-        com.integrafty.opexy.components.container.Container container = com.integrafty.opexy.utils.EmbedUtil.containerBranded("MAP", "HighCore Explorer", mapContent, null);
-        event.reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder().setComponents(container).useComponentsV2(true).build()).setEphemeral(true).useComponentsV2(true).queue();
+        Container container = EmbedUtil.containerBranded("MAP", "HighCore Explorer", mapContent, null);
+        event.reply(new MessageCreateBuilder().setComponents(container).useComponentsV2(true).build()).setEphemeral(true).useComponentsV2(true).queue();
     }
 
     private void showColors(ButtonInteractionEvent event) {
         String body = "**🎨 اخـتـر لـونـك الـمـفـضـل (لـون واحـد فـقـط):**";
-        net.dv8tion.jda.api.components.actionrow.ActionRow row1 = net.dv8tion.jda.api.components.actionrow.ActionRow.of(
-            net.dv8tion.jda.api.components.buttons.Button.secondary("color_red", "Soft Red"),
-            net.dv8tion.jda.api.components.buttons.Button.secondary("color_turquoise", "Turquoise"),
-            net.dv8tion.jda.api.components.buttons.Button.secondary("color_orange", "Carrot Orange"),
-            net.dv8tion.jda.api.components.buttons.Button.secondary("color_gray", "Light Gray"),
-            net.dv8tion.jda.api.components.buttons.Button.secondary("color_navy", "Midnight Navy")
+        ActionRow row1 = ActionRow.of(
+            Button.secondary("color_red", "Soft Red"),
+            Button.secondary("color_turquoise", "Turquoise"),
+            Button.secondary("color_orange", "Carrot Orange"),
+            Button.secondary("color_gray", "Light Gray"),
+            Button.secondary("color_navy", "Midnight Navy")
         );
-        net.dv8tion.jda.api.components.actionrow.ActionRow row2 = net.dv8tion.jda.api.components.actionrow.ActionRow.of(
-            net.dv8tion.jda.api.components.buttons.Button.secondary("color_blurple", "Blurple"),
-            net.dv8tion.jda.api.components.buttons.Button.secondary("color_asphalt", "Wet Asphalt")
+        ActionRow row2 = ActionRow.of(
+            Button.secondary("color_blurple", "Blurple"),
+            Button.secondary("color_asphalt", "Wet Asphalt")
         );
 
-        com.integrafty.opexy.components.container.Container container = com.integrafty.opexy.utils.EmbedUtil.containerBranded("COLORS", "Color Selection", body, null, row1, row2);
-        event.reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder().setComponents(container).useComponentsV2(true).build()).setEphemeral(true).useComponentsV2(true).queue();
+        Container container = EmbedUtil.containerBranded("COLORS", "Color Selection", body, null, row1, row2);
+        event.reply(new MessageCreateBuilder().setComponents(container).useComponentsV2(true).build()).setEphemeral(true).useComponentsV2(true).queue();
     }
 
     private void showPings(ButtonInteractionEvent event) {
         String body = "**🔔 اخـتـر الأقـسـام الـتـي تـرغـب بـمـتـابـعـتـهـا:**";
-        net.dv8tion.jda.api.components.actionrow.ActionRow row1 = net.dv8tion.jda.api.components.actionrow.ActionRow.of(
-            net.dv8tion.jda.api.components.buttons.Button.secondary("ping_stream", "Stream"),
-            net.dv8tion.jda.api.components.buttons.Button.secondary("ping_minecraft", "Minecraft"),
-            net.dv8tion.jda.api.components.buttons.Button.secondary("ping_event", "Events"),
-            net.dv8tion.jda.api.components.buttons.Button.secondary("ping_mcserver", "MC-Server"),
-            net.dv8tion.jda.api.components.buttons.Button.secondary("ping_dcserver", "DC-Server")
+        ActionRow row1 = ActionRow.of(
+            Button.secondary("ping_stream", "Stream"),
+            Button.secondary("ping_minecraft", "Minecraft"),
+            Button.secondary("ping_event", "Events"),
+            Button.secondary("ping_mcserver", "MC-Server"),
+            Button.secondary("ping_dcserver", "DC-Server")
         );
-        net.dv8tion.jda.api.components.actionrow.ActionRow row2 = net.dv8tion.jda.api.components.actionrow.ActionRow.of(
-            net.dv8tion.jda.api.components.buttons.Button.secondary("ping_apply", "Staff Apply"),
-            net.dv8tion.jda.api.components.buttons.Button.secondary("support_direct", "Support")
+        ActionRow row2 = ActionRow.of(
+            Button.secondary("ping_apply", "Staff Apply"),
+            Button.secondary("support_direct", "Support")
         );
 
-        com.integrafty.opexy.components.container.Container container = com.integrafty.opexy.utils.EmbedUtil.containerBranded("PINGS", "Notification Pings", body, null, row1, row2);
-        event.reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder().setComponents(container).useComponentsV2(true).build()).setEphemeral(true).useComponentsV2(true).queue();
+        Container container = EmbedUtil.containerBranded("PINGS", "Notification Pings", body, null, row1, row2);
+        event.reply(new MessageCreateBuilder().setComponents(container).useComponentsV2(true).build()).setEphemeral(true).useComponentsV2(true).queue();
     }
 
     private void showSocials(ButtonInteractionEvent event) {
         String body = "**🌐 تـابـعـنـا عـلـى مـنـصـات الـتـواصـل الاجـتـمـاعـي:**";
-        net.dv8tion.jda.api.components.actionrow.ActionRow row = net.dv8tion.jda.api.components.actionrow.ActionRow.of(
-            net.dv8tion.jda.api.components.buttons.Button.link("https://www.instagram.com/highcoremc", "Instagram"),
-            net.dv8tion.jda.api.components.buttons.Button.link("https://www.threads.com/@highcoremc", "Threads"),
-            net.dv8tion.jda.api.components.buttons.Button.link("https://www.youtube.com/@higcoremc", "YouTube"),
-            net.dv8tion.jda.api.components.buttons.Button.link("https://x.com/highcoremc", "X"),
-            net.dv8tion.jda.api.components.buttons.Button.link("https://www.tiktok.com/@highcoremcmc", "TikTok")
+        ActionRow row = ActionRow.of(
+            Button.link("https://www.instagram.com/highcoremc", "Instagram"),
+            Button.link("https://www.threads.com/@highcoremc", "Threads"),
+            Button.link("https://www.youtube.com/@higcoremc", "YouTube"),
+            Button.link("https://x.com/highcoremc", "X"),
+            Button.link("https://www.tiktok.com/@highcoremcmc", "TikTok")
         );
 
-        com.integrafty.opexy.components.container.Container container = com.integrafty.opexy.utils.EmbedUtil.containerBranded("SOCIAL", "Social Media", body, null, row);
-        event.reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder().setComponents(container).useComponentsV2(true).build()).setEphemeral(true).useComponentsV2(true).queue();
+        Container container = EmbedUtil.containerBranded("SOCIAL", "Social Media", body, null, row);
+        event.reply(new MessageCreateBuilder().setComponents(container).useComponentsV2(true).build()).setEphemeral(true).useComponentsV2(true).queue();
     }
 
     private void handleColorSelection(ButtonInteractionEvent event, String buttonId) {
@@ -184,7 +189,6 @@ public class StartupListener extends ListenerAdapter {
 
         event.deferReply(true).queue();
 
-        // Remove other color roles first (Exclusive)
         for (String roleId : COLOR_ROLES.values()) {
             Role r = event.getGuild().getRoleById(roleId);
             if (r != null && event.getMember().getRoles().contains(r)) {
@@ -192,7 +196,6 @@ public class StartupListener extends ListenerAdapter {
             }
         }
 
-        // Add the new role
         event.getGuild().addRoleToMember(event.getMember(), targetRole).queue(
             success -> event.getHook().sendMessage("✅ تـم تـحـديـث لـونـك إلـى: **" + targetRole.getName() + "**").queue()
         );
