@@ -31,9 +31,9 @@ public class WhitelistSyncService {
 
         // Map type values
         String mappedType = type;
-        if (type.contains("كراك")) {
+        if (type.contains("كراك") || type.contains("كرك")) {
             mappedType = "krack ~ كــراك";
-        } else if (type.contains("أصلية") || type.contains("اصلية")) {
+        } else if (type.contains("أصل") || type.contains("اصل")) {
             mappedType = "original ~ أصــلــية";
         }
 
