@@ -131,10 +131,7 @@ public class EmbedUtil {
             }
         }
 
-        Container c = Container.of(layout);
-        // Set default accent color to match HighCore's luxury feel
-        c = c.withAccentColor(ACCENT.getRGB() & 0xFFFFFF);
-        return c;
+        return Container.of(layout);
     }
 
     public static MessageEmbed brandedEmbed(String title, String description) {
@@ -236,7 +233,7 @@ public class EmbedUtil {
     }
 
     public static Container activityLog(String type, String details, Color color) {
-        return containerBranded("activity", type, details, BANNER_MAIN).withAccentColor(color.getRGB() & 0xFFFFFF);
+        return containerBranded("activity", type, details, BANNER_MAIN);
     }
 
     public static MessageEmbed createOldLogEmbed(String command, String details, Member moderator,
@@ -300,7 +297,7 @@ public class EmbedUtil {
     }
 
     public static Container warning(String t, String d) {
-        return containerBranded("WARN", t, "[!] " + d, BANNER_SUPPORT).withAccentColor(WARNING.getRGB() & 0xFFFFFF);
+        return containerBranded("WARN", t, "[!] " + d, BANNER_SUPPORT);
     }
 
     public static Container assistantResponse(String r) {
