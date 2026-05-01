@@ -14,9 +14,9 @@ spring:
 # Discord Bot Configuration
 discord:
   bot:
-    token: ${DISCORD_BOT_TOKEN}
+    token: ${DISCORD_BOT_TOKEN:}
   guild:
-    id: ${DISCORD_GUILD_ID}
+    id: ${DISCORD_GUILD_ID:}
     
 # Roles & Channels IDs (To be populated later from /setup or DB, but fallbacks are here)
 opexy:
