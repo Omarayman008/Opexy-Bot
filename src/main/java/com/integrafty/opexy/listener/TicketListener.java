@@ -435,6 +435,17 @@ public class TicketListener extends ListenerAdapter {
                 .setComponents(restoredContainer)
                 .useComponentsV2(true)
                 .build()).queue();
+
+            // Send unclaim notice
+            Container notice = EmbedUtil.containerBranded(
+                "NOTICE", 
+                "Unclaimed", 
+                "⤵️ Ticket Unclaimed By: " + event.getMember().getAsMention(), 
+                null
+            );
+            channel.sendMessage(new MessageCreateBuilder().setComponents(notice).useComponentsV2(true).build())
+                .useComponentsV2(true).queue();
+
             event.getHook().sendMessage("🔓 تم إلغاء استلام التذكرة.").setEphemeral(true).queue();
         }
     }
