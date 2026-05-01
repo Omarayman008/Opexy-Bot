@@ -2,6 +2,7 @@ package com.integrafty.opexy.listener;
 
 import com.integrafty.opexy.entity.TicketEntity;
 import com.integrafty.opexy.repository.TicketRepository;
+import com.integrafty.opexy.service.WhitelistSyncService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -39,6 +40,7 @@ public class TicketListener extends ListenerAdapter {
 
     private final JDA jda;
     private final TicketRepository ticketRepository;
+    private final WhitelistSyncService whitelistSyncService;
 
     private static final String TICKET_CATEGORY_ID = "1487143174567628840";
     private static final String TRANSCRIPT_CHANNEL_ID = "1487147026427940955";
@@ -214,11 +216,17 @@ public class TicketListener extends ListenerAdapter {
         final int finalNextNum = nextNum;
         final String finalCategoryId = categoryId;
 
+        boolean isWhitelist = finalCategoryId.equals("whitelist");
+        EnumSet<Permission> memberPerms = isWhitelist ? EnumSet.of(Permission.VIEW_CHANNEL) : EnumSet.of(Permission.VIEW_CHANNEL, Permission.MESSAGE_SEND);
+
         guild.createTextChannel(channelName)
             .setParent(guild.getCategoryById(TICKET_CATEGORY_ID))
             .addPermissionOverride(guild.getPublicRole(), null, EnumSet.of(Permission.VIEW_CHANNEL))
-            .addPermissionOverride(member, EnumSet.of(Permission.VIEW_CHANNEL, Permission.MESSAGE_SEND), null)
+            .addPermissionOverride(member, memberPerms, isWhitelist ? EnumSet.of(Permission.MESSAGE_SEND) : null)
             .queue(channel -> {
+                if (isWhitelist) {
+                    guild.addRoleToMember(member, guild.getRoleById("1499355941752012900")).queue();
+                }
                 TicketEntity ticket = new TicketEntity();
                 ticket.setUserId(userId);
                 ticket.setChannelId(channel.getId());
@@ -253,26 +261,42 @@ public class TicketListener extends ListenerAdapter {
 
                 ticketBody.append("**Subject:** ").append(subject).append("\n");
                 ticketBody.append("**Details:** ").append(details).append("\n\n");
-                ticketBody.append("A staff member will be with you shortly — please describe your issue in full detail.");
                 
-                Container welcomeContainer = EmbedUtil.containerBranded(
-                    sector, 
-                    "Case #" + finalCategoryName.toUpperCase() + "-" + formattedNum, 
-                    ticketBody.toString(), 
-                    EmbedUtil.BANNER_SUPPORT,
-                    ActionRow.of(
-                        net.dv8tion.jda.api.components.selections.StringSelectMenu.create("ticket_manage_menu")
-                            .setPlaceholder("إدارة الـتـذكـرة...")
-                            .addOption("تـغـيـيـر اسـم الـتـذكـرة", "ticket_manage_rename")
-                            .addOption("إضـافـة عـضـو", "ticket_manage_add")
-                            .addOption("إزالـة عـضـو", "ticket_manage_remove")
-                            .build()
-                    ),
-                    ActionRow.of(
-                        Button.secondary("ticket_claim", "اسـتـلام الـتـذكـرة"),
-                        Button.secondary("ticket_close", "إغـلاق الـتـذكـرة")
-                    )
-                );
+                if (isWhitelist) {
+                    ticketBody.append("### ✅ تـم قـبـول طـلـبـك مـبـدئـيـاً\n")
+                        .append("تـوجـه إلـى الـروم <#1488279212786843850> وضـع إيـمـوجـي 🟢 ريـأكـشـن وسـيـتـم تـفـعـيـلـك فـوراً.");
+                } else {
+                    ticketBody.append("A staff member will be with you shortly — please describe your issue in full detail.");
+                }
+                
+                Container welcomeContainer;
+                if (isWhitelist) {
+                    welcomeContainer = EmbedUtil.containerBranded(
+                        sector, 
+                        "Case #" + finalCategoryName.toUpperCase() + "-" + formattedNum, 
+                        ticketBody.toString(), 
+                        EmbedUtil.BANNER_SUPPORT
+                    );
+                } else {
+                    welcomeContainer = EmbedUtil.containerBranded(
+                        sector, 
+                        "Case #" + finalCategoryName.toUpperCase() + "-" + formattedNum, 
+                        ticketBody.toString(), 
+                        EmbedUtil.BANNER_SUPPORT,
+                        ActionRow.of(
+                            net.dv8tion.jda.api.components.selections.StringSelectMenu.create("ticket_manage_menu")
+                                .setPlaceholder("إدارة الـتـذكـرة...")
+                                .addOption("تـغـيـيـر اسـم الـتـذكـرة", "ticket_manage_rename")
+                                .addOption("إضـافـة عـضـو", "ticket_manage_add")
+                                .addOption("إزالـة عـضـو", "ticket_manage_remove")
+                                .build()
+                        ),
+                        ActionRow.of(
+                            Button.secondary("ticket_claim", "اسـتـلام الـتـذكـرة"),
+                            Button.secondary("ticket_close", "إغـلاق الـتـذكـرة")
+                        )
+                    );
+                }
 
                 String ping = "<@&1487152917763981574> " + member.getAsMention();
                 channel.sendMessage(ping).queue();
@@ -280,6 +304,15 @@ public class TicketListener extends ListenerAdapter {
                 channel.sendMessage(new MessageCreateBuilder().setComponents(welcomeContainer).useComponentsV2(true).build())
                     .useComponentsV2(true)
                     .queue();
+
+                if (isWhitelist) {
+                    whitelistSyncService.syncToSupabase(
+                        event.getValue("discord_info").getAsString(),
+                        event.getValue("mc_name").getAsString(),
+                        event.getValue("version").getAsString(),
+                        event.getValue("account_type").getAsString()
+                    );
+                }
 
                 Container successCont = EmbedUtil.success("الإنـشـاء", "تـم إنـشـاء تـذكـرتـك بـنـجـاح: " + channel.getAsMention());
                 event.reply(new MessageCreateBuilder().setComponents(successCont).useComponentsV2(true).build())
