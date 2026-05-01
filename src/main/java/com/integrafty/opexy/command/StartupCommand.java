@@ -22,21 +22,21 @@ public class StartupCommand implements SlashCommand {
 
     @Override
     public SlashCommandData getCommandData() {
-        return Commands.slash("startup", "إرسال لوحة التحكم الرئيسية للأعضاء");
+        return Commands.slash("startup", "Send main dashboard to members");
     }
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         if (!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
-            event.reply("❌ هذا الأمر للإدارة فقط.").setEphemeral(true).queue();
+            event.reply("X Administrator only.").setEphemeral(true).queue();
             return;
         }
 
-        String body = "### 🚀 لوحة التحكم الرئيسية | MAIN DASHBOARD\n" +
-                "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n\n" +
-                "مرحباً بك في سيرفر **HighCore MC**.\n" +
-                "استخدم الأزرار أدناه للوصول السريع إلى خريطة السيرفر، اختيار ألوانك، ضبط التنبيهات، أو متابعة حساباتنا.\n\n" +
-                "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬";
+        String body = "### MAIN DASHBOARD\n" +
+                "--------------------------\n\n" +
+                "Welcome to **HighCore MC**.\n" +
+                "Use buttons below to access Server Map, Colors, Pings, or Social Media.\n\n" +
+                "--------------------------";
 
         ActionRow row = ActionRow.of(
             Button.secondary("startup_map", "Server Map"),
@@ -45,13 +45,13 @@ public class StartupCommand implements SlashCommand {
             Button.secondary("startup_socials", "Social Media")
         );
 
-        Container container = EmbedUtil.containerBranded("STARTUP", "HighCore MC • Welcome", body, EmbedUtil.BANNER_MAIN, row);
+        Container container = EmbedUtil.containerBranded("STARTUP", "HighCore MC - Welcome", body, EmbedUtil.BANNER_MAIN, row);
 
         MessageCreateBuilder builder = new MessageCreateBuilder();
         builder.setComponents(container);
         builder.useComponentsV2(true);
 
         event.getChannel().sendMessage(builder.build()).useComponentsV2(true).queue();
-        event.reply("✅ تم إرسال لوحة التحكم الرئيسية بنجاح.").setEphemeral(true).queue();
+        event.reply("Main dashboard sent successfully.").setEphemeral(true).queue();
     }
 }
