@@ -580,7 +580,7 @@ public class TicketListener extends ListenerAdapter {
                 .queue();
                 
             // Send to logs
-            TextChannel logCh = event.getGuild().getTextChannelById("1486872077263835157");
+            TextChannel logCh = event.getGuild().getTextChannelById("1487147026427940955");
             if (logCh != null) {
                 logCh.sendMessage("📄 **TRANSCRIPT** | #" + channel.getName() + " | Closed by " + event.getUser().getAsMention())
                     .addFiles(net.dv8tion.jda.api.utils.FileUpload.fromData(transcript, "transcript-" + channel.getName() + ".txt"))
