@@ -50,8 +50,13 @@ public class DiscordEventListener extends ListenerAdapter {
             }
         }
         
-        // Auto-role
-        guild.addRoleToMember(event.getMember(), guild.getRoleById("1488278492650143854")).queue();
+        // Auto-role for humans
+        if (!event.getUser().isBot()) {
+            guild.addRoleToMember(event.getMember(), guild.getRoleById("1488278492650143854")).queue();
+        } else {
+            // Auto-role for bots
+            guild.addRoleToMember(event.getMember(), guild.getRoleById("1487878039177269248")).queue();
+        }
         
         // TODO: Send DM with verify link and server rules
     }
