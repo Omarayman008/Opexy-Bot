@@ -29,6 +29,17 @@ public class DiscordEventListener extends ListenerAdapter {
     @Override
     public void onReady(ReadyEvent event) {
         log.info("Bot is ready! Logged in as {}", event.getJDA().getSelfUser().getAsTag());
+        
+        // Auto-sync roles for existing members
+        event.getJDA().getGuilds().forEach(guild -> {
+            guild.loadMembers().onSuccess(members -> {
+                members.forEach(member -> {
+                    if (!member.getUser().isBot() && member.getRoles().stream().noneMatch(r -> r.getId().equals("1488278492650143854"))) {
+                        guild.addRoleToMember(member, guild.getRoleById("1488278492650143854")).queue();
+                    }
+                });
+            });
+        });
     }
 
     @Override
@@ -49,6 +60,9 @@ public class DiscordEventListener extends ListenerAdapter {
                 welcomeChannel.sendMessage(builder.build()).useComponentsV2(true).queue();
             }
         }
+        
+        // Auto-role
+        guild.addRoleToMember(event.getMember(), guild.getRoleById("1488278492650143854")).queue();
         
         // TODO: Send DM with verify link and server rules
     }
