@@ -21,13 +21,12 @@ public class TicketCommand implements SlashCommand {
 
     @Override
     public String getName() {
-        return "setup";
+        return "tickets";
     }
 
     @Override
     public SlashCommandData getCommandData() {
-        return Commands.slash("setup", "إعداد البوت")
-                .addOption(OptionType.STRING, "category", "الفئة (tickets)", true)
+        return Commands.slash("tickets", "إعداد لوحة التذاكر")
                 .addOption(OptionType.CHANNEL, "channel", "الروم المراد إرسال اللوحة فيه (اختياري)", false);
     }
 
@@ -42,12 +41,7 @@ public class TicketCommand implements SlashCommand {
             return;
         }
 
-        String category = event.getOption("category").getAsString();
-        if (category.equalsIgnoreCase("ticket") || category.equalsIgnoreCase("tickets")) {
-            handleSetup(event);
-        } else {
-            event.reply("⏳ سيتم دعم فئات أخرى قريباً. جرب `tickets`").setEphemeral(true).queue();
-        }
+        handleSetup(event);
     }
     
     public void handleSetup(SlashCommandInteractionEvent event) {
