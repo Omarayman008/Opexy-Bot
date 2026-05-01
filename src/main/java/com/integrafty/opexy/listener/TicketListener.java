@@ -178,7 +178,9 @@ public class TicketListener extends ListenerAdapter {
     private void handleTicketCreationFromModal(ModalInteractionEvent event) {
         String userId = event.getUser().getId();
         
-        if (ticketRepository.existsByUserIdAndStatus(userId, "OPEN")) {
+        boolean isExempt = event.getMember().getRoles().stream().anyMatch(r -> r.getId().equals("1487152572207861870"));
+        
+        if (!isExempt && ticketRepository.existsByUserIdAndStatus(userId, "OPEN")) {
             event.reply("❌ لـديـك تـذكـرة مـفـتـوحـة بـالـفـعـل! يـرجـى إغـلاقـهـا أولاً.").setEphemeral(true).queue();
             return;
         }
