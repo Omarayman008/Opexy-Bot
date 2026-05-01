@@ -45,6 +45,16 @@ public class TicketListener extends ListenerAdapter {
 
     private static final String TICKET_CATEGORY_ID = "1487143174567628840";
     private static final String TRANSCRIPT_CHANNEL_ID = "1487147026427940955";
+    private static final String STAFF_ROLE = "1487195816220430406";
+    private static final java.util.List<String> PRIVILEGED_ROLES = java.util.Arrays.asList(
+        "1190305586710073427", // owner-id
+        "1350531070222794804", // owner-id-2
+        "1337490826326048922", // op-staff
+        "1489671552730402909", // secret-team
+        "1487152572207861870", // opex-founder
+        "1487152882074521771", // opex-manager
+        "1487152897773797637"  // department-manager
+    );
 
     @PostConstruct
     public void init() {
@@ -85,6 +95,19 @@ public class TicketListener extends ListenerAdapter {
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
         String buttonId = event.getComponentId();
+
+        // Check if it's an administrative button
+        if (buttonId.startsWith("ticket_") && !buttonId.equals("ticket_support") && 
+            !buttonId.equals("ticket_complaint") && !buttonId.equals("ticket_hire") && !buttonId.equals("ticket_whitelist")) {
+            
+            boolean isStaff = event.getMember().getRoles().stream().anyMatch(r -> r.getId().equals(STAFF_ROLE));
+            boolean isPrivileged = event.getMember().getRoles().stream().anyMatch(r -> PRIVILEGED_ROLES.contains(r.getId()));
+            
+            if (!isStaff && !isPrivileged) {
+                event.reply("❌ عذراً، هذه الأزرار مخصصة للفريق الإداري فقط.").setEphemeral(true).queue();
+                return;
+            }
+        }
 
         if (buttonId.equals("ticket_close")) {
             handleTicketClose(event);
@@ -224,7 +247,16 @@ public class TicketListener extends ListenerAdapter {
             .setParent(guild.getCategoryById(TICKET_CATEGORY_ID))
             .addPermissionOverride(guild.getPublicRole(), null, EnumSet.of(Permission.VIEW_CHANNEL))
             .addPermissionOverride(member, memberPerms, isWhitelist ? EnumSet.of(Permission.MESSAGE_SEND) : null)
+            .addPermissionOverride(guild.getRoleById(STAFF_ROLE), EnumSet.of(Permission.VIEW_CHANNEL, Permission.MESSAGE_SEND), null)
             .queue(channel -> {
+                // Set overrides for privileged roles to ensure they always see and can write
+                for (String roleId : PRIVILEGED_ROLES) {
+                    net.dv8tion.jda.api.entities.Role role = guild.getRoleById(roleId);
+                    if (role != null) {
+                        channel.getManager().putRolePermissionOverride(role.getIdLong(), EnumSet.of(Permission.VIEW_CHANNEL, Permission.MESSAGE_SEND), null).queue();
+                    }
+                }
+
                 if (isWhitelist) {
                     guild.addRoleToMember(member, guild.getRoleById("1499355941752012900")).queue();
                 }
@@ -474,14 +506,17 @@ public class TicketListener extends ListenerAdapter {
                 .useComponentsV2(true)
                 .build()).queue();
             
-            // 3. Send the specific claim notice
-            Container notice = EmbedUtil.containerBranded(
-                "NOTICE", 
-                "Claimed", 
-                "📡 Ticket Handled By: " + event.getMember().getAsMention(), 
-                null
-            );
-            
+            // 4. Update Permissions: Staff role can't write, claimer can write.
+            net.dv8tion.jda.api.entities.Role staffRole = event.getGuild().getRoleById(STAFF_ROLE);
+            if (staffRole != null) {
+                channel.getManager().putRolePermissionOverride(staffRole.getIdLong(), 
+                    EnumSet.of(Permission.VIEW_CHANNEL), 
+                    EnumSet.of(Permission.MESSAGE_SEND)).queue();
+            }
+            channel.getManager().putMemberPermissionOverride(event.getUser().getIdLong(), 
+                EnumSet.of(Permission.VIEW_CHANNEL, Permission.MESSAGE_SEND), 
+                null).queue();
+
             channel.sendMessage(new MessageCreateBuilder().setComponents(notice).useComponentsV2(true).build()).useComponentsV2(true).queue();
         }
     }
@@ -537,6 +572,14 @@ public class TicketListener extends ListenerAdapter {
             );
             channel.sendMessage(new MessageCreateBuilder().setComponents(notice).useComponentsV2(true).build())
                 .useComponentsV2(true).queue();
+
+            // Restore permissions: Staff role can write again.
+            net.dv8tion.jda.api.entities.Role staffRole = event.getGuild().getRoleById(STAFF_ROLE);
+            if (staffRole != null) {
+                channel.getManager().putRolePermissionOverride(staffRole.getIdLong(), 
+                    EnumSet.of(Permission.VIEW_CHANNEL, Permission.MESSAGE_SEND), 
+                    null).queue();
+            }
 
             event.getHook().sendMessage("🔓 تم إلغاء استلام التذكرة.").setEphemeral(true).queue();
         }
