@@ -296,11 +296,16 @@ public class TicketListener extends ListenerAdapter {
     }
 
     private void handleFinalClose(ButtonInteractionEvent event) {
+        event.deferEdit().queue(); // Acknowledge immediately
+        
         TextChannel channel = event.getChannel().asTextChannel();
         Member member = event.getMember();
         
         Optional<TicketEntity> ticketOpt = ticketRepository.findByChannelId(channel.getId());
-        if (ticketOpt.isEmpty()) return;
+        if (ticketOpt.isEmpty()) {
+            event.getHook().sendMessage("❌ لم يتم العثور على بيانات التذكرة في قاعدة البيانات.").setEphemeral(true).queue();
+            return;
+        }
         TicketEntity ticket = ticketOpt.get();
         
         // 1. Remove client write access
@@ -333,13 +338,15 @@ public class TicketListener extends ListenerAdapter {
             )
         );
         
-        channel.sendMessage(new MessageCreateBuilder().setComponents(panel).useComponentsV2(true).build()).useComponentsV2(true).queue();
-        event.reply("✅ تـم إغـلاق الـتـذكـرة بـنـجـاح.").setEphemeral(true).queue();
+        channel.sendMessage(new MessageCreateBuilder().setComponents(panel).useComponentsV2(true).build())
+            .useComponentsV2(true).queue();
+        event.getHook().sendMessage("✅ تـم إغـلاق الـتـذكـرة بـنـجـاح.").setEphemeral(true).queue();
     }
 
     private void handleClaim(ButtonInteractionEvent event) {
+        event.deferEdit().queue();
         if (!event.getMember().hasPermission(Permission.MANAGE_CHANNEL)) {
-            event.reply("❌ لا تـمـلـك صـلاحـيـة لاسـتـلام الـتـذاكـر.").setEphemeral(true).queue();
+            event.getHook().sendMessage("❌ لا تـمـلـك صـلاحـيـة لاسـتـلام الـتـذاكـر.").setEphemeral(true).queue();
             return;
         }
 
@@ -396,13 +403,14 @@ public class TicketListener extends ListenerAdapter {
     }
 
     private void handleUnclaim(ButtonInteractionEvent event) {
+        event.deferEdit().queue();
         TextChannel channel = event.getChannel().asTextChannel();
         Optional<TicketEntity> ticketOpt = ticketRepository.findByChannelId(channel.getId());
 
         if (ticketOpt.isPresent()) {
             TicketEntity ticket = ticketOpt.get();
             if (!event.getUser().getId().equals(ticket.getStaffId()) && !event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
-                event.reply("❌ لا يـمـكـنـك إلـغـاء اسـتـلام تـذكـرة مـسـتـلـمـة مـن قـبـل شـخـص آخـر.").setEphemeral(true).queue();
+                event.getHook().sendMessage("❌ لا يـمـكـنـك إلـغـاء اسـتـلام تـذكـرة مـسـتـلـمـة مـن قـبـل شـخـص آخـر.").setEphemeral(true).queue();
                 return;
             }
             
@@ -450,6 +458,7 @@ public class TicketListener extends ListenerAdapter {
         }
     }
     private void handleReopen(ButtonInteractionEvent event) {
+        event.deferReply(true).queue();
         TextChannel channel = event.getChannel().asTextChannel();
         Optional<TicketEntity> ticketOpt = ticketRepository.findByChannelId(channel.getId());
         if (ticketOpt.isEmpty()) return;
@@ -472,7 +481,7 @@ public class TicketListener extends ListenerAdapter {
             channel.getManager().setName(currentName.substring(0, currentName.length() - 2)).queue();
         }
 
-        event.reply("✅ تـم إعـادة فـتـح الـتـذكـرة وإعـادة الـصـلاحـيـات.").queue();
+        event.getHook().sendMessage("✅ تـم إعـادة فـتـح الـتـذكـرة وإعـادة الـصـلاحـيـات.").queue();
     }
 
     private void handleTranscript(ButtonInteractionEvent event) {
