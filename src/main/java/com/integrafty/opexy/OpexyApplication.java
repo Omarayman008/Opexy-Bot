@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 import lombok.extern.slf4j.Slf4j;
+import java.net.URI;
 
 @SpringBootApplication
 @Slf4j
@@ -27,12 +28,29 @@ public class OpexyApplication {
         
         dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
 
-        // Railway DATABASE_URL support
+        // Railway DATABASE_URL support (Enhanced Parsing)
         String databaseUrl = System.getenv("DATABASE_URL");
         if (databaseUrl != null && databaseUrl.startsWith("postgresql://")) {
-            log.info("Detected Railway DATABASE_URL, converting to JDBC format...");
-            String jdbcUrl = databaseUrl.replace("postgresql://", "jdbc:postgresql://");
-            System.setProperty("spring.datasource.url", jdbcUrl);
+            try {
+                log.info("Parsing Railway DATABASE_URL...");
+                URI uri = new URI(databaseUrl);
+                String[] userInfo = uri.getUserInfo().split(":");
+                String username = userInfo[0];
+                String password = userInfo[1];
+                String host = uri.getHost();
+                int port = uri.getPort();
+                String path = uri.getPath();
+                
+                String jdbcUrl = String.format("jdbc:postgresql://%s:%d%s", host, port, path);
+                
+                System.setProperty("spring.datasource.url", jdbcUrl);
+                System.setProperty("spring.datasource.username", username);
+                System.setProperty("spring.datasource.password", password);
+                
+                log.info("Database configuration updated successfully from DATABASE_URL.");
+            } catch (Exception e) {
+                log.error("Failed to parse DATABASE_URL: {}", e.getMessage());
+            }
         }
         
         SpringApplication.run(OpexyApplication.class, args);
