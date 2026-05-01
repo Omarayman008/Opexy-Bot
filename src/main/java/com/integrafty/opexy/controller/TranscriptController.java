@@ -38,8 +38,13 @@ public class TranscriptController {
         }
 
         TicketEntity ticket = ticketOpt.get();
+        String openerName = "Unknown User";
+        
         JsonArray msgArray = new JsonArray();
         for (TicketMessageEntity msg : messages) {
+            if (msg.getUserId().equals(ticket.getUserId()) && openerName.equals("Unknown User")) {
+                openerName = msg.getUserName();
+            }
             JsonObject m = new JsonObject();
             m.addProperty("user_id", msg.getUserId());
             m.addProperty("user_name", msg.getUserName());
@@ -47,14 +52,19 @@ public class TranscriptController {
             m.addProperty("created_at", msg.getCreatedAt().toInstant(ZoneOffset.UTC).toString());
             msgArray.add(m);
         }
+        
+        // Fallback to first message sender if still unknown
+        if (openerName.equals("Unknown User") && !messages.isEmpty()) {
+            openerName = messages.get(0).getUserName();
+        }
 
         byte[] html = TranscriptService.buildHtml(
             id, 
             "case-" + id, 
-            "SUPPORT", 
+            ticket.getCategory().toUpperCase(), 
             ticket.getStatus(), 
             ticket.getCreatedAt().toInstant(ZoneOffset.UTC).toString(), 
-            "User-" + ticket.getUserId(), 
+            openerName, 
             ticket.getStaffId() != null ? ticket.getStaffId() : "Not Handled", 
             ticket.getStatus().equals("CLOSED") ? "Staff" : "N/A", 
             msgArray
