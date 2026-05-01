@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/opexy_db
-    username: postgres
-    password: password # TODO: Change in production
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/opexy_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
   jpa:
     hibernate:
       ddl-auto: update # Automatically updates the schema based on our Java Entities
