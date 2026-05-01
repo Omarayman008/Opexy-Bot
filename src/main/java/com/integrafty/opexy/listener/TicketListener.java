@@ -596,24 +596,28 @@ public class TicketListener extends ListenerAdapter {
         event.deferReply(true).queue();
         
         ticketRepository.findByChannelId(channel.getId()).ifPresentOrElse(ticket -> {
-            String domain = "https://opexy-production.up.railway.app"; // Fallback
+            String domain = "https://highcoremc-production.up.railway.app";
             String link = domain + "/view/transcript/" + ticket.getId();
             
-            Container notice = EmbedUtil.containerBranded(
-                "TRANSCRIPT", 
-                "سـجـل الـتـحـادث", 
-                "تـم تـولـيـد رابـط سـجـل الـتـحـادث بـنـجـاح.\n\n🔗 **[اضـغـط هـنـا لـلـعـرض](" + link + ")**", 
-                null
-            );
-            
-            event.getHook().sendMessage(new MessageCreateBuilder().setComponents(notice).useComponentsV2(true).build())
-                .setEphemeral(true).queue();
+            // Send to user ephemerally
+            event.getHook().sendMessage("🔗 **[تـفـضـل بـمـعـايـنـة سـجـل الـتـحـادث مـن هـنـا](" + link + ")**").setEphemeral(true).queue();
                 
-            // Send to logs
+            // Send to logs with EXACT format requested
             TextChannel logCh = event.getGuild().getTextChannelById("1487147026427940955");
             if (logCh != null) {
-                logCh.sendMessage("📄 **TRANSCRIPT** | #" + channel.getName() + " | Created by " + event.getUser().getAsMention() + "\n🔗 [View Transcript](" + link + ")")
-                    .queue();
+                Member opener = event.getGuild().getMemberById(ticket.getUserId());
+                String openerMention = opener != null ? opener.getAsMention() : "<@" + ticket.getUserId() + ">";
+                String openerName = opener != null ? opener.getUser().getName() : "Unknown";
+
+                String logMsg = String.format(
+                    "▶ **TRANSCRIPT • Archive — Case #%d**\n\n" +
+                    "**User:** %s (%s)\n" +
+                    "**Closed By:** %s\n\n" +
+                    "🔗 [View Transcript](%s)",
+                    ticket.getId(), openerMention, openerName, event.getUser().getAsMention(), link
+                );
+                
+                logCh.sendMessage(logMsg).queue();
             }
         }, () -> {
             event.getHook().sendMessage("❌ لم يتم العثور على بيانات التذكرة لإصدار الرابط.").setEphemeral(true).queue();

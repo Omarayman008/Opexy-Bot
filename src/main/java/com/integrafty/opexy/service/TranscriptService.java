@@ -88,7 +88,7 @@ public class TranscriptService {
         // Hero Section
         sb.append("<div class='hero'><div class='hero-top'><div style='display:flex;align-items:center;gap:12px'>");
         sb.append(
-                "<div class='logo-mark'>OP</div><div><div class='logo-text'>OPEXY BOT</div><div class='logo-sub'>Ticket Transcript</div></div>");
+                "<div class='logo-mark'>HC</div><div><div class='logo-text'>HIGH CORE MC</div><div class='logo-sub'>Ticket Transcript</div></div>");
         sb.append("</div><div class='hero-channel'><span>#</span>").append(channelName).append("</div></div>");
         sb.append("<div class='stats-grid'>");
         sb.append("<div class='stat-card'><div class='stat-label'>Ticket ID</div><div class='stat-value'>#").append(id)
@@ -145,7 +145,7 @@ public class TranscriptService {
         sb.append("</div>");
 
         // Footer
-        sb.append("<div class='footer'><span class='footer-brand'>Opexy Bot</span>");
+        sb.append("<div class='footer'><span class='footer-brand'>HighCore MC</span>");
         sb.append("<span>Generated ").append(DATE_FORMAT.format(Instant.now())).append(" (Asia/Riyadh)</span></div>");
         sb.append("</body></html>");
 
