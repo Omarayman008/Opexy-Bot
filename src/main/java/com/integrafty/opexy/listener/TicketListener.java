@@ -85,9 +85,7 @@ public class TicketListener extends ListenerAdapter {
     public void onButtonInteraction(ButtonInteractionEvent event) {
         String buttonId = event.getComponentId();
 
-        if (buttonId.startsWith("ticket_") && !buttonId.equals("ticket_close") && !buttonId.equals("ticket_claim") && !buttonId.equals("ticket_unclaim")) {
-            handleTicketModal(event, buttonId);
-        } else if (buttonId.equals("ticket_close")) {
+        if (buttonId.equals("ticket_close")) {
             handleTicketClose(event);
         } else if (buttonId.equals("ticket_claim")) {
             handleClaim(event);
@@ -107,7 +105,10 @@ public class TicketListener extends ListenerAdapter {
             event.getChannel().delete().queue();
         } else if (buttonId.equals("ticket_delete_cancel")) {
             event.reply("✅ تـم الـتـراجـع عـن الـحـذف.").setEphemeral(true).queue();
+        } else if (buttonId.startsWith("ticket_")) {
+            handleTicketModal(event, buttonId);
         }
+    }
     }
 
     private void handleTicketModal(ButtonInteractionEvent event, String buttonId) {
