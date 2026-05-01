@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.JDA;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
@@ -20,6 +21,9 @@ import java.util.concurrent.TimeUnit;
 public class CommandHandler extends ListenerAdapter {
 
     private final JDA jda;
+
+    @Autowired
+    private TicketCommand ticketCommand;
 
     @PostConstruct
     public void init() {
@@ -56,8 +60,15 @@ public class CommandHandler extends ListenerAdapter {
             case "profile":
             case "balance":
             case "daily":
-            case "setup":
+            case "daily":
                 event.reply("⏳ سيتم تفعيل هذا الأمر في المراحل القادمة.").setEphemeral(true).queue();
+                break;
+            case "setup":
+                if (!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+                    event.reply("❌ لا تملك صلاحية لاستخدام هذا الأمر.").setEphemeral(true).queue();
+                    return;
+                }
+                ticketCommand.handleSetup(event);
                 break;
             default:
                 event.reply("❌ عذراً، هذا الأمر غير مدعوم حالياً.").setEphemeral(true).queue();
