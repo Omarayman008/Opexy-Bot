@@ -59,20 +59,20 @@ public class TicketListener extends ListenerAdapter {
         String selected = event.getValues().get(0);
         switch (selected) {
             case "ticket_manage_add" -> {
-                Modal modal = Modal.create("modal_ticket_add", "إضـافـة عـضـو")
-                    .addComponents(ActionRow.of(TextInput.create("user_id", TextInputStyle.SHORT).setLabel("ID الـعـضـو").setPlaceholder("اكتب الأيدي الخاص بالعضو هنا").build()))
+                Modal modal = Modal.create("modal_ticket_add", "إضـافـة عـضـو لـلـتـذكـرة")
+                    .addComponents(Label.of("ID الـعـضـو", TextInput.create("user_id", TextInputStyle.SHORT).setPlaceholder("ادخل الأيدي الخاص بالعضو هنا...").build()))
                     .build();
                 event.replyModal(modal).queue();
             }
             case "ticket_manage_remove" -> {
-                Modal modal = Modal.create("modal_ticket_remove", "إزالـة عـضـو")
-                    .addComponents(ActionRow.of(TextInput.create("user_id", TextInputStyle.SHORT).setLabel("ID الـعـضـو").setPlaceholder("اكتب الأيدي الخاص بالعضو هنا").build()))
+                Modal modal = Modal.create("modal_ticket_remove", "إزالـة عـضـو مـن الـتـذكـرة")
+                    .addComponents(Label.of("ID الـعـضـو", TextInput.create("user_id", TextInputStyle.SHORT).setPlaceholder("ادخل الأيدي الخاص بالعضو هنا...").build()))
                     .build();
                 event.replyModal(modal).queue();
             }
             case "ticket_manage_rename" -> {
                 Modal modal = Modal.create("modal_ticket_rename", "تـغـيـيـر اسـم الـتـذكـرة")
-                    .addComponents(ActionRow.of(TextInput.create("new_name", TextInputStyle.SHORT).setLabel("الاسـم الـجـديـد").setPlaceholder("مثال: support-vip").build()))
+                    .addComponents(Label.of("الاسـم الـجـديـد", TextInput.create("new_name", TextInputStyle.SHORT).setPlaceholder("مثال: support-001").build()))
                     .build();
                 event.replyModal(modal).queue();
             }
@@ -100,20 +100,20 @@ public class TicketListener extends ListenerAdapter {
         Modal modal = switch (categoryId) {
             case "support" -> Modal.create("modal_ticket_support", "الـدعم الـفـنـي")
                 .addComponents(
-                    ActionRow.of(TextInput.create("support_type", TextInputStyle.SHORT).setLabel("نـوع الـدعم (مايـن / دـسكورد)").setPlaceholder("اكتب النوع هنا").build()),
-                    ActionRow.of(TextInput.create("issue", TextInputStyle.PARAGRAPH).setLabel("شـرح الـمـشـكـلـة").setPlaceholder("اكتب تفاصيل المشكلة هنا").build())
+                    Label.of("نـوع الـدعم (مايـن / دـسكورد)", TextInput.create("support_type", TextInputStyle.SHORT).setPlaceholder("اكتب النوع هنا").build()),
+                    Label.of("شـرح الـمـشـكـلـة", TextInput.create("issue", TextInputStyle.PARAGRAPH).setPlaceholder("اكتب تفاصيل المشكلة هنا").build())
                 ).build();
             case "complaint" -> Modal.create("modal_ticket_complaint", "الـشـكـاوى")
                 .addComponents(
-                    ActionRow.of(TextInput.create("target_user", TextInputStyle.SHORT).setLabel("ID الـشـخـص / Username").setPlaceholder("اكتب بيانات الشخص هنا").build()),
-                    ActionRow.of(TextInput.create("location", TextInputStyle.SHORT).setLabel("أيـن (مـايـنـكـرافـت / دـسـكـورد)").setPlaceholder("اكتب المكان هنا").build())
+                    Label.of("ID الـشـخـص / Username", TextInput.create("target_user", TextInputStyle.SHORT).setPlaceholder("اكتب بيانات الشخص هنا").build()),
+                    Label.of("أيـن (مـايـنـكـرافـت / دـسـكـورد)", TextInput.create("location", TextInputStyle.SHORT).setPlaceholder("اكتب المكان هنا").build())
                 ).build();
             case "hire" -> Modal.create("modal_ticket_hire", "الـتـقـديـم عـلـى الإدارة")
                 .addComponents(
-                    ActionRow.of(TextInput.create("name", TextInputStyle.SHORT).setLabel("الاسـم").build()),
-                    ActionRow.of(TextInput.create("age", TextInputStyle.SHORT).setLabel("الـعـمـر").build()),
-                    ActionRow.of(TextInput.create("skills", TextInputStyle.PARAGRAPH).setLabel("الـمـهـارات").build()),
-                    ActionRow.of(TextInput.create("depts", TextInputStyle.SHORT).setLabel("الأقـسـام (Discord, Minecraft, Hype)").build())
+                    Label.of("الاسـم", TextInput.create("name", TextInputStyle.SHORT).build()),
+                    Label.of("الـعـمـر", TextInput.create("age", TextInputStyle.SHORT).build()),
+                    Label.of("الـمـهـارات", TextInput.create("skills", TextInputStyle.PARAGRAPH).build()),
+                    Label.of("الأقـسـام (Discord, Minecraft, Hype)", TextInput.create("depts", TextInputStyle.SHORT).build())
                 ).build();
             default -> null;
         };
@@ -151,14 +151,14 @@ public class TicketListener extends ListenerAdapter {
         String userId = event.getValue("user_id").getAsString();
         event.getGuild().retrieveMemberById(userId).queue(member -> {
             event.getChannel().asTextChannel().getManager().putPermissionOverride(member, null, java.util.EnumSet.of(Permission.VIEW_CHANNEL)).queue();
-            event.reply("❌ تم إزالة " + member.getAsMention() + " من التذكرة.").queue();
-        }, error -> event.reply("❌ لم يتم العثور على عضو بهذا الأيدي.").setEphemeral(true).queue());
+            event.reply("✅ تـم إزالـة " + member.getAsMention() + " مـن الـتـذكـرة.").queue();
+        }, error -> event.reply("❌ لـم يـتـم الـعـثـور عـلـى عـضـو بـهـذا الأيـدي.").setEphemeral(true).queue());
     }
 
     private void handleRenameTicket(ModalInteractionEvent event) {
         String newName = event.getValue("new_name").getAsString();
         event.getChannel().asTextChannel().getManager().setName(newName).queue();
-        event.reply("✅ تم تغيير اسم التذكرة إلى: " + newName).queue();
+        event.reply("✅ تـم تـغـيـيـر اسـم الـتـذكـرة إلـى: " + newName).queue();
     }
 
     private void handleTicketCreationFromModal(ModalInteractionEvent event) {
@@ -166,7 +166,7 @@ public class TicketListener extends ListenerAdapter {
         
         // Prevent creating multiple tickets
         if (ticketRepository.existsByUserIdAndStatus(userId, "OPEN")) {
-            event.reply("❌ لديك تذكرة مفتوحة بالفعل! يرجى إغلاقها أولاً.").setEphemeral(true).queue();
+            event.reply("❌ لـديـك تـذكـرة مـفـتـوحـة بـالـفـعـل! يـرجـى إغـلاقـهـا أولاً.").setEphemeral(true).queue();
             return;
         }
 
@@ -202,7 +202,6 @@ public class TicketListener extends ListenerAdapter {
             .setParent(guild.getCategoryById(TICKET_CATEGORY_ID))
             .addPermissionOverride(guild.getPublicRole(), null, EnumSet.of(Permission.VIEW_CHANNEL))
             .addPermissionOverride(member, EnumSet.of(Permission.VIEW_CHANNEL, Permission.MESSAGE_SEND), null)
-            // Note: Admin roles are automatically granted access by Discord if they have Admin permission
             .queue(channel -> {
                 // Save to DB
                 TicketEntity ticket = new TicketEntity();
@@ -213,34 +212,41 @@ public class TicketListener extends ListenerAdapter {
                 ticketRepository.save(ticket);
 
                 // Build detailed body based on category
-                StringBuilder ticketBody = new StringBuilder("مـرحـبـاً بـك " + member.getAsMention() + ".\n\n");
-                ticketBody.append("**بـيـانـات الـتـذكـرة:**\n```\n");
-                
+                StringBuilder ticketBody = new StringBuilder("Welcome " + member.getAsMention() + " 👋\n\n");
+                String pingRole = "@DC Department"; 
+                String subject = "";
+                String details = "";
+                String sector = "";
+
                 if (finalCategoryId.equals("support")) {
-                    ticketBody.append("نـوع الـدعم: ").append(event.getValue("support_type").getAsString()).append("\n");
-                    ticketBody.append("شـرح الـمـشـكـلـة: ").append(event.getValue("issue").getAsString()).append("\n");
+                    sector = "SUPPORT CENTER";
+                    subject = "Support Request • " + event.getValue("support_type").getAsString();
+                    details = "Issue: " + event.getValue("issue").getAsString() + "\nService: Minecraft/Discord";
                 } else if (finalCategoryId.equals("complaint")) {
-                    ticketBody.append("الـمـسـتـهـدف: ").append(event.getValue("target_user").getAsString()).append("\n");
-                    ticketBody.append("الـمـكـان: ").append(event.getValue("location").getAsString()).append("\n");
+                    sector = "COMPLAINT CENTER";
+                    subject = "Complaint Request • " + event.getValue("location").getAsString();
+                    details = "Target: " + event.getValue("target_user").getAsString();
                 } else if (finalCategoryId.equals("hire")) {
-                    ticketBody.append("الاسـم: ").append(event.getValue("name").getAsString()).append("\n");
-                    ticketBody.append("الـعـمـر: ").append(event.getValue("age").getAsString()).append("\n");
-                    ticketBody.append("الـمـهـارات: ").append(event.getValue("skills").getAsString()).append("\n");
-                    ticketBody.append("الأقـسـام: ").append(event.getValue("depts").getAsString()).append("\n");
+                    sector = "HIRE CENTER";
+                    subject = "Staff Application • " + event.getValue("depts").getAsString();
+                    details = "Name: " + event.getValue("name").getAsString() + "\nAge: " + event.getValue("age").getAsString();
                 }
-                ticketBody.append("```\n\nفـريـقـنـا سـيـقـوم بـالـرد عـلـيـك قـريـبـاً.");
+
+                ticketBody.append("**Subject:** ").append(subject).append("\n");
+                ticketBody.append("**Details:** ").append(details).append("\n\n");
+                ticketBody.append("A staff member will be with you shortly — please describe your issue in full detail.");
                 
                 Container welcomeContainer = EmbedUtil.containerBranded(
-                    "تـذكـرة جـديـدة", 
-                    "تـذكـرة " + finalCategoryName, 
+                    sector, 
+                    "Case #" + finalCategoryName.toUpperCase() + "-" + formattedNum, 
                     ticketBody.toString(), 
                     EmbedUtil.BANNER_SUPPORT,
                     ActionRow.of(
                         net.dv8tion.jda.api.components.selections.StringSelectMenu.create("ticket_manage_menu")
-                            .setPlaceholder("إدارة الـتـذكـرة")
+                            .setPlaceholder("إدارة الـتـذكـرة...")
+                            .addOption("تـغـيـيـر اسـم الـتـذكـرة", "ticket_manage_rename")
                             .addOption("إضـافـة عـضـو", "ticket_manage_add")
                             .addOption("إزالـة عـضـو", "ticket_manage_remove")
-                            .addOption("تـغـيـيـر اسـم الـتـذكـرة", "ticket_manage_rename")
                             .build()
                     ),
                     ActionRow.of(
@@ -250,16 +256,13 @@ public class TicketListener extends ListenerAdapter {
                 );
 
                 MessageCreateBuilder msgBuilder = new MessageCreateBuilder();
+                msgBuilder.setContent(pingRole + " " + member.getAsMention());
                 msgBuilder.setComponents(welcomeContainer);
                 msgBuilder.useComponentsV2(true);
-
-                // Mention user to ping them in the new channel, then delete the ping msg
-                channel.sendMessage(member.getAsMention() + " 👑").queue(msg -> msg.delete().queueAfter(2, java.util.concurrent.TimeUnit.SECONDS));
                 
-                // Send the main premium message
                 channel.sendMessage(msgBuilder.build()).useComponentsV2(true).queue();
 
-                Container success = EmbedUtil.success("TICKETS", "تم إنشاء تذكرتك بنجاح: " + channel.getAsMention());
+                Container success = EmbedUtil.success("الإمـدادات", "تـم إنـشـاء تـذكـرتـك بـنـجـاح: " + channel.getAsMention());
                 MessageCreateBuilder successBuilder = new MessageCreateBuilder();
                 successBuilder.setComponents(success);
                 successBuilder.useComponentsV2(true);
@@ -295,7 +298,7 @@ public class TicketListener extends ListenerAdapter {
             }
         }
 
-        event.reply("🔒 تم إغلاق التذكرة. سيتم حذف الروم نهائياً خلال دقيقة...").queue(success -> {
+        event.reply("🔒 تـم إغـلاق الـتـذكـرة. سـيـتـم حـذف الـروم نـهـائـيـاً خـلال دقـيـقـة...").queue(success -> {
             channel.delete().queueAfter(60, java.util.concurrent.TimeUnit.SECONDS);
         });
     }
@@ -318,21 +321,21 @@ public class TicketListener extends ListenerAdapter {
             String ticketBody = "**تم استلام التذكرة بواسطة:** " + event.getMember().getAsMention();
             
             Container claimedContainer = EmbedUtil.containerBranded(
-                "تم الاستلام", 
-                "نظام التذاكر", 
+                "نـظام الـتـذاكـر", 
+                "تـم الاسـتـلام", 
                 ticketBody, 
                 EmbedUtil.BANNER_SUPPORT,
                 ActionRow.of(
                     net.dv8tion.jda.api.components.selections.StringSelectMenu.create("ticket_manage_menu")
-                        .setPlaceholder("إدارة التذكرة")
-                        .addOption("إضافة عضو", "ticket_manage_add")
-                        .addOption("إزالة عضو", "ticket_manage_remove")
-                        .addOption("تغيير اسم التذكرة", "ticket_manage_rename")
+                        .setPlaceholder("إدارة الـتـذكـرة...")
+                        .addOption("تـغـيـيـر اسـم الـتـذكـرة", "ticket_manage_rename")
+                        .addOption("إضـافـة عـضـو", "ticket_manage_add")
+                        .addOption("إزالـة عـضـو", "ticket_manage_remove")
                         .build()
                 ),
                 ActionRow.of(
-                    Button.secondary("ticket_unclaim", "إلغاء الاستلام"),
-                    Button.secondary("ticket_close", "إغلاق التذكرة")
+                    Button.secondary("ticket_unclaim", "إلـغـاء الاسـتـلام"),
+                    Button.secondary("ticket_close", "إغـلاق الـتـذكـرة")
                 )
             );
 
@@ -342,7 +345,19 @@ public class TicketListener extends ListenerAdapter {
                 .useComponentsV2(true)
                 .build()).queue();
             
-            event.getHook().sendMessage("✅ تم استلام التذكرة.").setEphemeral(true).queue();
+            // Send the specific claim notice from the screenshot
+            Container notice = EmbedUtil.containerBranded(
+                "NOTICE", 
+                "Claimed", 
+                "📡 Ticket Handled By: " + event.getMember().getAsMention(), 
+                null
+            );
+            
+            MessageCreateBuilder noticeBuilder = new MessageCreateBuilder();
+            noticeBuilder.setComponents(notice);
+            noticeBuilder.useComponentsV2(true);
+            
+            channel.sendMessage(noticeBuilder.build()).useComponentsV2(true).queue();
         }
     }
 
@@ -353,7 +368,7 @@ public class TicketListener extends ListenerAdapter {
         if (ticketOpt.isPresent()) {
             TicketEntity ticket = ticketOpt.get();
             if (!event.getUser().getId().equals(ticket.getStaffId()) && !event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
-                event.reply("❌ لا يمكنك إلغاء استلام تذكرة مستلمة من قبل شخص آخر.").setEphemeral(true).queue();
+                event.reply("❌ لا يـمـكـنـك إلـغـاء اسـتـلام تـذكـرة مـسـتـلـمـة مـن قـبـل شـخـص آخـر.").setEphemeral(true).queue();
                 return;
             }
             
@@ -364,21 +379,21 @@ public class TicketListener extends ListenerAdapter {
             String ticketBody = "مرحباً بك <@" + ticket.getUserId() + ">.\n\nتذكرتك متاحة الآن للاستلام من قبل فريق الدعم.";
             
             Container restoredContainer = EmbedUtil.containerBranded(
-                "تذكرة جديدة", 
-                "نظام التذاكر", 
+                "نـظام الـتـذاكـر", 
+                "بـانـتـظـار الـرد", 
                 ticketBody, 
                 EmbedUtil.BANNER_SUPPORT,
                 ActionRow.of(
                     net.dv8tion.jda.api.components.selections.StringSelectMenu.create("ticket_manage_menu")
-                        .setPlaceholder("إدارة التذكرة")
-                        .addOption("إضافة عضو", "ticket_manage_add")
-                        .addOption("إزالة عضو", "ticket_manage_remove")
-                        .addOption("تغيير اسم التذكرة", "ticket_manage_rename")
+                        .setPlaceholder("إدارة الـتـذكـرة...")
+                        .addOption("تـغـيـيـر اسـم الـتـذكـرة", "ticket_manage_rename")
+                        .addOption("إضـافـة عـضـو", "ticket_manage_add")
+                        .addOption("إزالـة عـضـو", "ticket_manage_remove")
                         .build()
                 ),
                 ActionRow.of(
-                    Button.secondary("ticket_claim", "استلام التذكرة"),
-                    Button.secondary("ticket_close", "إغلاق التذكرة")
+                    Button.secondary("ticket_claim", "اسـتـلام الـتـذكـرة"),
+                    Button.secondary("ticket_close", "إغـلاق الـتـذكـرة")
                 )
             );
 
