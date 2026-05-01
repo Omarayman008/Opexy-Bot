@@ -26,6 +26,14 @@ public class OpexyApplication {
             .load();
         
         dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
+
+        // Railway DATABASE_URL support
+        String databaseUrl = System.getenv("DATABASE_URL");
+        if (databaseUrl != null && databaseUrl.startsWith("postgresql://")) {
+            log.info("Detected Railway DATABASE_URL, converting to JDBC format...");
+            String jdbcUrl = databaseUrl.replace("postgresql://", "jdbc:postgresql://");
+            System.setProperty("spring.datasource.url", jdbcUrl);
+        }
         
         SpringApplication.run(OpexyApplication.class, args);
     }
