@@ -91,6 +91,20 @@ public class TicketListener extends ListenerAdapter {
             handleClaim(event);
         } else if (buttonId.equals("ticket_unclaim")) {
             handleUnclaim(event);
+        } else if (buttonId.equals("ticket_close_final")) {
+            handleFinalClose(event);
+        } else if (buttonId.equals("ticket_close_cancel")) {
+            event.reply("✅ تـم الـتـراجـع عـن الإغـلاق.").setEphemeral(true).queue();
+        } else if (buttonId.equals("ticket_reopen")) {
+            handleReopen(event);
+        } else if (buttonId.equals("ticket_transcript")) {
+            handleTranscript(event);
+        } else if (buttonId.equals("ticket_delete_init")) {
+            handleDeleteRequest(event);
+        } else if (buttonId.equals("ticket_delete_final")) {
+            event.getChannel().delete().queue();
+        } else if (buttonId.equals("ticket_delete_cancel")) {
+            event.reply("✅ تـم الـتـراجـع عـن الـحـذف.").setEphemeral(true).queue();
         }
     }
 
@@ -278,34 +292,65 @@ public class TicketListener extends ListenerAdapter {
     }
 
     private void handleTicketClose(ButtonInteractionEvent event) {
-        boolean isAdmin = event.getMember().hasPermission(Permission.MANAGE_CHANNEL);
+        Container confirm = EmbedUtil.containerBranded(
+            "تـأكـيـد الإغـلاق", 
+            "هـل أنـت مـتـأكـد؟", 
+            "### هـل أنـت مـتـأكـد مـن رغـبـتـك فـي إغـلاق هـذه الـتـذكـرة؟", 
+            EmbedUtil.BANNER_SUPPORT,
+            ActionRow.of(
+                Button.secondary("ticket_close_final", "تـأكـيـد الإغـلاق"),
+                Button.secondary("ticket_close_cancel", "تـراجـع")
+            )
+        );
+        event.reply(new MessageCreateBuilder().setComponents(confirm).useComponentsV2(true).build())
+            .setEphemeral(true).useComponentsV2(true).queue();
+    }
+
+    private void handleFinalClose(ButtonInteractionEvent event) {
         TextChannel channel = event.getChannel().asTextChannel();
-        Optional<TicketEntity> ticketOpt = ticketRepository.findByChannelId(channel.getId());
+        Member member = event.getMember();
         
-        if (ticketOpt.isPresent()) {
-            TicketEntity ticket = ticketOpt.get();
-            if (!isAdmin && !ticket.getUserId().equals(event.getUser().getId())) {
-                event.reply("❌ لا تملك صلاحية لإغلاق هذه التذكرة.").setEphemeral(true).queue();
-                return;
-            }
-            ticket.setStatus("CLOSED");
-            ticketRepository.save(ticket);
-
-            // Rename channel with -C suffix
-            String currentName = channel.getName();
-            if (!currentName.endsWith("-c")) {
-                channel.getManager().setName(currentName + "-c").queue();
-            }
+        Optional<TicketEntity> ticketOpt = ticketRepository.findByChannelId(channel.getId());
+        if (ticketOpt.isEmpty()) return;
+        TicketEntity ticket = ticketOpt.get();
+        
+        // 1. Remove client write access
+        Member client = event.getGuild().getMemberById(ticket.getUserId());
+        if (client != null) {
+            channel.getManager().putMemberPermissionOverride(client.getIdLong(), 
+                EnumSet.of(Permission.VIEW_CHANNEL), 
+                EnumSet.of(Permission.MESSAGE_SEND)).queue();
         }
-
-        event.reply("🔒 تـم إغـلاق الـتـذكـرة. سـيـتـم حـذف الـروم نـهـائـيـاً خـلال دقـيـقـة...").queue(success -> {
-            channel.delete().queueAfter(60, java.util.concurrent.TimeUnit.SECONDS);
-        });
+        
+        // 2. Update DB
+        ticket.setStatus("CLOSED");
+        ticketRepository.save(ticket);
+        
+        // 3. Rename channel
+        if (!channel.getName().endsWith("-c")) {
+            channel.getManager().setName(channel.getName() + "-c").queue();
+        }
+        
+        // 4. Send Archive Panel
+        Container panel = EmbedUtil.containerBranded(
+            "ARCHIVES", 
+            "لـوحـة الـتـحـكـم", 
+            "### تـم إغـلاق الـتـذكـرة\nبـواسـطـة الـعـضـو **" + member.getEffectiveName() + "**.\n\nاخـتـر إجـراء مـن الأسـفـل.", 
+            EmbedUtil.BANNER_SUPPORT,
+            ActionRow.of(
+                Button.secondary("ticket_reopen", "إعـادة فـتـح"),
+                Button.secondary("ticket_transcript", "سـجـل الـتـحـادث"),
+                Button.secondary("ticket_delete_init", "حـذف الـتـذكـرة")
+            )
+        );
+        
+        channel.sendMessage(new MessageCreateBuilder().setComponents(panel).useComponentsV2(true).build()).useComponentsV2(true).queue();
+        event.reply("✅ تـم إغـلاق الـتـذكـرة بـنـجـاح.").setEphemeral(true).queue();
     }
 
     private void handleClaim(ButtonInteractionEvent event) {
         if (!event.getMember().hasPermission(Permission.MANAGE_CHANNEL)) {
-            event.reply("❌ لا تملك صلاحية لاستلام التذاكر.").setEphemeral(true).queue();
+            event.reply("❌ لا تـمـلـك صـلاحـيـة لاسـتـلام الـتـذاكـر.").setEphemeral(true).queue();
             return;
         }
 
@@ -317,8 +362,13 @@ public class TicketListener extends ListenerAdapter {
             ticket.setStaffId(event.getUser().getId());
             ticketRepository.save(ticket);
 
-            // Update original message with Unclaim button and keep menu
-            String ticketBody = "**تم استلام التذكرة بواسطة:** " + event.getMember().getAsMention();
+            // 1. Rename channel to category-staffname
+            String category = channel.getName().split("-")[0];
+            String staffName = event.getMember().getEffectiveName().toLowerCase().replace(" ", "");
+            channel.getManager().setName(category + "-" + staffName).queue();
+
+            // 2. Update original message buttons
+            String ticketBody = "**تـم اسـتـلام الـتـذكـرة بـواسـطـة:** " + event.getMember().getAsMention();
             
             Container claimedContainer = EmbedUtil.containerBranded(
                 "نـظام الـتـذاكـر", 
@@ -339,13 +389,12 @@ public class TicketListener extends ListenerAdapter {
                 )
             );
 
-            // Edit the message that was interacted with
             event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
                 .setComponents(claimedContainer)
                 .useComponentsV2(true)
                 .build()).queue();
             
-            // Send the specific claim notice from the screenshot
+            // 3. Send the specific claim notice
             Container notice = EmbedUtil.containerBranded(
                 "NOTICE", 
                 "Claimed", 
@@ -353,11 +402,7 @@ public class TicketListener extends ListenerAdapter {
                 null
             );
             
-            MessageCreateBuilder noticeBuilder = new MessageCreateBuilder();
-            noticeBuilder.setComponents(notice);
-            noticeBuilder.useComponentsV2(true);
-            
-            channel.sendMessage(noticeBuilder.build()).useComponentsV2(true).queue();
+            channel.sendMessage(new MessageCreateBuilder().setComponents(notice).useComponentsV2(true).build()).useComponentsV2(true).queue();
         }
     }
 
@@ -403,5 +448,67 @@ public class TicketListener extends ListenerAdapter {
                 .build()).queue();
             event.getHook().sendMessage("🔓 تم إلغاء استلام التذكرة.").setEphemeral(true).queue();
         }
+    }
+    private void handleReopen(ButtonInteractionEvent event) {
+        TextChannel channel = event.getChannel().asTextChannel();
+        Optional<TicketEntity> ticketOpt = ticketRepository.findByChannelId(channel.getId());
+        if (ticketOpt.isEmpty()) return;
+        TicketEntity ticket = ticketOpt.get();
+
+        // 1. Restore client access
+        Member client = event.getGuild().getMemberById(ticket.getUserId());
+        if (client != null) {
+            channel.getManager().putMemberPermissionOverride(client.getIdLong(), 
+                EnumSet.of(Permission.VIEW_CHANNEL, Permission.MESSAGE_SEND), null).queue();
+        }
+
+        // 2. Update DB
+        ticket.setStatus("OPEN");
+        ticketRepository.save(ticket);
+
+        // 3. Rename back (remove -c)
+        String currentName = channel.getName();
+        if (currentName.endsWith("-c")) {
+            channel.getManager().setName(currentName.substring(0, currentName.length() - 2)).queue();
+        }
+
+        event.reply("✅ تـم إعـادة فـتـح الـتـذكـرة وإعـادة الـصـلاحـيـات.").queue();
+    }
+
+    private void handleTranscript(ButtonInteractionEvent event) {
+        TextChannel channel = event.getChannel().asTextChannel();
+        event.deferReply(true).queue();
+        
+        channel.getIterableHistory().takeAsync(100).thenAccept(messages -> {
+            byte[] transcript = com.integrafty.opexy.utils.TranscriptService.generateSimpleTranscript(channel, messages);
+            
+            // Send to user ephemerally
+            event.getHook().sendMessage("📄 سـجـل الـتـحـادث لـلـتـذكـرة: " + channel.getName())
+                .addFiles(net.dv8tion.jda.api.utils.FileUpload.fromData(transcript, "transcript-" + channel.getName() + ".txt"))
+                .queue();
+                
+            // Send to logs
+            TextChannel logCh = event.getGuild().getTextChannelById("1486872077263835157");
+            if (logCh != null) {
+                logCh.sendMessage("📄 **TRANSCRIPT** | #" + channel.getName() + " | Closed by " + event.getUser().getAsMention())
+                    .addFiles(net.dv8tion.jda.api.utils.FileUpload.fromData(transcript, "transcript-" + channel.getName() + ".txt"))
+                    .queue();
+            }
+        });
+    }
+
+    private void handleDeleteRequest(ButtonInteractionEvent event) {
+        Container confirm = EmbedUtil.containerBranded(
+            "تـحـذيـر", 
+            "حـذف الـقـنـاة", 
+            "### هـل أنـت مـتـأكـد مـن حـذف الـتـذكـرة نـهـائـيـاً؟\nهـذا الإجـراء لا يـمـكـن الـتـراجـع عـنـه.", 
+            EmbedUtil.BANNER_SUPPORT,
+            ActionRow.of(
+                Button.secondary("ticket_delete_final", "تـأكـيـد الـحـذف"),
+                Button.secondary("ticket_delete_cancel", "تـراجـع")
+            )
+        );
+        event.reply(new MessageCreateBuilder().setComponents(confirm).useComponentsV2(true).build())
+            .setEphemeral(true).useComponentsV2(true).queue();
     }
 }
