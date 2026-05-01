@@ -1,0 +1,17 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+/static/
+/templates/
+*.class
+*.log
+*.ctxt
+*.jar
+*.war
+*.zip
+*.tar.gz
+*.rar
+.idea/
+*.iml
+.vscode/
+.DS_Store
+.env

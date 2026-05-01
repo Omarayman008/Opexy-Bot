@@ -1,0 +1,49 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/opexy_db
+    username: postgres
+    password: password # TODO: Change in production
+  jpa:
+    hibernate:
+      ddl-auto: update # Automatically updates the schema based on our Java Entities
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+# Discord Bot Configuration
+discord:
+  bot:
+    token: ${DISCORD_BOT_TOKEN}
+  guild:
+    id: ${DISCORD_GUILD_ID}
+    
+# Roles & Channels IDs (To be populated later from /setup or DB, but fallbacks are here)
+opexy:
+  roles:
+    owner-id: "1190305586710073427"
+    owner-id-2: "1350531070222794804"
+    op-staff: "1337490826326048922"
+    secret-team: "1489671552730402909"
+    opex-founder: "1487152572207861870"
+    opex-manager: "1487152882074521771"
+    opex-developer: "1487152873048641677"
+    opex-investors: "1487152641028128979"
+    department-manager: "1487152897773797637"
+    dc-leader: "1487152904824422521"
+    moderator: "1487152907848646787"
+    helper: "1487152911472394401"
+    guardian: "1487152913422749980"
+    dc-department: "1487152917763981574"
+    mc-leader: "1487152923824885860"
+    reference: "1487152926827876462"
+    ancient: "1487195243391614997"
+    supreme: "1487195244230475958"
+    vanguard: "1487195245509742682"
+    mc-department: "1487195246608646275"
+    hype-manager: "1487195247430602852"
+    hype-events: "1487195248059879555"
+    hype-media: "1487230361543901224"
+    hype-department: "1487230245487644712"
+    staff: "1487195816220430406"
+    trial-staff: "1487195249817423902"
