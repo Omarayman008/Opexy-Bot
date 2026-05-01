@@ -10,9 +10,14 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.text.TextInput;
+import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
+import net.dv8tion.jda.api.interactions.modals.Modal;
+import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.JDA;
 import org.springframework.stereotype.Component;
 
@@ -40,14 +45,47 @@ public class TicketListener extends ListenerAdapter {
         String buttonId = event.getComponentId();
 
         if (buttonId.startsWith("ticket_") && !buttonId.equals("ticket_close")) {
-            handleTicketCreation(event, buttonId);
+            handleTicketModal(event, buttonId);
         } else if (buttonId.equals("ticket_close")) {
             handleTicketClose(event);
         }
     }
 
-    private void handleTicketCreation(ButtonInteractionEvent event, String buttonId) {
+    private void handleTicketModal(ButtonInteractionEvent event, String buttonId) {
+        String categoryId = buttonId.replace("ticket_", "");
+        String title = switch (categoryId) {
+            case "support" -> "الدعم الفني";
+            case "whitelist" -> "تقديم وايت ليست";
+            case "hiring" -> "طلب توظيف";
+            case "complaint" -> "شكوى";
+            default -> "تذكرة جديدة";
+        };
+
+        TextInput issueInput = TextInput.create("issue_desc", "وصف الموضوع / المشكلة", TextInputStyle.PARAGRAPH)
+            .setPlaceholder("الرجاء كتابة تفاصيل موضوعك هنا ليتمكن فريقنا من مساعدتك...")
+            .setMinLength(10)
+            .setMaxLength(1000)
+            .setRequired(true)
+            .build();
+
+        Modal modal = Modal.create("modal_" + buttonId, title)
+            .addComponents(ActionRow.of(issueInput))
+            .build();
+
+        event.replyModal(modal).queue();
+    }
+
+    @Override
+    public void onModalInteraction(ModalInteractionEvent event) {
+        if (event.getModalId().startsWith("modal_ticket_")) {
+            handleTicketCreationFromModal(event);
+        }
+    }
+
+    private void handleTicketCreationFromModal(ModalInteractionEvent event) {
+        String buttonId = event.getModalId().replace("modal_", "");
         String userId = event.getUser().getId();
+        String issueDescription = event.getValue("issue_desc").getAsString();
         
         // Prevent creating multiple tickets
         if (ticketRepository.existsByUserIdAndStatus(userId, "OPEN")) {
@@ -98,11 +136,11 @@ public class TicketListener extends ListenerAdapter {
                 ticket.setCategory(categoryId);
                 ticketRepository.save(ticket);
 
-                // V2 Premium Embed Styling
+                // V2 Premium Embed Styling with Modal Input
                 EmbedBuilder embed = new EmbedBuilder()
                     .setAuthor(member.getUser().getAsTag(), null, member.getUser().getAvatarUrl())
                     .setTitle("🎫 تذكرة " + finalCategoryName.replace("-", " "))
-                    .setDescription("مرحباً بك " + member.getAsMention() + ".\nيرجى طرح موضوعك أو مشكلتك بالتفصيل ليتمكن الفريق المختص من مساعدتك بشكل أسرع.")
+                    .setDescription("مرحباً بك " + member.getAsMention() + ".\n\n**تفاصيل الطلب:**\n```\n" + issueDescription + "\n```\n\nفريقنا سيقوم بالرد عليك قريباً.")
                     .setColor(finalEmbedColor)
                     .setFooter("HighCore Tickets System", event.getJDA().getSelfUser().getAvatarUrl())
                     .setTimestamp(Instant.now());
