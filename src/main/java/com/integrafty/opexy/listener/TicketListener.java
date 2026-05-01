@@ -1,6 +1,7 @@
 package com.integrafty.opexy.listener;
 
 import com.integrafty.opexy.entity.TicketEntity;
+import com.integrafty.opexy.entity.TicketMessageEntity;
 import com.integrafty.opexy.repository.TicketRepository;
 import com.integrafty.opexy.service.WhitelistSyncService;
 import lombok.RequiredArgsConstructor;
