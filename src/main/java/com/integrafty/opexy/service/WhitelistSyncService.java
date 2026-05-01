@@ -14,7 +14,7 @@ import java.time.Instant;
 @Slf4j
 public class WhitelistSyncService {
 
-    @Value("${supabase.url:jdbc:postgresql://db.ungifmcwoxnpeduzxxbr.supabase.co:5432/postgres}")
+    @Value("${supabase.url:jdbc:postgresql://db.ungifmcwoxnpeduzxxbr.supabase.co:5432/postgres?sslmode=require}")
     private String dbUrl;
 
     @Value("${supabase.user:postgres}")
