@@ -29,8 +29,8 @@ public class WhitelistSyncService {
             return;
         }
 
-        String sql = "INSERT INTO whitelist (discord, mc, version, type, team, tag, created_at, modified_at) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO whitelist (discord, mc, version, type, team, tag, admin, created_at, modified_at) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -41,8 +41,9 @@ public class WhitelistSyncService {
             pstmt.setString(4, type);
             pstmt.setString(5, "EMPTY");
             pstmt.setString(6, "مقبول");
-            pstmt.setTimestamp(7, Timestamp.from(Instant.now()));
+            pstmt.setNull(7, java.sql.Types.VARCHAR); // admin column
             pstmt.setTimestamp(8, Timestamp.from(Instant.now()));
+            pstmt.setTimestamp(9, Timestamp.from(Instant.now()));
 
             pstmt.executeUpdate();
             log.info("Successfully synced whitelist entry to Supabase for user: {}", mc);
