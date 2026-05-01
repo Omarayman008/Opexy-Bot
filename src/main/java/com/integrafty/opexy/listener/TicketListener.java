@@ -353,58 +353,57 @@ public class TicketListener extends ListenerAdapter {
     }
 
     private void handleFinalClose(ButtonInteractionEvent event) {
-        try {
-            event.deferEdit().queue(); // Acknowledge immediately to prevent timeout
-            
-            TextChannel channel = event.getChannel().asTextChannel();
-            Member member = event.getMember();
-            
-            ticketRepository.findByChannelId(channel.getId()).ifPresentOrElse(ticket -> {
-                // 1. Update DB Status
-                ticket.setStatus("CLOSED");
-                ticketRepository.save(ticket);
+        // Use deferReply to give us more time and show we are processing
+        event.deferReply(true).queue(hook -> {
+            try {
+                TextChannel channel = event.getChannel().asTextChannel();
+                Member member = event.getMember();
                 
-                // 2. Remove client write access
-                Member client = event.getGuild().getMemberById(ticket.getUserId());
-                if (client != null) {
-                    channel.getManager().putMemberPermissionOverride(client.getIdLong(), 
-                        EnumSet.of(Permission.VIEW_CHANNEL), 
-                        EnumSet.of(Permission.MESSAGE_SEND)).queue(null, err -> log.warn("Could not update client perms: {}", err.getMessage()));
-                }
-                
-                // 3. Rename channel
-                if (!channel.getName().endsWith("-c")) {
-                    channel.getManager().setName(channel.getName() + "-c").queue(null, err -> log.warn("Could not rename channel: {}", err.getMessage()));
-                }
-                
-                // 4. Send Archive Panel
-                Container panel = EmbedUtil.containerBranded(
-                    "ARCHIVES", 
-                    "لـوحـة الـتـحـكـم", 
-                    "### تـم إغـلاق الـتـذكـرة\nبـواسـطـة الـعـضـو **" + member.getEffectiveName() + "**.\n\nاخـتـر إجـراء مـن الأسـفـل.", 
-                    EmbedUtil.BANNER_SUPPORT,
-                    ActionRow.of(
-                        Button.secondary("ticket_reopen", "إعـادة فـتـح"),
-                        Button.secondary("ticket_transcript", "سـجـل الـتـحـادث"),
-                        Button.secondary("ticket_delete_init", "حـذف الـتـذكـرة")
-                    )
-                );
-                
-                channel.sendMessage(new MessageCreateBuilder().setComponents(panel).useComponentsV2(true).build())
-                    .useComponentsV2(true).queue();
-                
-                event.getHook().sendMessage("✅ تـم إغـلاق الـتـذكـرة بـنـجـاح.").setEphemeral(true).queue();
-            }, () -> {
-                event.getHook().sendMessage("❌ لم يتم العثور على بيانات التذكرة في قاعدة البيانات.").setEphemeral(true).queue();
-            });
-        } catch (Exception e) {
-            log.error("Fatal error in handleFinalClose", e);
-            if (!event.isAcknowledged()) {
-                event.reply("❌ حدث خطأ داخلي أثناء إغلاق التذكرة.").setEphemeral(true).queue();
-            } else {
-                event.getHook().sendMessage("❌ حدث خطأ داخلي أثناء إغلاق التذكرة.").setEphemeral(true).queue();
+                ticketRepository.findByChannelId(channel.getId()).ifPresentOrElse(ticket -> {
+                    // 1. Update DB Status
+                    ticket.setStatus("CLOSED");
+                    ticketRepository.save(ticket);
+                    
+                    // 2. Remove client write access
+                    Member client = event.getGuild().getMemberById(ticket.getUserId());
+                    if (client != null) {
+                        channel.getManager().putMemberPermissionOverride(client.getIdLong(), 
+                            EnumSet.of(Permission.VIEW_CHANNEL), 
+                            EnumSet.of(Permission.MESSAGE_SEND)).queue(null, err -> log.warn("Permission override failed: {}", err.getMessage()));
+                    }
+                    
+                    // 3. Rename channel
+                    if (!channel.getName().endsWith("-c")) {
+                        channel.getManager().setName(channel.getName() + "-c").queue(null, err -> log.warn("Rename failed: {}", err.getMessage()));
+                    }
+                    
+                    // 4. Send Archive Panel
+                    Container panel = EmbedUtil.containerBranded(
+                        "ARCHIVES", 
+                        "لـوحـة الـتـحـكـم", 
+                        "### تـم إغـلاق الـتـذكـرة\nبـواسـطـة الـعـضـو **" + member.getEffectiveName() + "**.\n\nاخـتـر إجـراء مـن الأسـفـل.", 
+                        EmbedUtil.BANNER_SUPPORT,
+                        ActionRow.of(
+                            Button.secondary("ticket_reopen", "إعـادة فـتـح"),
+                            Button.secondary("ticket_transcript", "سـجـل الـتـحـادث"),
+                            Button.secondary("ticket_delete_init", "حـذف الـتـذكـرة")
+                        )
+                    );
+                    
+                    channel.sendMessage(new MessageCreateBuilder().setComponents(panel).useComponentsV2(true).build())
+                        .useComponentsV2(true).queue();
+                    
+                    hook.sendMessage("✅ تـم إغـلاق الـتـذكـرة بـنـجـاح.").setEphemeral(true).queue();
+                }, () -> {
+                    hook.sendMessage("❌ لم يتم العثور على بيانات التذكرة في قاعدة البيانات.").setEphemeral(true).queue();
+                });
+            } catch (Exception e) {
+                log.error("Error in handleFinalClose deferred logic", e);
+                hook.sendMessage("❌ حدث خطأ داخلي أثناء إغلاق التذكرة: " + e.getMessage()).setEphemeral(true).queue();
             }
-        }
+        }, err -> {
+            log.error("Failed to defer interaction for final close", err);
+        });
     }
 
     private void handleClaim(ButtonInteractionEvent event) {
