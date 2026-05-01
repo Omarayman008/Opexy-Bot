@@ -60,19 +60,19 @@ public class TicketListener extends ListenerAdapter {
         switch (selected) {
             case "ticket_manage_add" -> {
                 Modal modal = Modal.create("modal_ticket_add", "إضـافـة عـضـو")
-                    .addComponents(ActionRow.of(TextInput.create("user_id", "ID الـعـضـو", TextInputStyle.SHORT).setPlaceholder("اكتب الأيدي الخاص بالعضو هنا").build()))
+                    .addComponents(ActionRow.of(TextInput.create("user_id", TextInputStyle.SHORT).setLabel("ID الـعـضـو").setPlaceholder("اكتب الأيدي الخاص بالعضو هنا").build()))
                     .build();
                 event.replyModal(modal).queue();
             }
             case "ticket_manage_remove" -> {
                 Modal modal = Modal.create("modal_ticket_remove", "إزالـة عـضـو")
-                    .addComponents(ActionRow.of(TextInput.create("user_id", "ID الـعـضـو", TextInputStyle.SHORT).setPlaceholder("اكتب الأيدي الخاص بالعضو هنا").build()))
+                    .addComponents(ActionRow.of(TextInput.create("user_id", TextInputStyle.SHORT).setLabel("ID الـعـضـو").setPlaceholder("اكتب الأيدي الخاص بالعضو هنا").build()))
                     .build();
                 event.replyModal(modal).queue();
             }
             case "ticket_manage_rename" -> {
                 Modal modal = Modal.create("modal_ticket_rename", "تـغـيـيـر اسـم الـتـذكـرة")
-                    .addComponents(ActionRow.of(TextInput.create("new_name", "الاسـم الـجـديـد", TextInputStyle.SHORT).setPlaceholder("مثال: support-vip").build()))
+                    .addComponents(ActionRow.of(TextInput.create("new_name", TextInputStyle.SHORT).setLabel("الاسـم الـجـديـد").setPlaceholder("مثال: support-vip").build()))
                     .build();
                 event.replyModal(modal).queue();
             }
@@ -100,20 +100,20 @@ public class TicketListener extends ListenerAdapter {
         Modal modal = switch (categoryId) {
             case "support" -> Modal.create("modal_ticket_support", "الـدعم الـفـنـي")
                 .addComponents(
-                    ActionRow.of(TextInput.create("support_type", "نـوع الـدعم (مايـن / دـسكورد)", TextInputStyle.SHORT).setPlaceholder("اكتب النوع هنا").build()),
-                    ActionRow.of(TextInput.create("issue", "شـرح الـمـشـكـلـة", TextInputStyle.PARAGRAPH).setPlaceholder("اكتب تفاصيل المشكلة هنا").build())
+                    ActionRow.of(TextInput.create("support_type", TextInputStyle.SHORT).setLabel("نـوع الـدعم (مايـن / دـسكورد)").setPlaceholder("اكتب النوع هنا").build()),
+                    ActionRow.of(TextInput.create("issue", TextInputStyle.PARAGRAPH).setLabel("شـرح الـمـشـكـلـة").setPlaceholder("اكتب تفاصيل المشكلة هنا").build())
                 ).build();
             case "complaint" -> Modal.create("modal_ticket_complaint", "الـشـكـاوى")
                 .addComponents(
-                    ActionRow.of(TextInput.create("target_user", "ID الـشـخـص / Username", TextInputStyle.SHORT).setPlaceholder("اكتب بيانات الشخص هنا").build()),
-                    ActionRow.of(TextInput.create("location", "أيـن (مـايـنـكـرافـت / دـسـكـورد)", TextInputStyle.SHORT).setPlaceholder("اكتب المكان هنا").build())
+                    ActionRow.of(TextInput.create("target_user", TextInputStyle.SHORT).setLabel("ID الـشـخـص / Username").setPlaceholder("اكتب بيانات الشخص هنا").build()),
+                    ActionRow.of(TextInput.create("location", TextInputStyle.SHORT).setLabel("أيـن (مـايـنـكـرافـت / دـسـكـورد)").setPlaceholder("اكتب المكان هنا").build())
                 ).build();
             case "hire" -> Modal.create("modal_ticket_hire", "الـتـقـديـم عـلـى الإدارة")
                 .addComponents(
-                    ActionRow.of(TextInput.create("name", "الاسـم", TextInputStyle.SHORT).build()),
-                    ActionRow.of(TextInput.create("age", "الـعـمـر", TextInputStyle.SHORT).build()),
-                    ActionRow.of(TextInput.create("skills", "الـمـهـارات", TextInputStyle.PARAGRAPH).build()),
-                    ActionRow.of(TextInput.create("depts", "الأقـسـام (Discord, Minecraft, Hype)", TextInputStyle.SHORT).build())
+                    ActionRow.of(TextInput.create("name", TextInputStyle.SHORT).setLabel("الاسـم").build()),
+                    ActionRow.of(TextInput.create("age", TextInputStyle.SHORT).setLabel("الـعـمـر").build()),
+                    ActionRow.of(TextInput.create("skills", TextInputStyle.PARAGRAPH).setLabel("الـمـهـارات").build()),
+                    ActionRow.of(TextInput.create("depts", TextInputStyle.SHORT).setLabel("الأقـسـام (Discord, Minecraft, Hype)").build())
                 ).build();
             default -> null;
         };
