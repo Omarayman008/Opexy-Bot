@@ -13,10 +13,13 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.events.session.ReadyEvent;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class CommandManager {
+public class CommandManager extends ListenerAdapter {
 
     private final JDA jda;
     private final DiscordEventListener discordEventListener;
@@ -25,6 +28,12 @@ public class CommandManager {
     @PostConstruct
     public void init() {
         jda.addEventListener(discordEventListener);
+        jda.addEventListener(this); // Register self to listen for ReadyEvent
+    }
+
+    @Override
+    public void onReady(ReadyEvent event) {
+        log.info("JDA is ready, registering commands...");
         registerCommands();
     }
 
