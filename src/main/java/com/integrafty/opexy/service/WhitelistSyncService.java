@@ -33,7 +33,7 @@ public class WhitelistSyncService {
         String mappedType = type;
         if (type.contains("كراك") || type.contains("كرك")) {
             mappedType = "krack ~ كــراك";
-        } else if (type.contains("أصل") || type.contains("اصل")) {
+        } else if (type.contains("أصل") || type.contains("اصل") || type.contains("أصلية") || type.contains("اصلية") || type.contains("اصليه")) {
             mappedType = "original ~ أصــلــية";
         }
 
