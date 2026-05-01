@@ -93,32 +93,32 @@ public class VoiceListener extends ListenerAdapter {
                 "Use the buttons below to manage your channel permissions and visibility.";
 
         ActionRow row1 = ActionRow.of(
-            Button.secondary("voice_lock", "Lock").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("🔒")),
-            Button.secondary("voice_unlock", "Unlock").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("🔓")),
-            Button.secondary("voice_hide", "Hide").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("👻")),
-            Button.secondary("voice_unhide", "Unhide").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("👁️")),
-            Button.secondary("voice_rename", "Rename").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("✏️"))
+            Button.secondary("voice_lock", "Lock"),
+            Button.secondary("voice_unlock", "Unlock"),
+            Button.secondary("voice_hide", "Hide"),
+            Button.secondary("voice_unhide", "Unhide"),
+            Button.secondary("voice_rename", "Rename")
         );
 
         ActionRow row2 = ActionRow.of(
-            Button.secondary("voice_limit", "Limit").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("👥")),
-            Button.secondary("voice_claim", "Claim").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("👑")),
-            Button.secondary("voice_kick", "Kick").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("👞")),
-            Button.secondary("voice_permit", "Permit").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("✅")),
-            Button.secondary("voice_reject", "Reject").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("❌"))
+            Button.secondary("voice_limit", "Limit"),
+            Button.secondary("voice_claim", "Claim"),
+            Button.secondary("voice_kick", "Kick"),
+            Button.secondary("voice_permit", "Permit"),
+            Button.secondary("voice_reject", "Reject")
         );
 
         ActionRow row3 = ActionRow.of(
-            Button.secondary("voice_trust", "Trust").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("🤝")),
-            Button.secondary("voice_untrust", "Untrust").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("🚫")),
-            Button.secondary("voice_ghost", "Ghost").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("🎭")),
-            Button.secondary("voice_unghost", "Unghost").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("🕶️")),
-            Button.secondary("voice_silence", "Silence").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("🔇"))
+            Button.secondary("voice_trust", "Trust"),
+            Button.secondary("voice_untrust", "Untrust"),
+            Button.secondary("voice_ghost", "Ghost"),
+            Button.secondary("voice_unghost", "Unghost"),
+            Button.secondary("voice_silence", "Silence")
         );
 
         ActionRow row4 = ActionRow.of(
-            Button.secondary("voice_unsilence", "Unsilence").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("🔉")),
-            Button.secondary("voice_transfer", "Transfer").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("👑"))
+            Button.secondary("voice_unsilence", "Unsilence"),
+            Button.secondary("voice_transfer", "Transfer")
         );
 
         Container container = EmbedUtil.containerBranded("VOICE", "Channel Management", body, EmbedUtil.BANNER_MAIN, row1, row2, row3, row4);

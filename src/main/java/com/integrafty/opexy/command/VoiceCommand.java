@@ -42,32 +42,32 @@ public class VoiceCommand implements SlashCommand {
                 "● **Management** — Kick or Transfer ownership";
 
         ActionRow row1 = ActionRow.of(
-            Button.secondary("voice_lock", "Lock").withEmoji(Emoji.fromUnicode("🔒")),
-            Button.secondary("voice_unlock", "Unlock").withEmoji(Emoji.fromUnicode("🔓")),
-            Button.secondary("voice_hide", "Hide").withEmoji(Emoji.fromUnicode("👻")),
-            Button.secondary("voice_unhide", "Unhide").withEmoji(Emoji.fromUnicode("👁️")),
-            Button.secondary("voice_rename", "Rename").withEmoji(Emoji.fromUnicode("✏️"))
+            Button.secondary("voice_lock", "Lock"),
+            Button.secondary("voice_unlock", "Unlock"),
+            Button.secondary("voice_hide", "Hide"),
+            Button.secondary("voice_unhide", "Unhide"),
+            Button.secondary("voice_rename", "Rename")
         );
 
         ActionRow row2 = ActionRow.of(
-            Button.secondary("voice_limit", "Limit").withEmoji(Emoji.fromUnicode("👥")),
-            Button.secondary("voice_claim", "Claim").withEmoji(Emoji.fromUnicode("👑")),
-            Button.secondary("voice_kick", "Kick").withEmoji(Emoji.fromUnicode("👞")),
-            Button.secondary("voice_permit", "Permit").withEmoji(Emoji.fromUnicode("✅")),
-            Button.secondary("voice_reject", "Reject").withEmoji(Emoji.fromUnicode("❌"))
+            Button.secondary("voice_limit", "Limit"),
+            Button.secondary("voice_claim", "Claim"),
+            Button.secondary("voice_kick", "Kick"),
+            Button.secondary("voice_permit", "Permit"),
+            Button.secondary("voice_reject", "Reject")
         );
 
         ActionRow row3 = ActionRow.of(
-            Button.secondary("voice_trust", "Trust").withEmoji(Emoji.fromUnicode("🤝")),
-            Button.secondary("voice_untrust", "Untrust").withEmoji(Emoji.fromUnicode("🚫")),
-            Button.secondary("voice_ghost", "Ghost").withEmoji(Emoji.fromUnicode("🎭")),
-            Button.secondary("voice_unghost", "Unghost").withEmoji(Emoji.fromUnicode("🕶️")),
-            Button.secondary("voice_silence", "Silence").withEmoji(Emoji.fromUnicode("🔇"))
+            Button.secondary("voice_trust", "Trust"),
+            Button.secondary("voice_untrust", "Untrust"),
+            Button.secondary("voice_ghost", "Ghost"),
+            Button.secondary("voice_unghost", "Unghost"),
+            Button.secondary("voice_silence", "Silence")
         );
 
         ActionRow row4 = ActionRow.of(
-            Button.secondary("voice_unsilence", "Unsilence").withEmoji(Emoji.fromUnicode("🔉")),
-            Button.secondary("voice_transfer", "Transfer").withEmoji(Emoji.fromUnicode("👑"))
+            Button.secondary("voice_unsilence", "Unsilence"),
+            Button.secondary("voice_transfer", "Transfer")
         );
 
         Container container = EmbedUtil.containerBranded("VOICE", "System Dashboard", body, EmbedUtil.BANNER_MAIN, row1, row2, row3, row4);

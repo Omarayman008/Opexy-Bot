@@ -24,6 +24,12 @@ public class TicketEntity {
     @Column(name = "status", nullable = false)
     private String status = "OPEN"; // OPEN, CLOSED
 
+    @Column(name = "ticket_number")
+    private Integer ticketNumber;
+
+    @Column(name = "staff_id")
+    private String staffId;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 }

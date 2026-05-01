@@ -26,22 +26,42 @@ public class TicketCommand implements SlashCommand {
 
     @Override
     public SlashCommandData getCommandData() {
-        return Commands.slash("tickets", "إعداد لوحة التذاكر")
-                .addOption(OptionType.CHANNEL, "channel", "الروم المراد إرسال اللوحة فيه (اختياري)", false);
+        return Commands.slash("tickets", "إدارة نظام التذاكر")
+                .addSubcommands(
+                    new net.dv8tion.jda.api.interactions.commands.build.SubcommandData("setup", "إرسال لوحة التذاكر")
+                        .addOption(OptionType.CHANNEL, "channel", "الروم المراد إرسال اللوحة فيه (اختياري)", false),
+                    new net.dv8tion.jda.api.interactions.commands.build.SubcommandData("add", "إضافة عضو للتذكرة")
+                        .addOption(OptionType.USER, "user", "العضو المراد إضافته", true),
+                    new net.dv8tion.jda.api.interactions.commands.build.SubcommandData("remove", "إزالة عضو من التذكرة")
+                        .addOption(OptionType.USER, "user", "العضو المراد إزالته", true),
+                    new net.dv8tion.jda.api.interactions.commands.build.SubcommandData("rename", "تغيير اسم التذكرة")
+                        .addOption(OptionType.STRING, "name", "الاسم الجديد", true),
+                    new net.dv8tion.jda.api.interactions.commands.build.SubcommandData("close", "إغلاق التذكرة الحالية"),
+                    new net.dv8tion.jda.api.interactions.commands.build.SubcommandData("claim", "استلام التذكرة"),
+                    new net.dv8tion.jda.api.interactions.commands.build.SubcommandData("unclaim", "إلغاء استلام التذكرة")
+                );
     }
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
-        if (!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
-            Container denied = EmbedUtil.accessDenied();
-            MessageCreateBuilder deniedBuilder = new MessageCreateBuilder();
-            deniedBuilder.setComponents(denied);
-            deniedBuilder.useComponentsV2(true);
-            event.reply(deniedBuilder.build()).setEphemeral(true).useComponentsV2(true).queue();
+        String subcommand = event.getSubcommandName();
+        if (subcommand == null) return;
+
+        // Everyone can maybe use some commands, but setup is admin only
+        if (subcommand.equals("setup") && !event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+            event.reply("❌ لا تملك صلاحية لاستخدام هذا الأمر.").setEphemeral(true).queue();
             return;
         }
 
-        handleSetup(event);
+        switch (subcommand) {
+            case "setup" -> handleSetup(event);
+            case "add" -> handleAdd(event);
+            case "remove" -> handleRemove(event);
+            case "rename" -> handleRename(event);
+            case "close" -> handleClose(event);
+            case "claim" -> handleClaim(event);
+            case "unclaim" -> handleUnclaim(event);
+        }
     }
     
     public void handleSetup(SlashCommandInteractionEvent event) {
@@ -53,10 +73,9 @@ public class TicketCommand implements SlashCommand {
                 "يرجى اختيار القسم المناسب من الأزرار بالأسفل:";
 
         ActionRow buttons = ActionRow.of(
-            Button.secondary("ticket_support", "الدعم الفني").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("⚙️")),
-            Button.secondary("ticket_whitelist", "التقديم (White List)").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("📜")),
-            Button.secondary("ticket_hiring", "التوظيف (Hiring)").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("💼")),
-            Button.secondary("ticket_complaint", "الشكاوى").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("⚠️"))
+            Button.secondary("ticket_support", "الدعم الفني"),
+            Button.secondary("ticket_complaint", "الشكاوى"),
+            Button.secondary("ticket_admin_app", "التقديم على الإدارة")
         );
 
         Container container = EmbedUtil.containerBranded(
@@ -88,5 +107,42 @@ public class TicketCommand implements SlashCommand {
         successBuilder.useComponentsV2(true);
         
         event.reply(successBuilder.build()).setEphemeral(true).useComponentsV2(true).queue();
+    }
+
+    private void handleAdd(SlashCommandInteractionEvent event) {
+        net.dv8tion.jda.api.entities.Member target = event.getOption("user").getAsMember();
+        net.dv8tion.jda.api.entities.channel.concrete.TextChannel channel = event.getChannel().asTextChannel();
+        
+        channel.getManager().putPermissionOverride(target, java.util.EnumSet.of(Permission.VIEW_CHANNEL, Permission.MESSAGE_SEND), null).queue();
+        event.reply("✅ تم إضافة " + target.getAsMention() + " إلى التذكرة.").queue();
+    }
+
+    private void handleRemove(SlashCommandInteractionEvent event) {
+        net.dv8tion.jda.api.entities.Member target = event.getOption("user").getAsMember();
+        net.dv8tion.jda.api.entities.channel.concrete.TextChannel channel = event.getChannel().asTextChannel();
+        
+        channel.getManager().putPermissionOverride(target, null, java.util.EnumSet.of(Permission.VIEW_CHANNEL)).queue();
+        event.reply("❌ تم إزالة " + target.getAsMention() + " من التذكرة.").queue();
+    }
+
+    private void handleRename(SlashCommandInteractionEvent event) {
+        String newName = event.getOption("name").getAsString();
+        event.getChannel().asTextChannel().getManager().setName(newName).queue();
+        event.reply("✅ تم تغيير اسم التذكرة إلى: " + newName).queue();
+    }
+
+    private void handleClose(SlashCommandInteractionEvent event) {
+        // This will be handled by the listener if we want to reuse logic, 
+        // but for now let's just trigger a delete or rename
+        event.reply("🔒 سيتم إغلاق التذكرة...").queue();
+        event.getChannel().asTextChannel().getManager().setName(event.getChannel().getName() + "-c").queue();
+    }
+
+    private void handleClaim(SlashCommandInteractionEvent event) {
+        event.reply("✅ تم استلام التذكرة بواسطة: " + event.getMember().getAsMention()).queue();
+    }
+
+    private void handleUnclaim(SlashCommandInteractionEvent event) {
+        event.reply("🔓 تم إلغاء استلام التذكرة.").queue();
     }
 }

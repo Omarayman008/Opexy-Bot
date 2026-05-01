@@ -7,4 +7,7 @@ import java.util.Optional;
 public interface TicketRepository extends JpaRepository<TicketEntity, Long> {
     Optional<TicketEntity> findByChannelId(String channelId);
     boolean existsByUserIdAndStatus(String userId, String status);
+    
+    @org.springframework.data.jpa.repository.Query("SELECT MAX(t.ticketNumber) FROM TicketEntity t WHERE t.category = :category")
+    Integer findMaxTicketNumberByCategory(String category);
 }

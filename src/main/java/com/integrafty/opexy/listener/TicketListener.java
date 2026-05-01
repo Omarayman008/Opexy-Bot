@@ -51,10 +51,14 @@ public class TicketListener extends ListenerAdapter {
     public void onButtonInteraction(ButtonInteractionEvent event) {
         String buttonId = event.getComponentId();
 
-        if (buttonId.startsWith("ticket_") && !buttonId.equals("ticket_close")) {
+        if (buttonId.startsWith("ticket_") && !buttonId.equals("ticket_close") && !buttonId.equals("ticket_claim") && !buttonId.equals("ticket_unclaim")) {
             handleTicketModal(event, buttonId);
         } else if (buttonId.equals("ticket_close")) {
             handleTicketClose(event);
+        } else if (buttonId.equals("ticket_claim")) {
+            handleClaim(event);
+        } else if (buttonId.equals("ticket_unclaim")) {
+            handleUnclaim(event);
         }
     }
 
@@ -62,9 +66,8 @@ public class TicketListener extends ListenerAdapter {
         String categoryId = buttonId.replace("ticket_", "");
         String title = switch (categoryId) {
             case "support" -> "الدعم الفني";
-            case "whitelist" -> "تقديم وايت ليست";
-            case "hiring" -> "طلب توظيف";
-            case "complaint" -> "شكوى";
+            case "complaint" -> "الشكاوى";
+            case "admin_app" -> "التقديم على الإدارة";
             default -> "تذكرة جديدة";
         };
 
@@ -101,34 +104,30 @@ public class TicketListener extends ListenerAdapter {
         }
 
         String categoryName = "";
-        String categoryId = buttonId.replace("ticket_", ""); // support, whitelist, etc
-        Color embedColor = Color.WHITE;
+        String categoryId = buttonId.replace("ticket_", ""); // support, complaint, admin_app
         
         switch (categoryId) {
             case "support": 
-                categoryName = "دعم-فني"; 
-                embedColor = Color.decode("#5865F2"); 
-                break;
-            case "whitelist": 
-                categoryName = "وايت-ليست"; 
-                embedColor = Color.decode("#57F287"); 
-                break;
-            case "hiring": 
-                categoryName = "توظيف"; 
-                embedColor = Color.decode("#4F545C"); 
+                categoryName = "Support"; 
                 break;
             case "complaint": 
-                categoryName = "شكوى"; 
-                embedColor = Color.decode("#ED4245"); 
+                categoryName = "Complaint"; 
+                break;
+            case "admin_app": 
+                categoryName = "Admin"; 
                 break;
         }
 
+        Integer lastNum = ticketRepository.findMaxTicketNumberByCategory(categoryId);
+        int nextNum = (lastNum == null) ? 1 : lastNum + 1;
+        String formattedNum = String.format("%03d", nextNum);
+
         Guild guild = event.getGuild();
         Member member = event.getMember();
-        String channelName = categoryName + "-" + member.getUser().getName();
+        String channelName = categoryName + "-" + formattedNum;
 
         final String finalCategoryName = categoryName;
-        final Color finalEmbedColor = embedColor;
+        final int finalNextNum = nextNum;
 
         // Create Text Channel in specified Category
         guild.createTextChannel(channelName)
@@ -142,6 +141,7 @@ public class TicketListener extends ListenerAdapter {
                 ticket.setUserId(userId);
                 ticket.setChannelId(channel.getId());
                 ticket.setCategory(categoryId);
+                ticket.setTicketNumber(finalNextNum);
                 ticketRepository.save(ticket);
 
                 // Premium V2 Container for Ticket Welcome Message
@@ -149,10 +149,13 @@ public class TicketListener extends ListenerAdapter {
                 
                 Container welcomeContainer = EmbedUtil.containerBranded(
                     "SESSION", 
-                    "تذكرة " + finalCategoryName.replace("-", " "), 
+                    "تذكرة " + finalCategoryName, 
                     ticketBody, 
                     EmbedUtil.BANNER_SUPPORT,
-                    ActionRow.of(Button.danger("ticket_close", "🔒 إغلاق التذكرة"))
+                    ActionRow.of(
+                        Button.secondary("ticket_claim", "Claim"),
+                        Button.secondary("ticket_close", "إغلاق التذكرة")
+                    )
                 );
 
                 MessageCreateBuilder msgBuilder = new MessageCreateBuilder();
@@ -181,9 +184,7 @@ public class TicketListener extends ListenerAdapter {
     }
 
     private void handleTicketClose(ButtonInteractionEvent event) {
-        // Allow only admins or ticket creators to close
         boolean isAdmin = event.getMember().hasPermission(Permission.MANAGE_CHANNEL);
-        
         TextChannel channel = event.getChannel().asTextChannel();
         Optional<TicketEntity> ticketOpt = ticketRepository.findByChannelId(channel.getId());
         
@@ -195,13 +196,73 @@ public class TicketListener extends ListenerAdapter {
             }
             ticket.setStatus("CLOSED");
             ticketRepository.save(ticket);
-        } else if (!isAdmin) {
-             event.reply("❌ لا تملك صلاحية لإغلاق هذه التذكرة.").setEphemeral(true).queue();
-             return;
+
+            // Rename channel with -C suffix
+            String currentName = channel.getName();
+            if (!currentName.endsWith("-c")) {
+                channel.getManager().setName(currentName + "-c").queue();
+            }
         }
 
-        event.reply("🔒 سيتم إغلاق التذكرة وحذف الغرفة نهائياً خلال 5 ثواني...").queue(success -> {
-            channel.delete().queueAfter(5, java.util.concurrent.TimeUnit.SECONDS);
+        event.reply("🔒 تم إغلاق التذكرة. سيتم حذف الروم نهائياً خلال دقيقة...").queue(success -> {
+            channel.delete().queueAfter(60, java.util.concurrent.TimeUnit.SECONDS);
         });
+    }
+
+    private void handleClaim(ButtonInteractionEvent event) {
+        if (!event.getMember().hasPermission(Permission.MANAGE_CHANNEL)) {
+            event.reply("❌ لا تملك صلاحية لاستلام التذاكر.").setEphemeral(true).queue();
+            return;
+        }
+
+        TextChannel channel = event.getChannel().asTextChannel();
+        Optional<TicketEntity> ticketOpt = ticketRepository.findByChannelId(channel.getId());
+
+        if (ticketOpt.isPresent()) {
+            TicketEntity ticket = ticketOpt.get();
+            ticket.setStaffId(event.getUser().getId());
+            ticketRepository.save(ticket);
+
+            // Update original message with Unclaim button
+            String ticketBody = "**تم استلام التذكرة بواسطة:** " + event.getMember().getAsMention();
+            
+            Container claimedContainer = EmbedUtil.containerBranded(
+                "CLAIMED", 
+                "Ticket System", 
+                ticketBody, 
+                EmbedUtil.BANNER_SUPPORT,
+                ActionRow.of(
+                    Button.secondary("ticket_unclaim", "Unclaim"),
+                    Button.secondary("ticket_close", "إغلاق التذكرة")
+                )
+            );
+
+            MessageCreateBuilder msgBuilder = new MessageCreateBuilder();
+            msgBuilder.setComponents(claimedContainer);
+            msgBuilder.useComponentsV2(true);
+            
+            // Edit the welcome message (usually the first message)
+            channel.sendMessage(msgBuilder.build()).useComponentsV2(true).queue();
+            
+            event.reply("✅ تم استلام التذكرة.").setEphemeral(true).queue();
+        }
+    }
+
+    private void handleUnclaim(ButtonInteractionEvent event) {
+        TextChannel channel = event.getChannel().asTextChannel();
+        Optional<TicketEntity> ticketOpt = ticketRepository.findByChannelId(channel.getId());
+
+        if (ticketOpt.isPresent()) {
+            TicketEntity ticket = ticketOpt.get();
+            if (!event.getUser().getId().equals(ticket.getStaffId()) && !event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+                event.reply("❌ لا يمكنك إلغاء استلام تذكرة مستلمة من قبل شخص آخر.").setEphemeral(true).queue();
+                return;
+            }
+            
+            ticket.setStaffId(null);
+            ticketRepository.save(ticket);
+
+            event.reply("🔓 تم إلغاء استلام التذكرة، وهي الآن متاحة للجميع.").queue();
+        }
     }
 }
