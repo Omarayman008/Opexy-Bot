@@ -353,31 +353,47 @@ public class TicketListener extends ListenerAdapter {
     }
 
     private void handleFinalClose(ButtonInteractionEvent event) {
-        // Use deferReply to give us more time and show we are processing
+        log.info("Starting handleFinalClose for channel: {}", event.getChannel().getName());
+        
         event.deferReply(true).queue(hook -> {
+            log.info("Interaction deferred for final close");
             try {
                 TextChannel channel = event.getChannel().asTextChannel();
                 Member member = event.getMember();
-                
-                ticketRepository.findByChannelId(channel.getId()).ifPresentOrElse(ticket -> {
-                    // 1. Update DB Status
+                String channelId = channel.getId();
+
+                log.info("Searching for ticket in DB for channelId: {}", channelId);
+                ticketRepository.findByChannelId(channelId).ifPresentOrElse(ticket -> {
+                    log.info("Ticket found in DB. Updating status to CLOSED");
                     ticket.setStatus("CLOSED");
                     ticketRepository.save(ticket);
-                    
+                    log.info("Ticket status updated in DB");
+
+                    // 1. Rename channel
+                    log.info("Renaming channel...");
+                    String newName = channel.getName();
+                    if (!newName.endsWith("-c")) {
+                        newName += "-c";
+                    }
+                    channel.getManager().setName(newName).queue(
+                        v -> log.info("Channel renamed successfully"),
+                        e -> log.warn("Channel rename failed: {}", e.getMessage())
+                    );
+
                     // 2. Remove client write access
+                    log.info("Updating permissions for client: {}", ticket.getUserId());
                     Member client = event.getGuild().getMemberById(ticket.getUserId());
                     if (client != null) {
-                        channel.getManager().putMemberPermissionOverride(client.getIdLong(), 
-                            EnumSet.of(Permission.VIEW_CHANNEL), 
-                            EnumSet.of(Permission.MESSAGE_SEND)).queue(null, err -> log.warn("Permission override failed: {}", err.getMessage()));
+                        channel.getManager().putMemberPermissionOverride(client.getIdLong(),
+                            EnumSet.of(Permission.VIEW_CHANNEL),
+                            EnumSet.of(Permission.MESSAGE_SEND)).queue(
+                                v -> log.info("Client permissions updated"),
+                                e -> log.warn("Client permissions update failed: {}", e.getMessage())
+                            );
                     }
-                    
-                    // 3. Rename channel
-                    if (!channel.getName().endsWith("-c")) {
-                        channel.getManager().setName(channel.getName() + "-c").queue(null, err -> log.warn("Rename failed: {}", err.getMessage()));
-                    }
-                    
-                    // 4. Send Archive Panel
+
+                    // 3. Send Archive Panel
+                    log.info("Sending archive panel...");
                     Container panel = EmbedUtil.containerBranded(
                         "ARCHIVES", 
                         "لـوحـة الـتـحـكـم", 
@@ -391,10 +407,14 @@ public class TicketListener extends ListenerAdapter {
                     );
                     
                     channel.sendMessage(new MessageCreateBuilder().setComponents(panel).useComponentsV2(true).build())
-                        .useComponentsV2(true).queue();
+                        .useComponentsV2(true).queue(
+                            v -> log.info("Archive panel sent successfully"),
+                            e -> log.error("Failed to send archive panel", e)
+                        );
                     
                     hook.sendMessage("✅ تـم إغـلاق الـتـذكـرة بـنـجـاح.").setEphemeral(true).queue();
                 }, () -> {
+                    log.warn("No ticket found in DB for channelId: {}", channelId);
                     hook.sendMessage("❌ لم يتم العثور على بيانات التذكرة في قاعدة البيانات.").setEphemeral(true).queue();
                 });
             } catch (Exception e) {
