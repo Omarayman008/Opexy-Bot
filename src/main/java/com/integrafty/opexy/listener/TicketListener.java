@@ -12,12 +12,16 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.text.TextInput;
-import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
-import net.dv8tion.jda.api.interactions.modals.Modal;
-import net.dv8tion.jda.api.interactions.components.ItemComponent;
+import net.dv8tion.jda.api.components.buttons.Button;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.textinput.TextInput;
+import net.dv8tion.jda.api.components.textinput.TextInputStyle;
+import net.dv8tion.jda.api.modals.Modal;
+
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import com.integrafty.opexy.utils.EmbedUtil;
+import net.dv8tion.jda.api.components.container.Container;
+import net.dv8tion.jda.api.components.label.Label;
 import net.dv8tion.jda.api.JDA;
 import org.springframework.stereotype.Component;
 
@@ -61,7 +65,7 @@ public class TicketListener extends ListenerAdapter {
             default -> "تذكرة جديدة";
         };
 
-        TextInput issueInput = TextInput.create("issue_desc", "وصف الموضوع / المشكلة", TextInputStyle.PARAGRAPH)
+        TextInput issueInput = TextInput.create("issue_desc", TextInputStyle.PARAGRAPH)
             .setPlaceholder("الرجاء كتابة تفاصيل موضوعك هنا ليتمكن فريقنا من مساعدتك...")
             .setMinLength(10)
             .setMaxLength(1000)
@@ -69,7 +73,7 @@ public class TicketListener extends ListenerAdapter {
             .build();
 
         Modal modal = Modal.create("modal_" + buttonId, title)
-            .addComponents(ActionRow.of(issueInput))
+            .addComponents(Label.of("الوصف", issueInput))
             .build();
 
         event.replyModal(modal).queue();
@@ -136,28 +140,38 @@ public class TicketListener extends ListenerAdapter {
                 ticket.setCategory(categoryId);
                 ticketRepository.save(ticket);
 
-                // V2 Premium Embed Styling with Modal Input
-                EmbedBuilder embed = new EmbedBuilder()
-                    .setAuthor(member.getUser().getAsTag(), null, member.getUser().getAvatarUrl())
-                    .setTitle("🎫 تذكرة " + finalCategoryName.replace("-", " "))
-                    .setDescription("مرحباً بك " + member.getAsMention() + ".\n\n**تفاصيل الطلب:**\n```\n" + issueDescription + "\n```\n\nفريقنا سيقوم بالرد عليك قريباً.")
-                    .setColor(finalEmbedColor)
-                    .setFooter("HighCore Tickets System", event.getJDA().getSelfUser().getAvatarUrl())
-                    .setTimestamp(Instant.now());
-
-                ActionRow buttons = ActionRow.of(
-                    Button.danger("ticket_close", "🔒 إغلاق التذكرة")
+                // Premium V2 Container for Ticket Welcome Message
+                String ticketBody = "مرحباً بك " + member.getAsMention() + ".\n\n**تفاصيل الطلب:**\n```\n" + issueDescription + "\n```\n\nفريقنا سيقوم بالرد عليك قريباً.";
+                
+                Container welcomeContainer = EmbedUtil.containerBranded(
+                    "SESSION", 
+                    "تذكرة " + finalCategoryName.replace("-", " "), 
+                    ticketBody, 
+                    EmbedUtil.BANNER_SUPPORT,
+                    ActionRow.of(Button.danger("ticket_close", "🔒 إغلاق التذكرة"))
                 );
+
+                MessageCreateBuilder msgBuilder = new MessageCreateBuilder();
+                msgBuilder.setComponents(welcomeContainer);
+                msgBuilder.useComponentsV2(true);
 
                 // Mention user to ping them in the new channel, then delete the ping msg
                 channel.sendMessage(member.getAsMention() + " 👑").queue(msg -> msg.delete().queueAfter(2, java.util.concurrent.TimeUnit.SECONDS));
                 
-                // Send the main embed
-                channel.sendMessageEmbeds(embed.build()).setComponents(buttons).queue();
+                // Send the main premium message
+                channel.sendMessage(msgBuilder.build()).useComponentsV2(true).queue();
 
-                event.reply("✅ تم إنشاء تذكرتك بنجاح: " + channel.getAsMention()).setEphemeral(true).queue();
+                Container success = EmbedUtil.success("TICKETS", "تم إنشاء تذكرتك بنجاح: " + channel.getAsMention());
+                MessageCreateBuilder successBuilder = new MessageCreateBuilder();
+                successBuilder.setComponents(success);
+                successBuilder.useComponentsV2(true);
+                event.reply(successBuilder.build()).setEphemeral(true).useComponentsV2(true).queue();
             }, error -> {
-                event.reply("❌ حدث خطأ أثناء إنشاء الغرفة، يرجى التأكد من صلاحيات البوت.").setEphemeral(true).queue();
+                Container errorCont = EmbedUtil.error("ERROR", "حدث خطأ أثناء إنشاء الغرفة، يرجى التأكد من صلاحيات البوت.");
+                MessageCreateBuilder errorBuilder = new MessageCreateBuilder();
+                errorBuilder.setComponents(errorCont);
+                errorBuilder.useComponentsV2(true);
+                event.reply(errorBuilder.build()).setEphemeral(true).useComponentsV2(true).queue();
                 log.error("Error creating ticket channel", error);
             });
     }

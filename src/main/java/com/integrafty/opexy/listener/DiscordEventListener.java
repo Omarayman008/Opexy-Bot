@@ -11,6 +11,9 @@ import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import com.integrafty.opexy.utils.EmbedUtil;
+import net.dv8tion.jda.api.components.container.Container;
 import org.springframework.stereotype.Component;
 
 import java.awt.Color;
@@ -36,15 +39,14 @@ public class DiscordEventListener extends ListenerAdapter {
         if (configOpt.isPresent() && configOpt.get().getWelcomeChannelId() != null) {
             TextChannel welcomeChannel = guild.getTextChannelById(configOpt.get().getWelcomeChannelId());
             if (welcomeChannel != null) {
-                EmbedBuilder embed = new EmbedBuilder()
-                        .setColor(Color.decode("#5865F2"))
-                        .setTitle("👋 مرحباً بك في " + guild.getName())
-                        .setDescription("أهلاً بك " + event.getMember().getAsMention() + "!\nأنت العضو رقم **" + guild.getMemberCount() + "**")
-                        .setThumbnail(event.getUser().getEffectiveAvatarUrl())
-                        .setImage("https://i.imgur.com/placeholder_welcome.png") // Placeholder image
-                        .setFooter("HighCore System");
+                String body = "أهلاً بك " + event.getMember().getAsMention() + "!\nأنت العضو رقم **" + guild.getMemberCount() + "**";
+                Container welcome = EmbedUtil.containerBranded("WELCOME", "مرحباً بك في " + guild.getName(), body, EmbedUtil.BANNER_WELCOME);
                 
-                welcomeChannel.sendMessageEmbeds(embed.build()).queue();
+                MessageCreateBuilder builder = new MessageCreateBuilder();
+                builder.setComponents(welcome);
+                builder.useComponentsV2(true);
+
+                welcomeChannel.sendMessage(builder.build()).useComponentsV2(true).queue();
             }
         }
         
@@ -59,14 +61,14 @@ public class DiscordEventListener extends ListenerAdapter {
         if (configOpt.isPresent() && configOpt.get().getLogChannelId() != null) {
             TextChannel logChannel = guild.getTextChannelById(configOpt.get().getLogChannelId());
             if (logChannel != null) {
-                EmbedBuilder embed = new EmbedBuilder()
-                        .setColor(Color.RED)
-                        .setTitle("عضو غادر السيرفر")
-                        .setDescription("العضو: " + event.getUser().getAsMention() + " (" + event.getUser().getName() + ")")
-                        .setThumbnail(event.getUser().getEffectiveAvatarUrl())
-                        .setFooter("HighCore Logs");
+                String body = "العضو: " + event.getUser().getAsMention() + " (" + event.getUser().getName() + ")";
+                Container leave = EmbedUtil.containerBranded("LOGS", "عضو غادر السيرفر", body, EmbedUtil.BANNER_MAIN);
                 
-                logChannel.sendMessageEmbeds(embed.build()).queue();
+                MessageCreateBuilder builder = new MessageCreateBuilder();
+                builder.setComponents(leave);
+                builder.useComponentsV2(true);
+
+                logChannel.sendMessage(builder.build()).useComponentsV2(true).queue();
             }
         }
     }
