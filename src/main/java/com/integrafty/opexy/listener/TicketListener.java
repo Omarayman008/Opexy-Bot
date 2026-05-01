@@ -353,51 +353,58 @@ public class TicketListener extends ListenerAdapter {
     }
 
     private void handleFinalClose(ButtonInteractionEvent event) {
-        event.deferEdit().queue(); // Acknowledge immediately
-        
-        TextChannel channel = event.getChannel().asTextChannel();
-        Member member = event.getMember();
-        
-        Optional<TicketEntity> ticketOpt = ticketRepository.findByChannelId(channel.getId());
-        if (ticketOpt.isEmpty()) {
-            event.getHook().sendMessage("❌ لم يتم العثور على بيانات التذكرة في قاعدة البيانات.").setEphemeral(true).queue();
-            return;
+        try {
+            event.deferEdit().queue(); // Acknowledge immediately to prevent timeout
+            
+            TextChannel channel = event.getChannel().asTextChannel();
+            Member member = event.getMember();
+            
+            ticketRepository.findByChannelId(channel.getId()).ifPresentOrElse(ticket -> {
+                // 1. Update DB Status
+                ticket.setStatus("CLOSED");
+                ticketRepository.save(ticket);
+                
+                // 2. Remove client write access
+                Member client = event.getGuild().getMemberById(ticket.getUserId());
+                if (client != null) {
+                    channel.getManager().putMemberPermissionOverride(client.getIdLong(), 
+                        EnumSet.of(Permission.VIEW_CHANNEL), 
+                        EnumSet.of(Permission.MESSAGE_SEND)).queue(null, err -> log.warn("Could not update client perms: {}", err.getMessage()));
+                }
+                
+                // 3. Rename channel
+                if (!channel.getName().endsWith("-c")) {
+                    channel.getManager().setName(channel.getName() + "-c").queue(null, err -> log.warn("Could not rename channel: {}", err.getMessage()));
+                }
+                
+                // 4. Send Archive Panel
+                Container panel = EmbedUtil.containerBranded(
+                    "ARCHIVES", 
+                    "لـوحـة الـتـحـكـم", 
+                    "### تـم إغـلاق الـتـذكـرة\nبـواسـطـة الـعـضـو **" + member.getEffectiveName() + "**.\n\nاخـتـر إجـراء مـن الأسـفـل.", 
+                    EmbedUtil.BANNER_SUPPORT,
+                    ActionRow.of(
+                        Button.secondary("ticket_reopen", "إعـادة فـتـح"),
+                        Button.secondary("ticket_transcript", "سـجـل الـتـحـادث"),
+                        Button.secondary("ticket_delete_init", "حـذف الـتـذكـرة")
+                    )
+                );
+                
+                channel.sendMessage(new MessageCreateBuilder().setComponents(panel).useComponentsV2(true).build())
+                    .useComponentsV2(true).queue();
+                
+                event.getHook().sendMessage("✅ تـم إغـلاق الـتـذكـرة بـنـجـاح.").setEphemeral(true).queue();
+            }, () -> {
+                event.getHook().sendMessage("❌ لم يتم العثور على بيانات التذكرة في قاعدة البيانات.").setEphemeral(true).queue();
+            });
+        } catch (Exception e) {
+            log.error("Fatal error in handleFinalClose", e);
+            if (!event.isAcknowledged()) {
+                event.reply("❌ حدث خطأ داخلي أثناء إغلاق التذكرة.").setEphemeral(true).queue();
+            } else {
+                event.getHook().sendMessage("❌ حدث خطأ داخلي أثناء إغلاق التذكرة.").setEphemeral(true).queue();
+            }
         }
-        TicketEntity ticket = ticketOpt.get();
-        
-        // 1. Remove client write access
-        Member client = event.getGuild().getMemberById(ticket.getUserId());
-        if (client != null) {
-            channel.getManager().putMemberPermissionOverride(client.getIdLong(), 
-                EnumSet.of(Permission.VIEW_CHANNEL), 
-                EnumSet.of(Permission.MESSAGE_SEND)).queue();
-        }
-        
-        // 2. Update DB
-        ticket.setStatus("CLOSED");
-        ticketRepository.save(ticket);
-        
-        // 3. Rename channel
-        if (!channel.getName().endsWith("-c")) {
-            channel.getManager().setName(channel.getName() + "-c").queue();
-        }
-        
-        // 4. Send Archive Panel
-        Container panel = EmbedUtil.containerBranded(
-            "ARCHIVES", 
-            "لـوحـة الـتـحـكـم", 
-            "### تـم إغـلاق الـتـذكـرة\nبـواسـطـة الـعـضـو **" + member.getEffectiveName() + "**.\n\nاخـتـر إجـراء مـن الأسـفـل.", 
-            EmbedUtil.BANNER_SUPPORT,
-            ActionRow.of(
-                Button.secondary("ticket_reopen", "إعـادة فـتـح"),
-                Button.secondary("ticket_transcript", "سـجـل الـتـحـادث"),
-                Button.secondary("ticket_delete_init", "حـذف الـتـذكـرة")
-            )
-        );
-        
-        channel.sendMessage(new MessageCreateBuilder().setComponents(panel).useComponentsV2(true).build())
-            .useComponentsV2(true).queue();
-        event.getHook().sendMessage("✅ تـم إغـلاق الـتـذكـرة بـنـجـاح.").setEphemeral(true).queue();
     }
 
     private void handleClaim(ButtonInteractionEvent event) {
@@ -442,7 +449,7 @@ public class TicketListener extends ListenerAdapter {
                 )
             );
 
-            event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+            event.getHook().editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
                 .setComponents(claimedContainer)
                 .useComponentsV2(true)
                 .build()).queue();
@@ -496,7 +503,7 @@ public class TicketListener extends ListenerAdapter {
                 )
             );
 
-            event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+            event.getHook().editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
                 .setComponents(restoredContainer)
                 .useComponentsV2(true)
                 .build()).queue();
