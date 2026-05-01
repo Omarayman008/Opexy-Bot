@@ -20,24 +20,24 @@ public class TicketCommand {
             return;
         }
 
-        // Premium Embed Styling (V2 style interactivity)
+        String rules = "### 📜 قـوانـيـن وشـروط الـدعـم الـفـنـي\n\n" +
+                "**الاحترام المتبادل** — يرجى احترام جميع أعضاء الإدارة. أي إساءة قد تعرضك للحظر.\n\n" +
+                "**تذكرة واحدة** — يرجى فتح تذكرة واحدة فقط لمشكلتك وعدم التكرار.\n\n" +
+                "**الوضوح** — اشرح مشكلتك بالكامل فور فتح التذكرة لنسرع في خدمتك.\n\n" +
+                "**المنشن** — يمنع عمل منشن (Ping) للإدارة داخل التذكرة، سنقوم بالرد بأقرب وقت.\n\n" +
+                "يرجى اختيار القسم المناسب من الأزرار بالأسفل:";
+
+        // Premium Container Style (V2) matching the new design
         EmbedBuilder embed = new EmbedBuilder()
-            .setTitle("🎫 مركز المساعدة والدعم الفني")
-            .setDescription("مرحباً بك في مركز الدعم الخاص بـ **HighCore Mc**.\nيرجى اختيار القسم المناسب لاستفسارك من الأزرار أدناه:")
-            .setColor(Color.decode("#5865F2"))
-            .addField("🛠️ الدعم الفني (Support)", "للاستفسارات العامة والمشاكل التقنية", false)
-            .addField("📜 التقديم (White List)", "لطلب الانضمام كعضو معتمد", false)
-            .addField("💼 التوظيف (Hiring)", "للتقديم على الإدارة والفريق", false)
-            .addField("⚠️ الشكاوى (Complaint)", "لرفع شكوى على عضو أو إداري", false)
-            .setImage("https://i.imgur.com/placeholder_ticket_banner.png") // Placeholder for Ticket Banner
-            .setFooter("HighCore System", event.getJDA().getSelfUser().getAvatarUrl())
-            .setTimestamp(Instant.now());
+            .setColor(Color.decode("#2B2D31")) // Discord background color to hide the side line
+            .setDescription(rules)
+            .setImage("https://i.imgur.com/u3lM7q5.jpeg"); // Placeholder for premium banner, user can change later
 
         ActionRow buttons = ActionRow.of(
-            Button.primary("ticket_support", "🛠️ دعم فني"),
-            Button.success("ticket_whitelist", "📜 وايت ليست"),
-            Button.secondary("ticket_hiring", "💼 توظيف"),
-            Button.danger("ticket_complaint", "⚠️ شكوى")
+            Button.secondary("ticket_support", "الدعم الفني").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("⚙️")),
+            Button.secondary("ticket_whitelist", "التقديم (White List)").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("📜")),
+            Button.secondary("ticket_hiring", "التوظيف (Hiring)").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("💼")),
+            Button.secondary("ticket_complaint", "الشكاوى").withEmoji(net.dv8tion.jda.api.entities.emoji.Emoji.fromUnicode("⚠️"))
         );
 
         event.getChannel().sendMessageEmbeds(embed.build()).setComponents(buttons).queue();
