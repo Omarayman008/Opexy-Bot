@@ -191,6 +191,9 @@ public class TranscriptService {
                     m.appendReplacement(sb,
                             "<div class='att-wrap'><a href='" + url + "' target='_blank'><img class='att-img' src='"
                                     + url + "' alt='Image Attachment'></a></div>");
+                } else if (lowerUrl.matches(".*\\.(mp4|mov|webm|avi)(?:\\?.*)?$")) {
+                    m.appendReplacement(sb,
+                            "<div class='att-wrap'><video class='att-img' controls src='" + url + "'></video></div>");
                 } else {
                     String fileName = "Download File/Video";
                     try {

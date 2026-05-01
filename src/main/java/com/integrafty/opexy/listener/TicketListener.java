@@ -570,8 +570,7 @@ public class TicketListener extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(net.dv8tion.jda.api.events.message.MessageReceivedEvent event) {
-        if (event.getAuthor().isBot()) return;
-        
+        // Log all messages in ticket channels, including from bots
         String channelId = event.getChannel().getId();
         ticketRepository.findByChannelId(channelId).ifPresent(ticket -> {
             TicketMessageEntity msg = new TicketMessageEntity();
@@ -582,6 +581,10 @@ public class TicketListener extends ListenerAdapter {
             StringBuilder content = new StringBuilder(event.getMessage().getContentRaw());
             for (net.dv8tion.jda.api.entities.Message.Attachment att : event.getMessage().getAttachments()) {
                 content.append("\n[ATTACHMENT: ").append(att.getUrl()).append("]");
+            }
+            
+            if (content.length() == 0 && event.getMessage().getEmbeds().size() > 0) {
+                content.append("[Embed Content]");
             }
             
             msg.setContent(content.toString());
