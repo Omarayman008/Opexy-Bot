@@ -60,7 +60,6 @@ public class CommandHandler extends ListenerAdapter {
             case "profile":
             case "balance":
             case "daily":
-            case "daily":
                 event.reply("⏳ سيتم تفعيل هذا الأمر في المراحل القادمة.").setEphemeral(true).queue();
                 break;
             case "setup":

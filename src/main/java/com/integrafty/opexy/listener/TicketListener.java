@@ -82,6 +82,9 @@ public class TicketListener extends ListenerAdapter {
         Member member = event.getMember();
         String channelName = categoryName + "-" + member.getUser().getName();
 
+        final String finalCategoryName = categoryName;
+        final Color finalEmbedColor = embedColor;
+
         // Create Text Channel
         guild.createTextChannel(channelName)
             .addPermissionOverride(guild.getPublicRole(), null, EnumSet.of(Permission.VIEW_CHANNEL))
@@ -98,9 +101,9 @@ public class TicketListener extends ListenerAdapter {
                 // V2 Premium Embed Styling
                 EmbedBuilder embed = new EmbedBuilder()
                     .setAuthor(member.getUser().getAsTag(), null, member.getUser().getAvatarUrl())
-                    .setTitle("🎫 تذكرة " + categoryName.replace("-", " "))
+                    .setTitle("🎫 تذكرة " + finalCategoryName.replace("-", " "))
                     .setDescription("مرحباً بك " + member.getAsMention() + ".\nيرجى طرح موضوعك أو مشكلتك بالتفصيل ليتمكن الفريق المختص من مساعدتك بشكل أسرع.")
-                    .setColor(embedColor)
+                    .setColor(finalEmbedColor)
                     .setFooter("HighCore Tickets System", event.getJDA().getSelfUser().getAvatarUrl())
                     .setTimestamp(Instant.now());
 
