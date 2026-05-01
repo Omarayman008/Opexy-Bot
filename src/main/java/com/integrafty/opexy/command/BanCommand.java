@@ -37,19 +37,33 @@ public class BanCommand implements SlashCommand {
             return;
         }
 
-        Member target = event.getOption("user").getAsMember();
+        net.dv8tion.jda.api.entities.User targetUser = event.getOption("user").getAsUser();
         String reason = event.getOption("reason") != null ? event.getOption("reason").getAsString() : "بدون سبب";
-        int delDays = event.getOption("days") != null ? event.getOption("days").getAsInt() : 0;
+        int delDays = event.getOption("days") != null ? Math.min(7, Math.max(0, event.getOption("days").getAsInt())) : 0;
 
-        if (target == null) {
-            event.reply("❌ لم يتم العثور على العضو.").setEphemeral(true).queue();
+        if (targetUser.getId().equals(event.getUser().getId())) {
+            event.reply("❌ لا يمكنك حظر نفسك.").setEphemeral(true).queue();
             return;
         }
 
-        event.getGuild().ban(target, delDays, TimeUnit.DAYS).reason(reason).queue(
+        if (targetUser.getId().equals(event.getJDA().getSelfUser().getId())) {
+            event.reply("❌ لا يمكنك حظري!").setEphemeral(true).queue();
+            return;
+        }
+
+        event.deferReply().queue();
+
+        // Try to DM target before banning
+        targetUser.openPrivateChannel().queue(pc -> {
+            pc.sendMessage("⚠️ لقد تم حظرك من سيرفر **" + event.getGuild().getName() + "**\n**السبب:** " + reason).queue(
+                s -> {}, e -> {} // Ignore DM errors
+            );
+        }, err -> {});
+
+        event.getGuild().ban(targetUser, delDays, TimeUnit.DAYS).reason(reason).queue(
             success -> {
-                String description = String.format("### 🔨 Ban Notification\n\n**Target:** %s\n**Moderator:** %s\n**Reason:** %s", 
-                        target.getUser().getAsTag(), event.getMember().getAsMention(), reason);
+                String description = String.format("### 🔨 تـم الـحـظـر بـنـجـاح\n\n**الـعـضـو:** %s\n**الاسـم:** %s\n**الـمـسـؤول:** %s\n**الـسـبـب:** %s", 
+                        targetUser.getAsMention(), targetUser.getName(), event.getMember().getAsMention(), reason);
 
                 Container container = EmbedUtil.containerBranded("MODERATION", "User Banned", description, EmbedUtil.BANNER_MAIN);
                 
@@ -57,9 +71,9 @@ public class BanCommand implements SlashCommand {
                 builder.setComponents(container);
                 builder.useComponentsV2(true);
 
-                event.reply(builder.build()).useComponentsV2(true).queue();
+                event.getHook().sendMessage(builder.build()).queue();
             },
-            error -> event.reply("❌ لم أتمكن من حظر العضو. قد تكون رتبته أعلى مني.").setEphemeral(true).queue()
+            error -> event.getHook().sendMessage("❌ لم أتمكن من حظر العضو. قد تكون لديه رتبة أعلى مني أو لا أملك الصلاحيات الكافية.").setEphemeral(true).queue()
         );
     }
 }
