@@ -506,6 +506,14 @@ public class TicketListener extends ListenerAdapter {
                 .useComponentsV2(true)
                 .build()).queue();
             
+            // 3. Send the specific claim notice
+            Container notice = EmbedUtil.containerBranded(
+                "NOTICE", 
+                "Claimed", 
+                "📡 Ticket Handled By: " + event.getMember().getAsMention(), 
+                null
+            );
+            
             // 4. Update Permissions: Staff role can't write, claimer can write.
             net.dv8tion.jda.api.entities.Role staffRole = event.getGuild().getRoleById(STAFF_ROLE);
             if (staffRole != null) {
