@@ -1,15 +1,26 @@
 spring:
+  main:
+    banner-mode: "off"
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/opexy_db}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:password}
   jpa:
+    show-sql: false
     hibernate:
-      ddl-auto: update # Automatically updates the schema based on our Java Entities
+      ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
+        format_sql: false
+
+logging:
+  level:
+    root: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+    com.integrafty.opexy: INFO
+    net.dv8tion.jda: INFO
 
 # Discord Bot Configuration
 discord:
