@@ -264,7 +264,7 @@ public class TicketListener extends ListenerAdapter {
                 
                 if (isWhitelist) {
                     ticketBody.append("### ✅ تـم قـبـول طـلـبـك مـبـدئـيـاً\n")
-                        .append("تـوجـه إلـى الـروم <#1488279212786843850> وضـع إيـمـوجـي 🟢 ريـأكـشـن وسـيـتـم تـفـعـيـلـك فـوراً.");
+                        .append("يـرجـى اتـبـاع الـخـطـوات الـمـرسـلـة بـالأسـفـل لـتـكـمـلـة الـتـفـعـيـل.");
                 } else {
                     ticketBody.append("A staff member will be with you shortly — please describe your issue in full detail.");
                 }
@@ -312,6 +312,16 @@ public class TicketListener extends ListenerAdapter {
                         event.getValue("version").getAsString(),
                         event.getValue("account_type").getAsString()
                     );
+
+                    // Send detailed steps as a separate message
+                    String steps = "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n" +
+                                 "### 📋 خـطـوات الـتـفـعـيـل الـنـهـائـيـة\n\n" +
+                                 "**1.** تـم تـسـجـيـل بـيـانـاتـك فـي قـاعـدة بـيـانـات الـسـيـرفـر بـنـجـاح.\n" +
+                                 "**2.** تـوجـه الآن إلـى روم الـتـفـعـيـل: <#1488279212786843850>.\n" +
+                                 "**3.** قـم بـالـضـغـط عـلـى إيـمـوجـي 🟢 ريـأكـشـن لـتـفـعـيـل حـسـابـك آلياً.\n\n" +
+                                 "**مـلاحـظـة:** سـيـتـم تـفـعـيـلـك فـور وضـع الـريـأكـشـن، مـرحـبـاً بـك فـي الـسـيـرفـر!\n" +
+                                 "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬";
+                    channel.sendMessage(steps).queue();
                 }
 
                 Container successCont = EmbedUtil.success("الإنـشـاء", "تـم إنـشـاء تـذكـرتـك بـنـجـاح: " + channel.getAsMention());
