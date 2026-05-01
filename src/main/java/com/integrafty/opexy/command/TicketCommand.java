@@ -49,7 +49,8 @@ public class TicketCommand implements SlashCommand {
         ActionRow buttons = ActionRow.of(
             Button.secondary("ticket_support", "الـدعم الـفـنـي"),
             Button.secondary("ticket_complaint", "الـشـكـاوى"),
-            Button.secondary("ticket_hire", "الـتـقـديـم عـلـى الإدارة")
+            Button.secondary("ticket_hire", "الـتـقـديـم عـلـى الإدارة"),
+            Button.secondary("ticket_whitelist", "الـوايـت لـيـسـت")
         );
 
         Container container = EmbedUtil.containerBranded(

@@ -129,6 +129,13 @@ public class TicketListener extends ListenerAdapter {
                     Label.of("الـمـهـارات", TextInput.create("skills", TextInputStyle.PARAGRAPH).build()),
                     Label.of("الأقـسـام (Discord, Minecraft, Hype)", TextInput.create("depts", TextInputStyle.SHORT).build())
                 ).build();
+            case "whitelist" -> Modal.create("modal_ticket_whitelist", "الـوايـت لـيـسـت")
+                .addComponents(
+                    Label.of("Discord User & ID", TextInput.create("discord_info", TextInputStyle.SHORT).setPlaceholder("Example: User#0000 - 123456789...").build()),
+                    Label.of("MC Username", TextInput.create("mc_name", TextInputStyle.SHORT).setPlaceholder("اكتب اسمك في اللعبة").build()),
+                    Label.of("Version (Bedrok/Java)", TextInput.create("version", TextInputStyle.SHORT).setPlaceholder("Example: Java 1.20.1").build()),
+                    Label.of("Type (كراك/اصليه)", TextInput.create("account_type", TextInputStyle.SHORT).setPlaceholder("Example: اصلية").build())
+                ).build();
             default -> null;
         };
 
@@ -192,6 +199,7 @@ public class TicketListener extends ListenerAdapter {
             case "support": categoryName = "support"; break;
             case "complaint": categoryName = "complaint"; break;
             case "hire": categoryName = "Hire"; break;
+            case "whitelist": categoryName = "Whitelist"; break;
         }
 
         Integer lastNum = ticketRepository.findMaxTicketNumberByCategory(categoryId);
@@ -235,6 +243,12 @@ public class TicketListener extends ListenerAdapter {
                     sector = "HIRE CENTER";
                     subject = "Staff Application • " + event.getValue("depts").getAsString();
                     details = "Name: " + event.getValue("name").getAsString() + "\nAge: " + event.getValue("age").getAsString();
+                } else if (finalCategoryId.equals("whitelist") || finalCategoryId.equals("modal_ticket_whitelist")) {
+                    sector = "WHITELIST CENTER";
+                    subject = "Whitelist Request • " + event.getValue("mc_name").getAsString();
+                    details = "Discord: " + event.getValue("discord_info").getAsString() + 
+                              "\nVersion: " + event.getValue("version").getAsString() + 
+                              "\nAccount: " + event.getValue("account_type").getAsString();
                 }
 
                 ticketBody.append("**Subject:** ").append(subject).append("\n");
