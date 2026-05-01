@@ -32,15 +32,17 @@ public class TicketCommand implements SlashCommand {
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
+        event.deferReply(true).queue();
+
         if (!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
-            event.reply("❌ لا تـمـلـك صـلاحـيـة لاسـتـخـدام هـذا الأمـر.").setEphemeral(true).queue();
+            event.getHook().sendMessageComponents(EmbedUtil.accessDenied()).setEphemeral(true).queue();
             return;
         }
 
         String rules = "### 📜 قـوانـيـن وشـروط الـدعـم الـفـنـي\n\n" +
                 "**الاحـتـرام الـمـتـبـادل** — يـرجـى احـتـرام جـمـيـع أعـضـاء الإدارة. أي إسـاءة قـد تـعـرضـك لـلـحظـر الـنـهـائـي.\n\n" +
                 "**تـذكـرة واحـدة** — يـرجـى فـتـح تـذكـرة واحـدة فـقـط لـمـشـكـلـتـك وعـدم الـتـكـرار مـطـلـقـاً.\n\n" +
-                "**الـوضـوح** — اشـرح مـشـكـلـتـك بـالـكـامـل فـور فـتـح الـتـذكـرة لـنـسـرع فـي خـدمـتـك الـفـورـيـة.\n\n" +
+                "**الـوضـوح** — اشـرح مـشـكـلـتـك بـالـكـامـل فـور فـتـح الـتـذكـرة لـنـسـرع فـي خـخدمـتـك الـفـورـيـة.\n\n" +
                 "**الـمـنـشـن** — يـمـنـع عـمـل مـنـشـن (Ping) لـلإدارة داخـل الـتـذكـرة، سـنـقـوم بـالـرد بـأقـرب وقـت مـمـكـن.\n\n" +
                 "يـرجـى اخـتـيـار الـقـسـم الـمـنـاسـب مـن الأزرار بـالأـسـفـل:";
 
@@ -63,9 +65,11 @@ public class TicketCommand implements SlashCommand {
             targetChannel = event.getOption("channel").getAsChannel().asGuildMessageChannel();
         }
 
-        targetChannel.sendMessageComponents(container).queue();
+        targetChannel.sendMessage(new MessageCreateBuilder().setComponents(container).useComponentsV2(true).build())
+            .useComponentsV2(true).queue();
 
         Container success = EmbedUtil.success("الإمـدادات", "تـم إرسـال لـوحـة الـتـذاكـر بـنـجـاح فـي " + targetChannel.getAsMention());
-        event.replyComponents(success).setEphemeral(true).queue();
+        event.getHook().sendMessage(new MessageCreateBuilder().setComponents(success).useComponentsV2(true).build())
+            .useComponentsV2(true).queue();
     }
 }

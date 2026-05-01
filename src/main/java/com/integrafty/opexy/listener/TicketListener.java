@@ -263,16 +263,19 @@ public class TicketListener extends ListenerAdapter {
                 String ping = "<@&1487152917763981574> " + member.getAsMention();
                 channel.sendMessage(ping).queue();
                 
-                channel.sendMessageComponents(welcomeContainer)
+                channel.sendMessage(new MessageCreateBuilder().setComponents(welcomeContainer).useComponentsV2(true).build())
+                    .useComponentsV2(true)
                     .queue();
 
                 Container successCont = EmbedUtil.success("الإنـشـاء", "تـم إنـشـاء تـذكـرتـك بـنـجـاح: " + channel.getAsMention());
-                event.replyComponents(successCont)
+                event.reply(new MessageCreateBuilder().setComponents(successCont).useComponentsV2(true).build())
                     .setEphemeral(true)
+                    .useComponentsV2(true)
                     .queue();
             }, error -> {
                 Container errorCont = EmbedUtil.error("ERROR", "حدث خطأ أثناء إنشاء الغرفة، يرجى التأكد من صلاحيات البوت.");
-                event.replyComponents(errorCont).setEphemeral(true).queue();
+                event.reply(new MessageCreateBuilder().setComponents(errorCont).useComponentsV2(true).build())
+                    .setEphemeral(true).useComponentsV2(true).queue();
                 log.error("Error creating ticket channel", error);
             });
     }
