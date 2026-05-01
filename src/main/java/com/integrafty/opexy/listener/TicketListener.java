@@ -59,20 +59,20 @@ public class TicketListener extends ListenerAdapter {
         String selected = event.getValues().get(0);
         switch (selected) {
             case "ticket_manage_add" -> {
-                Modal modal = Modal.create("modal_ticket_add", "إضافة عضو")
-                    .addComponents(Label.of("ID العضو", TextInput.create("user_id", TextInputStyle.SHORT).setPlaceholder("اكتب الأيدي الخاص بالعضو هنا").build()))
+                Modal modal = Modal.create("modal_ticket_add", "إضـافـة عـضـو")
+                    .addComponents(ActionRow.of(TextInput.create("user_id", "ID الـعـضـو", TextInputStyle.SHORT).setPlaceholder("اكتب الأيدي الخاص بالعضو هنا").build()))
                     .build();
                 event.replyModal(modal).queue();
             }
             case "ticket_manage_remove" -> {
-                Modal modal = Modal.create("modal_ticket_remove", "إزالة عضو")
-                    .addComponents(Label.of("ID العضو", TextInput.create("user_id", TextInputStyle.SHORT).setPlaceholder("اكتب الأيدي الخاص بالعضو هنا").build()))
+                Modal modal = Modal.create("modal_ticket_remove", "إزالـة عـضـو")
+                    .addComponents(ActionRow.of(TextInput.create("user_id", "ID الـعـضـو", TextInputStyle.SHORT).setPlaceholder("اكتب الأيدي الخاص بالعضو هنا").build()))
                     .build();
                 event.replyModal(modal).queue();
             }
             case "ticket_manage_rename" -> {
-                Modal modal = Modal.create("modal_ticket_rename", "تغيير اسم التذكرة")
-                    .addComponents(Label.of("الاسم الجديد", TextInput.create("new_name", TextInputStyle.SHORT).setPlaceholder("مثال: support-vip").build()))
+                Modal modal = Modal.create("modal_ticket_rename", "تـغـيـيـر اسـم الـتـذكـرة")
+                    .addComponents(ActionRow.of(TextInput.create("new_name", "الاسـم الـجـديـد", TextInputStyle.SHORT).setPlaceholder("مثال: support-vip").build()))
                     .build();
                 event.replyModal(modal).queue();
             }
