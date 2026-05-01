@@ -605,6 +605,9 @@ public class TicketListener extends ListenerAdapter {
             // Send to user ephemerally
             event.getHook().sendMessage("🔗 **[تـفـضـل بـمـعـايـنـة سـجـل الـتـحـادث مـن هـنـا](" + link + ")**").setEphemeral(true).queue();
                 
+            // Send public confirmation in the ticket channel
+            event.getChannel().sendMessage("✅ تم حفظ الترانسكربت في <#1487147026427940955>").queue();
+                
             // Send to logs with EXACT format requested
             TextChannel logCh = event.getGuild().getTextChannelById("1487147026427940955");
             if (logCh != null) {
