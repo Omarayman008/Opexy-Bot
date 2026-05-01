@@ -401,7 +401,7 @@ public class TicketListener extends ListenerAdapter {
                         EmbedUtil.BANNER_SUPPORT,
                         ActionRow.of(
                             Button.secondary("ticket_reopen", "إعـادة فـتـح"),
-                            Button.secondary("ticket_transcript", "سـجـل الـتـحـادث"),
+                            Button.secondary("ticket_transcript", "تـــران ســـــكـــربـــت"),
                             Button.secondary("ticket_delete_init", "حـذف الـتـذكـرة")
                         )
                     );
