@@ -567,25 +567,55 @@ public class TicketListener extends ListenerAdapter {
         event.getHook().sendMessage("✅ تـم إعـادة فـتـح الـتـذكـرة وإعـادة الـصـلاحـيـات.").queue();
     }
 
+    @Override
+    public void onMessageReceived(net.dv8tion.jda.api.events.message.MessageReceivedEvent event) {
+        if (event.getAuthor().isBot()) return;
+        
+        String channelId = event.getChannel().getId();
+        ticketRepository.findByChannelId(channelId).ifPresent(ticket -> {
+            TicketMessageEntity msg = new TicketMessageEntity();
+            msg.setTicketId(ticket.getId().toString());
+            msg.setUserId(event.getAuthor().getId());
+            msg.setUserName(event.getAuthor().getName());
+            
+            StringBuilder content = new StringBuilder(event.getMessage().getContentRaw());
+            for (net.dv8tion.jda.api.entities.Message.Attachment att : event.getMessage().getAttachments()) {
+                content.append("\n[ATTACHMENT: ").append(att.getUrl()).append("]");
+            }
+            
+            msg.setContent(content.toString());
+            com.integrafty.opexy.repository.TicketMessageRepository msgRepo = 
+                com.integrafty.opexy.OpexyApplication.getContext().getBean(com.integrafty.opexy.repository.TicketMessageRepository.class);
+            msgRepo.save(msg);
+        });
+    }
+
     private void handleTranscript(ButtonInteractionEvent event) {
         TextChannel channel = event.getChannel().asTextChannel();
         event.deferReply(true).queue();
         
-        channel.getIterableHistory().takeAsync(100).thenAccept(messages -> {
-            byte[] transcript = com.integrafty.opexy.utils.TranscriptService.generateSimpleTranscript(channel, messages);
+        ticketRepository.findByChannelId(channel.getId()).ifPresentOrElse(ticket -> {
+            String domain = "https://opexy-production.up.railway.app"; // Fallback
+            String link = domain + "/view/transcript/" + ticket.getId();
             
-            // Send to user ephemerally
-            event.getHook().sendMessage("📄 سـجـل الـتـحـادث لـلـتـذكـرة: " + channel.getName())
-                .addFiles(net.dv8tion.jda.api.utils.FileUpload.fromData(transcript, "transcript-" + channel.getName() + ".txt"))
-                .queue();
+            Container notice = EmbedUtil.containerBranded(
+                "TRANSCRIPT", 
+                "سـجـل الـتـحـادث", 
+                "تـم تـولـيـد رابـط سـجـل الـتـحـادث بـنـجـاح.\n\n🔗 **[اضـغـط هـنـا لـلـعـرض](" + link + ")**", 
+                null
+            );
+            
+            event.getHook().sendMessage(new MessageCreateBuilder().setComponents(notice).useComponentsV2(true).build())
+                .setEphemeral(true).queue();
                 
             // Send to logs
             TextChannel logCh = event.getGuild().getTextChannelById("1487147026427940955");
             if (logCh != null) {
-                logCh.sendMessage("📄 **TRANSCRIPT** | #" + channel.getName() + " | Closed by " + event.getUser().getAsMention())
-                    .addFiles(net.dv8tion.jda.api.utils.FileUpload.fromData(transcript, "transcript-" + channel.getName() + ".txt"))
+                logCh.sendMessage("📄 **TRANSCRIPT** | #" + channel.getName() + " | Created by " + event.getUser().getAsMention() + "\n🔗 [View Transcript](" + link + ")")
                     .queue();
             }
+        }, () -> {
+            event.getHook().sendMessage("❌ لم يتم العثور على بيانات التذكرة لإصدار الرابط.").setEphemeral(true).queue();
         });
     }
 

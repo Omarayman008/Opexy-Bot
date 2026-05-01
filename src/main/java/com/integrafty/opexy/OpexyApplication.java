@@ -19,6 +19,8 @@ import java.net.URI;
 @Slf4j
 public class OpexyApplication {
 
+    private static org.springframework.context.ConfigurableApplicationContext context;
+
     public static void main(String[] args) {
         Dotenv dotenv = Dotenv.configure()
             .directory("./")
@@ -53,7 +55,11 @@ public class OpexyApplication {
             }
         }
         
-        SpringApplication.run(OpexyApplication.class, args);
+        context = SpringApplication.run(OpexyApplication.class, args);
+    }
+
+    public static org.springframework.context.ConfigurableApplicationContext getContext() {
+        return context;
     }
 
     @Bean
