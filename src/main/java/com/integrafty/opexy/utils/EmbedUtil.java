@@ -209,15 +209,15 @@ public class EmbedUtil {
     }
 
     public static Container success(String title, String description) {
-        return containerBranded("SUCCESS", title, "✅ " + description, BANNER_MAIN);
+        return containerBranded("نجاح", title, "✅ " + description, BANNER_MAIN);
     }
 
     public static Container error(String title, String description) {
-        return containerBranded("ERROR", title, "❌ " + description, BANNER_MAIN);
+        return containerBranded("خطأ", title, "❌ " + description, BANNER_MAIN);
     }
 
     public static Container info(String title, String description) {
-        return containerBranded("INFO", title, "ℹ️ " + description, BANNER_MAIN);
+        return containerBranded("معلومات", title, "ℹ️ " + description, BANNER_MAIN);
     }
 
     public static Container ticketHeader(String tid, String u, String ty, String b) {
@@ -229,7 +229,7 @@ public class EmbedUtil {
     }
 
     public static Container accessDenied() {
-        return error("ACCESS DENIED", "You do not have permission to use this command.");
+        return error("تم رفض الوصول", "لا تملك الصلاحية الكافية لاستخدام هذا الأمر.");
     }
 
     public static Container activityLog(String type, String details, Color color) {

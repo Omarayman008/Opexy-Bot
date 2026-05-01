@@ -79,8 +79,8 @@ public class TicketCommand implements SlashCommand {
         );
 
         Container container = EmbedUtil.containerBranded(
-                "TICKETS", 
-                "Support Center", 
+                "التذاكر", 
+                "مركز الدعم", 
                 rules, 
                 EmbedUtil.BANNER_TICKETS_MENU, 
                 buttons
@@ -101,7 +101,7 @@ public class TicketCommand implements SlashCommand {
 
         targetChannel.sendMessage(builder.build()).useComponentsV2(true).queue();
 
-        Container success = EmbedUtil.success("LOGISTICS", "تم إرسال لوحة التذاكر (Ticket Panel) بنجاح في " + targetChannel.getAsMention());
+        Container success = EmbedUtil.success("الإمدادات", "تم إرسال لوحة التذاكر بنجاح في " + targetChannel.getAsMention());
         MessageCreateBuilder successBuilder = new MessageCreateBuilder();
         successBuilder.setComponents(success);
         successBuilder.useComponentsV2(true);

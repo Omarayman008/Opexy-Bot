@@ -35,42 +35,42 @@ public class VoiceCommand implements SlashCommand {
             return;
         }
 
-        String body = "### 🎙️ Voice Control Dashboard\n" +
-                "Manage your temporary voice room using the modules below.\n\n" +
-                "● **Security** — Lock or Hide your room\n" +
-                "● **Identity** — Rename or Set member limits\n" +
-                "● **Management** — Kick or Transfer ownership";
+        String body = "### 🎙️ لوحة التحكم في الغرف الصوتية\n" +
+                "قم بإدارة غرفتك الصوتية المؤقتة باستخدام الخيارات أدناه.\n\n" +
+                "● **الأمان** — قفل أو إخفاء الغرفة\n" +
+                "● **الهوية** — تغيير الاسم أو تحديد عدد الأعضاء\n" +
+                "● **الإدارة** — الطرد أو نقل الملكية";
 
         ActionRow row1 = ActionRow.of(
-            Button.secondary("voice_lock", "Lock"),
-            Button.secondary("voice_unlock", "Unlock"),
-            Button.secondary("voice_hide", "Hide"),
-            Button.secondary("voice_unhide", "Unhide"),
-            Button.secondary("voice_rename", "Rename")
+            Button.secondary("voice_lock", "قفل"),
+            Button.secondary("voice_unlock", "فتح"),
+            Button.secondary("voice_hide", "إخفاء"),
+            Button.secondary("voice_unhide", "إظهار"),
+            Button.secondary("voice_rename", "تغيير الاسم")
         );
 
         ActionRow row2 = ActionRow.of(
-            Button.secondary("voice_limit", "Limit"),
-            Button.secondary("voice_claim", "Claim"),
-            Button.secondary("voice_kick", "Kick"),
-            Button.secondary("voice_permit", "Permit"),
-            Button.secondary("voice_reject", "Reject")
+            Button.secondary("voice_limit", "تحديد العدد"),
+            Button.secondary("voice_claim", "استلام الملكية"),
+            Button.secondary("voice_kick", "طرد"),
+            Button.secondary("voice_permit", "سماح"),
+            Button.secondary("voice_reject", "رفض")
         );
 
         ActionRow row3 = ActionRow.of(
-            Button.secondary("voice_trust", "Trust"),
-            Button.secondary("voice_untrust", "Untrust"),
-            Button.secondary("voice_ghost", "Ghost"),
-            Button.secondary("voice_unghost", "Unghost"),
-            Button.secondary("voice_silence", "Silence")
+            Button.secondary("voice_trust", "توثيق"),
+            Button.secondary("voice_untrust", "إلغاء التوثيق"),
+            Button.secondary("voice_ghost", "شبح"),
+            Button.secondary("voice_unghost", "إلغاء الشبح"),
+            Button.secondary("voice_silence", "صمت")
         );
 
         ActionRow row4 = ActionRow.of(
-            Button.secondary("voice_unsilence", "Unsilence"),
-            Button.secondary("voice_transfer", "Transfer")
+            Button.secondary("voice_unsilence", "إلغاء الصمت"),
+            Button.secondary("voice_transfer", "نقل الملكية")
         );
 
-        Container container = EmbedUtil.containerBranded("VOICE", "System Dashboard", body, EmbedUtil.BANNER_MAIN, row1, row2, row3, row4);
+        Container container = EmbedUtil.containerBranded("الصوت", "لوحة التحكم", body, EmbedUtil.BANNER_MAIN, row1, row2, row3, row4);
 
         MessageCreateBuilder builder = new MessageCreateBuilder();
         builder.setComponents(container);

@@ -18,6 +18,7 @@ import net.dv8tion.jda.api.components.textinput.TextInput;
 import net.dv8tion.jda.api.components.textinput.TextInputStyle;
 import net.dv8tion.jda.api.modals.Modal;
 
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import com.integrafty.opexy.utils.EmbedUtil;
 import net.dv8tion.jda.api.components.container.Container;
@@ -45,6 +46,37 @@ public class TicketListener extends ListenerAdapter {
     @PostConstruct
     public void init() {
         jda.addEventListener(this);
+    }
+
+    @Override
+    public void onStringSelectInteraction(StringSelectInteractionEvent event) {
+        if (event.getComponentId().equals("ticket_manage_menu")) {
+            handleManageMenu(event);
+        }
+    }
+
+    private void handleManageMenu(StringSelectInteractionEvent event) {
+        String selected = event.getValues().get(0);
+        switch (selected) {
+            case "ticket_manage_add" -> {
+                Modal modal = Modal.create("modal_ticket_add", "إضافة عضو")
+                    .addComponents(Label.of("ID العضو", TextInput.create("user_id", TextInputStyle.SHORT).setPlaceholder("اكتب الأيدي الخاص بالعضو هنا").build()))
+                    .build();
+                event.replyModal(modal).queue();
+            }
+            case "ticket_manage_remove" -> {
+                Modal modal = Modal.create("modal_ticket_remove", "إزالة عضو")
+                    .addComponents(Label.of("ID العضو", TextInput.create("user_id", TextInputStyle.SHORT).setPlaceholder("اكتب الأيدي الخاص بالعضو هنا").build()))
+                    .build();
+                event.replyModal(modal).queue();
+            }
+            case "ticket_manage_rename" -> {
+                Modal modal = Modal.create("modal_ticket_rename", "تغيير اسم التذكرة")
+                    .addComponents(Label.of("الاسم الجديد", TextInput.create("new_name", TextInputStyle.SHORT).setPlaceholder("مثال: support-vip").build()))
+                    .build();
+                event.replyModal(modal).queue();
+            }
+        }
     }
 
     @Override
@@ -87,9 +119,40 @@ public class TicketListener extends ListenerAdapter {
 
     @Override
     public void onModalInteraction(ModalInteractionEvent event) {
-        if (event.getModalId().startsWith("modal_ticket_")) {
-            handleTicketCreationFromModal(event);
+        String modalId = event.getModalId();
+        if (modalId.startsWith("modal_ticket_")) {
+            if (modalId.equals("modal_ticket_add")) {
+                handleAddMember(event);
+            } else if (modalId.equals("modal_ticket_remove")) {
+                handleRemoveMember(event);
+            } else if (modalId.equals("modal_ticket_rename")) {
+                handleRenameTicket(event);
+            } else {
+                handleTicketCreationFromModal(event);
+            }
         }
+    }
+
+    private void handleAddMember(ModalInteractionEvent event) {
+        String userId = event.getValue("user_id").getAsString();
+        event.getGuild().retrieveMemberById(userId).queue(member -> {
+            event.getChannel().asTextChannel().getManager().putPermissionOverride(member, java.util.EnumSet.of(Permission.VIEW_CHANNEL, Permission.MESSAGE_SEND), null).queue();
+            event.reply("✅ تم إضافة " + member.getAsMention() + " إلى التذكرة.").queue();
+        }, error -> event.reply("❌ لم يتم العثور على عضو بهذا الأيدي.").setEphemeral(true).queue());
+    }
+
+    private void handleRemoveMember(ModalInteractionEvent event) {
+        String userId = event.getValue("user_id").getAsString();
+        event.getGuild().retrieveMemberById(userId).queue(member -> {
+            event.getChannel().asTextChannel().getManager().putPermissionOverride(member, null, java.util.EnumSet.of(Permission.VIEW_CHANNEL)).queue();
+            event.reply("❌ تم إزالة " + member.getAsMention() + " من التذكرة.").queue();
+        }, error -> event.reply("❌ لم يتم العثور على عضو بهذا الأيدي.").setEphemeral(true).queue());
+    }
+
+    private void handleRenameTicket(ModalInteractionEvent event) {
+        String newName = event.getValue("new_name").getAsString();
+        event.getChannel().asTextChannel().getManager().setName(newName).queue();
+        event.reply("✅ تم تغيير اسم التذكرة إلى: " + newName).queue();
     }
 
     private void handleTicketCreationFromModal(ModalInteractionEvent event) {
@@ -148,12 +211,20 @@ public class TicketListener extends ListenerAdapter {
                 String ticketBody = "مرحباً بك " + member.getAsMention() + ".\n\n**تفاصيل الطلب:**\n```\n" + issueDescription + "\n```\n\nفريقنا سيقوم بالرد عليك قريباً.";
                 
                 Container welcomeContainer = EmbedUtil.containerBranded(
-                    "SESSION", 
+                    "تذكرة جديدة", 
                     "تذكرة " + finalCategoryName, 
                     ticketBody, 
                     EmbedUtil.BANNER_SUPPORT,
                     ActionRow.of(
-                        Button.secondary("ticket_claim", "Claim"),
+                        net.dv8tion.jda.api.components.selections.StringSelectMenu.create("ticket_manage_menu")
+                            .setPlaceholder("إدارة التذكرة")
+                            .addOption("إضافة عضو", "ticket_manage_add")
+                            .addOption("إزالة عضو", "ticket_manage_remove")
+                            .addOption("تغيير اسم التذكرة", "ticket_manage_rename")
+                            .build()
+                    ),
+                    ActionRow.of(
+                        Button.secondary("ticket_claim", "استلام التذكرة"),
                         Button.secondary("ticket_close", "إغلاق التذكرة")
                     )
                 );
@@ -223,28 +294,35 @@ public class TicketListener extends ListenerAdapter {
             ticket.setStaffId(event.getUser().getId());
             ticketRepository.save(ticket);
 
-            // Update original message with Unclaim button
+            // Update original message with Unclaim button and keep menu
             String ticketBody = "**تم استلام التذكرة بواسطة:** " + event.getMember().getAsMention();
             
             Container claimedContainer = EmbedUtil.containerBranded(
-                "CLAIMED", 
-                "Ticket System", 
+                "تم الاستلام", 
+                "نظام التذاكر", 
                 ticketBody, 
                 EmbedUtil.BANNER_SUPPORT,
                 ActionRow.of(
-                    Button.secondary("ticket_unclaim", "Unclaim"),
+                    net.dv8tion.jda.api.components.selections.StringSelectMenu.create("ticket_manage_menu")
+                        .setPlaceholder("إدارة التذكرة")
+                        .addOption("إضافة عضو", "ticket_manage_add")
+                        .addOption("إزالة عضو", "ticket_manage_remove")
+                        .addOption("تغيير اسم التذكرة", "ticket_manage_rename")
+                        .build()
+                ),
+                ActionRow.of(
+                    Button.secondary("ticket_unclaim", "إلغاء الاستلام"),
                     Button.secondary("ticket_close", "إغلاق التذكرة")
                 )
             );
 
-            MessageCreateBuilder msgBuilder = new MessageCreateBuilder();
-            msgBuilder.setComponents(claimedContainer);
-            msgBuilder.useComponentsV2(true);
+            // Edit the message that was interacted with
+            event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+                .setComponents(claimedContainer)
+                .useComponentsV2(true)
+                .build()).queue();
             
-            // Edit the welcome message (usually the first message)
-            channel.sendMessage(msgBuilder.build()).useComponentsV2(true).queue();
-            
-            event.reply("✅ تم استلام التذكرة.").setEphemeral(true).queue();
+            event.getHook().sendMessage("✅ تم استلام التذكرة.").setEphemeral(true).queue();
         }
     }
 
@@ -262,7 +340,33 @@ public class TicketListener extends ListenerAdapter {
             ticket.setStaffId(null);
             ticketRepository.save(ticket);
 
-            event.reply("🔓 تم إلغاء استلام التذكرة، وهي الآن متاحة للجميع.").queue();
+            // Restore original welcome container look
+            String ticketBody = "مرحباً بك <@" + ticket.getUserId() + ">.\n\nتذكرتك متاحة الآن للاستلام من قبل فريق الدعم.";
+            
+            Container restoredContainer = EmbedUtil.containerBranded(
+                "تذكرة جديدة", 
+                "نظام التذاكر", 
+                ticketBody, 
+                EmbedUtil.BANNER_SUPPORT,
+                ActionRow.of(
+                    net.dv8tion.jda.api.components.selections.StringSelectMenu.create("ticket_manage_menu")
+                        .setPlaceholder("إدارة التذكرة")
+                        .addOption("إضافة عضو", "ticket_manage_add")
+                        .addOption("إزالة عضو", "ticket_manage_remove")
+                        .addOption("تغيير اسم التذكرة", "ticket_manage_rename")
+                        .build()
+                ),
+                ActionRow.of(
+                    Button.secondary("ticket_claim", "استلام التذكرة"),
+                    Button.secondary("ticket_close", "إغلاق التذكرة")
+                )
+            );
+
+            event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+                .setComponents(restoredContainer)
+                .useComponentsV2(true)
+                .build()).queue();
+            event.getHook().sendMessage("🔓 تم إلغاء استلام التذكرة.").setEphemeral(true).queue();
         }
     }
 }
