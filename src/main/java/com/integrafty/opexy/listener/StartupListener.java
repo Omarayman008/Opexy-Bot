@@ -46,13 +46,133 @@ public class StartupListener extends ListenerAdapter {
     public void onButtonInteraction(ButtonInteractionEvent event) {
         String id = event.getComponentId();
 
-        if (id.startsWith("color_")) {
-            handleColorSelection(event, id);
-        } else if (id.startsWith("ping_")) {
-            handlePingSelection(event, id);
-        } else if (id.equals("support_direct")) {
-            event.reply("📍 توجه إلى روم الدعم الفني من هنا: <#1487143271586074624>").setEphemeral(true).queue();
+        switch (id) {
+            case "startup_map":
+                showServerMap(event);
+                break;
+            case "startup_colors":
+                showColors(event);
+                break;
+            case "startup_pings":
+                showPings(event);
+                break;
+            case "startup_socials":
+                showSocials(event);
+                break;
+            case "support_direct":
+                event.reply("📍 توجه إلى روم الدعم الفني من هنا: <#1487143271586074624>").setEphemeral(true).queue();
+                break;
+            default:
+                if (id.startsWith("color_")) {
+                    handleColorSelection(event, id);
+                } else if (id.startsWith("ping_")) {
+                    handlePingSelection(event, id);
+                }
+                break;
         }
+    }
+
+    private void showServerMap(ButtonInteractionEvent event) {
+        String mapContent = 
+            "### 🗺️ خـريـطـة الـسـيـرفـر | SERVER MAP\n" +
+            "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n\n" +
+            "┣ <#1487138386258165820> • استقبل الأعضاء الجدد بحماس\n" +
+            "┃\n" +
+            "┣ <#1488279212786843850> • وثق حسابك لفتح الرومات\n" +
+            "┃\n" +
+            "┣ <#1487138587827900486> • قوانين السيرفر والمعلومات الأساسية\n" +
+            "┃\n" +
+            "┣ <#14871386591478457> • آخر أخبار وتحديثات السيرفر\n" +
+            "┃\n" +
+            "┣ <#1487204004076191946> • أحدث مقاطع اليوتيوب الحصرية\n" +
+            "┃\n" +
+            "┣ <#1487140470172815574> • تابع البث المباشر الآن\n" +
+            "┃\n" +
+            "┣ <#1487139870433476720> • شرح مفصل للعب بالسيرفر\n" +
+            "┃\n" +
+            "┣ <#1487139967296864377> • شاركنا أفكارك لتطوير السيرفر\n" +
+            "┃\n" +
+            "┣ <#1487139736748425236> • حالة السيرفر التقنية الحالية\n" +
+            "┃\n" +
+            "┣ <#1487140811404611695> • شارك في تصويتات السيرفر\n" +
+            "┃\n" +
+            "┣ <#1488278004919435335> • دردشة خاصة للاعبي ماينكرافت\n" +
+            "┃\n" +
+            "┣ <#1487140532965867600> • استخدم أوامر البوت هنا\n" +
+            "┃\n" +
+            "┣ <#1487140589500629034> • شارك صورك ومقاطعك هنا\n" +
+            "┃\n" +
+            "┣ <#1487138843378323486> • اقتراحات تخص قسم الأوبكس\n" +
+            "┃\n" +
+            "┣ <#1487142537666760735> • جدول فعاليات السيرفر القادمة\n" +
+            "┃\n" +
+            "┣ <#1487142391474557069> • اقترح فعاليات جديدة ممتعة\n" +
+            "┃\n" +
+            "┣ <#1487142175765430393> • شات خاص أثناء الفعاليات\n" +
+            "┃\n" +
+            "┣ <#1487141372325531709> • روم صوتي عام للاجتماع\n" +
+            "┃\n" +
+            "┣ <#1487141441854767184> • روم صوتي إضافي للجميع\n" +
+            "┃\n" +
+            "┣ <#1486872077263835157> • لوحة تحكم إعداداتك الخاصة\n" +
+            "┃\n" +
+            "┣ <#1499728555754520667> • أنشئ رومتك الصوتية فوراً\n" +
+            "┃\n" +
+            "┗ <#1487143271586074624> • تواصل مع الإدارة مباشرة\n\n" +
+            "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬";
+
+        com.integrafty.opexy.components.container.Container container = com.integrafty.opexy.utils.EmbedUtil.containerBranded("MAP", "HighCore Explorer", mapContent, null);
+        event.reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder().setComponents(container).useComponentsV2(true).build()).setEphemeral(true).useComponentsV2(true).queue();
+    }
+
+    private void showColors(ButtonInteractionEvent event) {
+        String body = "**🎨 اخـتـر لـونـك الـمـفـضـل (لـون واحـد فـقـط):**";
+        net.dv8tion.jda.api.components.actionrow.ActionRow row1 = net.dv8tion.jda.api.components.actionrow.ActionRow.of(
+            net.dv8tion.jda.api.components.buttons.Button.secondary("color_red", "Soft Red"),
+            net.dv8tion.jda.api.components.buttons.Button.secondary("color_turquoise", "Turquoise"),
+            net.dv8tion.jda.api.components.buttons.Button.secondary("color_orange", "Carrot Orange"),
+            net.dv8tion.jda.api.components.buttons.Button.secondary("color_gray", "Light Gray"),
+            net.dv8tion.jda.api.components.buttons.Button.secondary("color_navy", "Midnight Navy")
+        );
+        net.dv8tion.jda.api.components.actionrow.ActionRow row2 = net.dv8tion.jda.api.components.actionrow.ActionRow.of(
+            net.dv8tion.jda.api.components.buttons.Button.secondary("color_blurple", "Blurple"),
+            net.dv8tion.jda.api.components.buttons.Button.secondary("color_asphalt", "Wet Asphalt")
+        );
+
+        com.integrafty.opexy.components.container.Container container = com.integrafty.opexy.utils.EmbedUtil.containerBranded("COLORS", "Color Selection", body, null, row1, row2);
+        event.reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder().setComponents(container).useComponentsV2(true).build()).setEphemeral(true).useComponentsV2(true).queue();
+    }
+
+    private void showPings(ButtonInteractionEvent event) {
+        String body = "**🔔 اخـتـر الأقـسـام الـتـي تـرغـب بـمـتـابـعـتـهـا:**";
+        net.dv8tion.jda.api.components.actionrow.ActionRow row1 = net.dv8tion.jda.api.components.actionrow.ActionRow.of(
+            net.dv8tion.jda.api.components.buttons.Button.secondary("ping_stream", "Stream"),
+            net.dv8tion.jda.api.components.buttons.Button.secondary("ping_minecraft", "Minecraft"),
+            net.dv8tion.jda.api.components.buttons.Button.secondary("ping_event", "Events"),
+            net.dv8tion.jda.api.components.buttons.Button.secondary("ping_mcserver", "MC-Server"),
+            net.dv8tion.jda.api.components.buttons.Button.secondary("ping_dcserver", "DC-Server")
+        );
+        net.dv8tion.jda.api.components.actionrow.ActionRow row2 = net.dv8tion.jda.api.components.actionrow.ActionRow.of(
+            net.dv8tion.jda.api.components.buttons.Button.secondary("ping_apply", "Staff Apply"),
+            net.dv8tion.jda.api.components.buttons.Button.secondary("support_direct", "Support")
+        );
+
+        com.integrafty.opexy.components.container.Container container = com.integrafty.opexy.utils.EmbedUtil.containerBranded("PINGS", "Notification Pings", body, null, row1, row2);
+        event.reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder().setComponents(container).useComponentsV2(true).build()).setEphemeral(true).useComponentsV2(true).queue();
+    }
+
+    private void showSocials(ButtonInteractionEvent event) {
+        String body = "**🌐 تـابـعـنـا عـلـى مـنـصـات الـتـواصـل الاجـتـمـاعـي:**";
+        net.dv8tion.jda.api.components.actionrow.ActionRow row = net.dv8tion.jda.api.components.actionrow.ActionRow.of(
+            net.dv8tion.jda.api.components.buttons.Button.link("https://www.instagram.com/highcoremc", "Instagram"),
+            net.dv8tion.jda.api.components.buttons.Button.link("https://www.threads.com/@highcoremc", "Threads"),
+            net.dv8tion.jda.api.components.buttons.Button.link("https://www.youtube.com/@higcoremc", "YouTube"),
+            net.dv8tion.jda.api.components.buttons.Button.link("https://x.com/highcoremc", "X"),
+            net.dv8tion.jda.api.components.buttons.Button.link("https://www.tiktok.com/@highcoremcmc", "TikTok")
+        );
+
+        com.integrafty.opexy.components.container.Container container = com.integrafty.opexy.utils.EmbedUtil.containerBranded("SOCIAL", "Social Media", body, null, row);
+        event.reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder().setComponents(container).useComponentsV2(true).build()).setEphemeral(true).useComponentsV2(true).queue();
     }
 
     private void handleColorSelection(ButtonInteractionEvent event, String buttonId) {
