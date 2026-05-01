@@ -247,6 +247,8 @@ public class VoiceListener extends ListenerAdapter {
     @Override
     public void onModalInteraction(ModalInteractionEvent event) {
         String modalId = event.getModalId();
+        if (!modalId.startsWith("modal_voice_")) return;
+        
         VoiceChannel channel = event.getGuild().getVoiceChannels().stream()
             .filter(vc -> voiceRoomRepository.findByChannelId(vc.getId()).isPresent() && 
                           voiceRoomRepository.findByChannelId(vc.getId()).get().getOwnerId().equals(event.getUser().getId()))
