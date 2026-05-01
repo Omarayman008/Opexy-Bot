@@ -178,25 +178,18 @@ public class TicketListener extends ListenerAdapter {
     private void handleTicketCreationFromModal(ModalInteractionEvent event) {
         String userId = event.getUser().getId();
         
-        // Prevent creating multiple tickets
         if (ticketRepository.existsByUserIdAndStatus(userId, "OPEN")) {
             event.reply("❌ لـديـك تـذكـرة مـفـتـوحـة بـالـفـعـل! يـرجـى إغـلاقـهـا أولاً.").setEphemeral(true).queue();
             return;
         }
 
         String categoryName = "";
-        String categoryId = event.getModalId().replace("modal_ticket_", ""); // support, complaint, hire
+        String categoryId = event.getModalId().replace("modal_ticket_", ""); 
         
         switch (categoryId) {
-            case "support": 
-                categoryName = "support"; 
-                break;
-            case "complaint": 
-                categoryName = "complaint"; 
-                break;
-            case "hire": 
-                categoryName = "Hire"; 
-                break;
+            case "support": categoryName = "support"; break;
+            case "complaint": categoryName = "complaint"; break;
+            case "hire": categoryName = "Hire"; break;
         }
 
         Integer lastNum = ticketRepository.findMaxTicketNumberByCategory(categoryId);
@@ -211,13 +204,11 @@ public class TicketListener extends ListenerAdapter {
         final int finalNextNum = nextNum;
         final String finalCategoryId = categoryId;
 
-        // Create Text Channel in specified Category
         guild.createTextChannel(channelName)
             .setParent(guild.getCategoryById(TICKET_CATEGORY_ID))
             .addPermissionOverride(guild.getPublicRole(), null, EnumSet.of(Permission.VIEW_CHANNEL))
             .addPermissionOverride(member, EnumSet.of(Permission.VIEW_CHANNEL, Permission.MESSAGE_SEND), null)
             .queue(channel -> {
-                // Save to DB
                 TicketEntity ticket = new TicketEntity();
                 ticket.setUserId(userId);
                 ticket.setChannelId(channel.getId());
@@ -225,9 +216,7 @@ public class TicketListener extends ListenerAdapter {
                 ticket.setTicketNumber(finalNextNum);
                 ticketRepository.save(ticket);
 
-                // Build detailed body based on category
                 StringBuilder ticketBody = new StringBuilder("Welcome " + member.getAsMention() + " 👋\n\n");
-                String pingRole = "@DC Department"; 
                 String subject = "";
                 String details = "";
                 String sector = "";
@@ -269,24 +258,21 @@ public class TicketListener extends ListenerAdapter {
                     )
                 );
 
-                MessageCreateBuilder msgBuilder = new MessageCreateBuilder();
-                msgBuilder.setContent(pingRole + " " + member.getAsMention());
-                msgBuilder.setComponents(welcomeContainer);
-                msgBuilder.useComponentsV2(true);
+                String ping = "<@&1487152917763981574> " + member.getAsMention();
                 
-                channel.sendMessage(msgBuilder.build()).useComponentsV2(true).queue();
+                channel.sendMessageComponents(welcomeContainer)
+                    .setContent(ping)
+                    .useComponentsV2(true)
+                    .queue();
 
-                Container success = EmbedUtil.success("الإمـدادات", "تـم إنـشـاء تـذكـرتـك بـنـجـاح: " + channel.getAsMention());
-                MessageCreateBuilder successBuilder = new MessageCreateBuilder();
-                successBuilder.setComponents(success);
-                successBuilder.useComponentsV2(true);
-                event.reply(successBuilder.build()).setEphemeral(true).useComponentsV2(true).queue();
+                Container successCont = EmbedUtil.success("الإنـشـاء", "تـم إنـشـاء تـذكـرتـك بـنـجـاح: " + channel.getAsMention());
+                event.replyComponents(successCont)
+                    .setEphemeral(true)
+                    .useComponentsV2(true)
+                    .queue();
             }, error -> {
                 Container errorCont = EmbedUtil.error("ERROR", "حدث خطأ أثناء إنشاء الغرفة، يرجى التأكد من صلاحيات البوت.");
-                MessageCreateBuilder errorBuilder = new MessageCreateBuilder();
-                errorBuilder.setComponents(errorCont);
-                errorBuilder.useComponentsV2(true);
-                event.reply(errorBuilder.build()).setEphemeral(true).useComponentsV2(true).queue();
+                event.replyComponents(errorCont).setEphemeral(true).useComponentsV2(true).queue();
                 log.error("Error creating ticket channel", error);
             });
     }
