@@ -25,28 +25,29 @@ public class YouTubeService {
     public Optional<JsonObject> getLatestVideo(String channelId) {
         try {
             String resolvedId = channelId;
-            
+
             if (!channelId.startsWith("UC")) {
                 resolvedId = resolveChannelId(channelId);
             }
 
-            String url = "https://www.youtube.com/feeds/videos.xml?channel_id=" + resolvedId;
-            
+            // Only use channel_id URL — ?user= is deprecated and always returns 404
             if (!resolvedId.startsWith("UC")) {
-                url = "https://www.youtube.com/feeds/videos.xml?user=" + resolvedId.replace("@", "");
+                log.warn("YouTube RSS: Could not resolve channel ID for {}, skipping.", channelId);
+                return Optional.empty();
             }
 
+            String url = "https://www.youtube.com/feeds/videos.xml?channel_id=" + resolvedId;
             String xml = restTemplate.getForObject(url, String.class);
-            
+
             if (xml != null && xml.contains("<entry>")) {
                 int entryStart = xml.indexOf("<entry>");
                 String latestEntry = xml.substring(entryStart);
-                
+
                 JsonObject video = new JsonObject();
                 video.addProperty("videoId", extractValue(latestEntry, "<yt:videoId>(.*?)</yt:videoId>"));
                 video.addProperty("title", extractValue(latestEntry, "<title>(.*?)</title>"));
                 video.addProperty("thumbnail", "https://i.ytimg.com/vi/" + video.get("videoId").getAsString() + "/hqdefault.jpg");
-                
+
                 return Optional.of(video);
             }
         } catch (Exception e) {
@@ -91,8 +92,30 @@ public class YouTubeService {
         } catch (Exception e) {
             log.warn("YouTube Resolver (Scrape): Failed for {}: {}", input, e.getMessage());
         }
-        
-        return input;
+
+        // Step 3: Try RSS feed directly with @handle
+        try {
+            String handle = input.startsWith("@") ? input : "@" + input;
+            String rssUrl = "https://www.youtube.com/feeds/videos.xml?user=" + handle.replace("@", "");
+            // This is intentionally not used for fetch — just here as last-resort channel page scrape
+            String url = "https://www.youtube.com/" + handle;
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("User-Agent", "Mozilla/5.0");
+            headers.set("Accept-Language", "en-US,en;q=0.9");
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            String html = response.getBody();
+            if (html != null) {
+                Pattern p = Pattern.compile("\"externalId\":\"(UC[a-zA-Z0-9_-]+)\"");
+                Matcher m = p.matcher(html);
+                if (m.find()) return m.group(1);
+            }
+        } catch (Exception e) {
+            log.warn("YouTube Resolver (Fallback): Failed for {}: {}", input, e.getMessage());
+        }
+
+        // Resolution failed — return null so caller can skip
+        return null;
     }
 
     private String extractValue(String xml, String regex) {
