@@ -29,9 +29,18 @@ public class TranscriptController {
 
     @GetMapping(value = "/{id}", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> viewTranscript(@PathVariable String id) {
-        Optional<TicketEntity> ticketOpt = ticketRepository.findById(Long.parseLong(id));
+        long ticketId;
+        try {
+            // Clean ID of any trailing junk like )**
+            String cleanId = id.replaceAll("[^0-9]", "");
+            ticketId = Long.parseLong(cleanId);
+        } catch (NumberFormatException e) {
+            return ResponseEntity.ok("<body style='background:#0d0e10;color:#e3e5e8;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh'><h1>Invalid Transcript ID</h1></body>");
+        }
+
+        Optional<TicketEntity> ticketOpt = ticketRepository.findById(ticketId);
         
-        List<TicketMessageEntity> messages = ticketMessageRepository.findAllByTicketIdOrderByCreatedAtAsc(id);
+        List<TicketMessageEntity> messages = ticketMessageRepository.findAllByTicketIdOrderByCreatedAtAsc(String.valueOf(ticketId));
         
         if (ticketOpt.isEmpty() || messages.isEmpty()) {
             return ResponseEntity.ok("<body style='background:#0d0e10;color:#e3e5e8;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh'><h1>Transcript Not Found or Empty</h1></body>");

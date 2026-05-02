@@ -74,9 +74,21 @@ public class VoiceListener extends ListenerAdapter {
     }
 
     private void handleCreateRoom(Member member, Category category) {
-        // Load saved profile or defaults
-        VoiceRoomEntity room = voiceRoomRepository.findById(member.getId())
-                .orElse(new VoiceRoomEntity());
+        // Load saved profile or defaults - Clean up duplicates if any
+        List<VoiceRoomEntity> rooms = voiceRoomRepository.findAllByOwnerId(member.getId());
+        VoiceRoomEntity room;
+        
+        if (rooms.isEmpty()) {
+            room = new VoiceRoomEntity();
+        } else {
+            room = rooms.get(0);
+            // Cleanup duplicates from old schema
+            if (rooms.size() > 1) {
+                for (int i = 1; i < rooms.size(); i++) {
+                    voiceRoomRepository.delete(rooms.get(i));
+                }
+            }
+        }
         
         String channelName = room.getRoomName() != null ? room.getRoomName() : "🔊 | " + member.getEffectiveName();
         int userLimit = room.getUserLimit() != null ? room.getUserLimit() : 0;
