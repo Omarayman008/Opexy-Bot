@@ -244,11 +244,11 @@ public class VoiceListener extends ListenerAdapter {
         switch (id) {
             case "voice_rename":
                 event.replyModal(Modal.create("modal_voice_rename", "تغيير اسم الغرفة")
-                    .addComponents(ActionRow.of(TextInput.create("voice_new_name", "الاسم الجديد", TextInputStyle.SHORT).setPlaceholder("🔊 | My Room").build())).build()).queue();
+                    .addComponents(Label.of("الاسم الجديد", TextInput.create("voice_new_name", TextInputStyle.SHORT).setPlaceholder("🔊 | My Room").build())).build()).queue();
                 break;
             case "voice_limit":
                 event.replyModal(Modal.create("modal_voice_limit", "حد الأعضاء")
-                    .addComponents(ActionRow.of(TextInput.create("voice_new_limit", "العدد (0-99)", TextInputStyle.SHORT).setPlaceholder("0 = لا يوجد حد").build())).build()).queue();
+                    .addComponents(Label.of("العدد (0-99)", TextInput.create("voice_new_limit", TextInputStyle.SHORT).setPlaceholder("0 = لا يوجد حد").build())).build()).queue();
                 break;
             case "voice_bitrate":
                 StringSelectMenu bitrateMenu = StringSelectMenu.create("menu_voice_bitrate")
@@ -302,11 +302,11 @@ public class VoiceListener extends ListenerAdapter {
                 break;
             case "voice_trust":
                 event.replyModal(Modal.create("modal_voice_trust", "إعطاء صلاحية دخول")
-                    .addComponents(ActionRow.of(TextInput.create("voice_user_id", "ID العضو", TextInputStyle.SHORT).build())).build()).queue();
+                    .addComponents(Label.of("ID العضو", TextInput.create("voice_user_id", TextInputStyle.SHORT).build())).build()).queue();
                 break;
             case "voice_block":
                 event.replyModal(Modal.create("modal_voice_block", "حظر عضو من الدخول")
-                    .addComponents(ActionRow.of(TextInput.create("voice_user_id", "ID العضو", TextInputStyle.SHORT).build())).build()).queue();
+                    .addComponents(Label.of("ID العضو", TextInput.create("voice_user_id", TextInputStyle.SHORT).build())).build()).queue();
                 break;
             case "voice_ownership":
                 String ownerMention = event.getGuild().getMemberById(room.getOwnerId()).getAsMention();
@@ -317,7 +317,7 @@ public class VoiceListener extends ListenerAdapter {
                 break;
             case "voice_transfer_start":
                 event.replyModal(Modal.create("modal_voice_transfer", "نقل ملكية الغرفة")
-                    .addComponents(ActionRow.of(TextInput.create("voice_user_id", "ID المالك الجديد", TextInputStyle.SHORT).build())).build()).queue();
+                    .addComponents(Label.of("ID المالك الجديد", TextInput.create("voice_user_id", TextInputStyle.SHORT).build())).build()).queue();
                 break;
             case "voice_panel":
                 sendMemberPanel(channel, event);
