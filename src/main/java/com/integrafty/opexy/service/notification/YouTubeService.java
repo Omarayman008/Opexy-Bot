@@ -1,6 +1,7 @@
 package com.integrafty.opexy.service.notification;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,12 +26,19 @@ public class YouTubeService {
         try {
             String resolvedId = channelId;
             
-            // If it's a handle or username, try to resolve it to a UC... ID
+            // If it's a handle, try to resolve it to a UC... ID
             if (!channelId.startsWith("UC")) {
                 resolvedId = resolveChannelId(channelId);
             }
 
+            // Always try RSS with the best ID we have
             String url = "https://www.youtube.com/feeds/videos.xml?channel_id=" + resolvedId;
+            
+            // Fallback for legacy usernames if resolution failed
+            if (!resolvedId.startsWith("UC")) {
+                url = "https://www.youtube.com/feeds/videos.xml?user=" + resolvedId.replace("@", "");
+            }
+
             String xml = restTemplate.getForObject(url, String.class);
             
             if (xml != null && xml.contains("<entry>")) {
@@ -52,24 +60,24 @@ public class YouTubeService {
 
     private String resolveChannelId(String input) {
         try {
+            // Using YouTube's oembed to find the canonical channel URL/ID
             String handle = input.startsWith("@") ? input : "@" + input;
-            String url = "https://www.youtube.com/" + handle;
+            String oembedUrl = "https://www.youtube.com/oembed?url=https://www.youtube.com/" + handle + "&format=json";
             
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36");
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-            
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
-            String html = response.getBody();
-            
-            if (html != null && html.contains("channelId\":\"")) {
-                String id = html.substring(html.indexOf("channelId\":\"") + 12);
-                id = id.substring(0, id.indexOf("\""));
-                log.info("YouTube Resolver: Resolved {} to {}", input, id);
-                return id;
+            String jsonResponse = restTemplate.getForObject(oembedUrl, String.class);
+            if (jsonResponse != null) {
+                JsonObject json = JsonParser.parseString(jsonResponse).getAsJsonObject();
+                if (json.has("author_url")) {
+                    String authorUrl = json.get("author_url").getAsString();
+                    if (authorUrl.contains("/channel/")) {
+                        String id = authorUrl.substring(authorUrl.lastIndexOf("/") + 1);
+                        log.info("YouTube Resolver: Resolved {} to {} via oembed", input, id);
+                        return id;
+                    }
+                }
             }
         } catch (Exception e) {
-            log.warn("YouTube Resolver: Could not resolve ID for {}: {}", input, e.getMessage());
+            log.warn("YouTube Resolver (oembed): Failed for {}: {}", input, e.getMessage());
         }
         return input;
     }
