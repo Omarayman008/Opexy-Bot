@@ -41,18 +41,15 @@ public class NotificationListener extends ListenerAdapter {
 
         switch (id) {
             case "notify_add_live":
-                event.replyModal(Modal.create("modal_notify_add_live", "Add Live Channel")
+                event.replyModal(Modal.create("modal_notify_add_live", "Add Channel")
                     .addComponents(
-                        Label.of("Platform (KICK or TWITCH)", TextInput.create("platform", TextInputStyle.SHORT).setPlaceholder("KICK").setRequired(true).build()),
-                        Label.of("Channel Username/ID", TextInput.create("channel_id", TextInputStyle.SHORT).setPlaceholder("shroud").setRequired(true).build()),
-                        Label.of("Display Name", TextInput.create("display_name", TextInputStyle.SHORT).setPlaceholder("Shroud").setRequired(true).build())
+                        Label.of("Channel URL", TextInput.create("url", TextInputStyle.SHORT).setPlaceholder("https://kick.com/itvrz or https://twitch.tv/shroud").setRequired(true).build())
                     ).build()).queue();
                 break;
             case "notify_add_video":
                 event.replyModal(Modal.create("modal_notify_add_video", "Add YouTube Channel")
                     .addComponents(
-                        Label.of("YouTube Channel ID", TextInput.create("channel_id", TextInputStyle.SHORT).setPlaceholder("UC...").setRequired(true).build()),
-                        Label.of("Display Name", TextInput.create("display_name", TextInputStyle.SHORT).setPlaceholder("MrBeast").setRequired(true).build())
+                        Label.of("YouTube URL", TextInput.create("url", TextInputStyle.SHORT).setPlaceholder("https://youtube.com/@MrBeast").setRequired(true).build())
                     ).build()).queue();
                 break;
             case "notify_remove_live":
@@ -89,21 +86,37 @@ public class NotificationListener extends ListenerAdapter {
         String id = event.getModalId();
         if (!id.startsWith("modal_notify_")) return;
 
+        String url = event.getValue("url").getAsString().toLowerCase();
         NotificationEntity entity = new NotificationEntity();
         entity.setGuildId(event.getGuild().getId());
 
-        if (id.equals("modal_notify_add_live")) {
-            entity.setPlatform(event.getValue("platform").getAsString().toUpperCase());
-            entity.setChannelId(event.getValue("channel_id").getAsString());
-            entity.setDisplayName(event.getValue("display_name").getAsString());
-        } else if (id.equals("modal_notify_add_video")) {
+        if (url.contains("kick.com/")) {
+            entity.setPlatform("KICK");
+            entity.setChannelId(extractFromUrl(url, "kick.com/"));
+        } else if (url.contains("twitch.tv/")) {
+            entity.setPlatform("TWITCH");
+            entity.setChannelId(extractFromUrl(url, "twitch.tv/"));
+        } else if (url.contains("youtube.com/") || url.contains("youtu.be/")) {
             entity.setPlatform("YOUTUBE");
-            entity.setChannelId(event.getValue("channel_id").getAsString());
-            entity.setDisplayName(event.getValue("display_name").getAsString());
+            if (url.contains("/@")) entity.setChannelId(extractFromUrl(url, "/@"));
+            else if (url.contains("/channel/")) entity.setChannelId(extractFromUrl(url, "/channel/"));
+            else if (url.contains("/user/")) entity.setChannelId(extractFromUrl(url, "/user/"));
+            else entity.setChannelId(extractFromUrl(url, "youtube.com/"));
+        } else {
+            event.reply("Invalid URL! Please provide a valid Kick, Twitch, or YouTube link.").setEphemeral(true).queue();
+            return;
         }
 
+        entity.setDisplayName(entity.getChannelId());
         notificationRepository.save(entity);
-        event.reply("Successfully added **" + entity.getDisplayName() + "** to tracking!").setEphemeral(true).queue();
+        event.reply("Successfully added **" + entity.getDisplayName() + "** from " + entity.getPlatform() + "!").setEphemeral(true).queue();
+    }
+
+    private String extractFromUrl(String url, String marker) {
+        String part = url.substring(url.indexOf(marker) + marker.length());
+        if (part.contains("/")) part = part.substring(0, part.indexOf("/"));
+        if (part.contains("?")) part = part.substring(0, part.indexOf("?"));
+        return part;
     }
 
     @Override
