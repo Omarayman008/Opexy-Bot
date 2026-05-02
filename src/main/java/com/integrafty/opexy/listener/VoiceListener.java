@@ -82,10 +82,13 @@ public class VoiceListener extends ListenerAdapter {
         int userLimit = room.getUserLimit() != null ? room.getUserLimit() : 0;
         
         member.getGuild().createVoiceChannel(channelName, category)
-            .setUserLimit(userLimit)
             .addPermissionOverride(member.getGuild().getPublicRole(), null, EnumSet.of(Permission.VIEW_CHANNEL))
             .addPermissionOverride(member, EnumSet.of(Permission.VIEW_CHANNEL, Permission.VOICE_MOVE_OTHERS, Permission.MANAGE_CHANNEL), null)
             .queue(channel -> {
+                // Apply voice settings
+                if (userLimit > 0) channel.getManager().setUserLimit(userLimit).queue();
+                if (room.getBitrate() != null) channel.getManager().setBitrate(room.getBitrate()).queue();
+
                 // Update DB
                 room.setOwnerId(member.getId());
                 room.setChannelId(channel.getId());
