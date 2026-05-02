@@ -201,13 +201,13 @@ public class VoiceListener extends ListenerAdapter {
         }
 
         if (channel == null) {
-            event.reply("❌ لا تملك غرفة نشطة للتحكم بها حالياً.").setEphemeral(true).queue();
+            event.reply("You do not have an active private room.").setEphemeral(true).queue();
             return;
         }
 
         Optional<VoiceRoomEntity> roomOpt = voiceRoomRepository.findByChannelId(channel.getId());
         if (roomOpt.isEmpty()) {
-            event.reply("❌ هذه الغرفة ليست مسجلة في النظام كغرفة مؤقتة.").setEphemeral(true).queue();
+            event.reply("This room is not registered in the system.").setEphemeral(true).queue();
             return;
         }
 
@@ -216,7 +216,7 @@ public class VoiceListener extends ListenerAdapter {
         boolean isAdmin = event.getMember().hasPermission(Permission.MANAGE_CHANNEL);
 
         if (!isOwner && !isAdmin && !id.equals("voice_ownership")) {
-            event.reply("❌ لا تملك صلاحية للتحكم في هذه الغرفة.").setEphemeral(true).queue();
+            event.reply("You do not have permission to control this room.").setEphemeral(true).queue();
             return;
         }
 

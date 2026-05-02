@@ -24,13 +24,13 @@ public class VoiceCommand implements SlashCommand {
 
     @Override
     public SlashCommandData getCommandData() {
-        return Commands.slash("voice-setup", "إعداد لوحة التحكم في الغرف الصوتية");
+        return Commands.slash("voice-setup", "Setup the voice room control dashboard");
     }
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         if (!event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
-            event.reply("❌ لا تملك صلاحية لاستخدام هذا الأمر.").setEphemeral(true).queue();
+            event.reply("You do not have permission to use this command.").setEphemeral(true).queue();
             return;
         }
 
@@ -77,9 +77,9 @@ public class VoiceCommand implements SlashCommand {
         net.dv8tion.jda.api.entities.channel.concrete.TextChannel dashboard = event.getGuild().getTextChannelById(DASHBOARD_CHANNEL_ID);
         if (dashboard != null) {
             dashboard.sendMessage(builder.build()).useComponentsV2(true).queue();
-            event.reply("✅ تم إرسال لوحة التحكم بنجاح في " + dashboard.getAsMention()).setEphemeral(true).queue();
+            event.reply("Dashboard sent successfully to " + dashboard.getAsMention()).setEphemeral(true).queue();
         } else {
-            event.reply("❌ لم يتم العثور على روم الداشبورد المخصص.").setEphemeral(true).queue();
+            event.reply("Dashboard channel not found.").setEphemeral(true).queue();
         }
     }
 }
