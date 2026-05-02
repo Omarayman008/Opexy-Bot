@@ -56,17 +56,6 @@ public class VoiceListener extends ListenerAdapter {
         
         // Handle Joining "Join to Create"
         if (event.getChannelJoined() != null) {
-            String joinedId = event.getChannelJoined().getId();
-            String joinedName = event.getChannelJoined().getName();
-            log.info("🔊 {} joined: {} ({})", member.getEffectiveName(), joinedName, joinedId);
-            
-            boolean isJoinToCreate = joinedId.equals(JOIN_TO_CREATE_ID) || joinedName.toLowerCase().contains("join to create");
-            
-            if (isJoinToCreate) {
-                log.info("✨ Triggering Room Creation for {}", member.getEffectiveName());
-                handleCreateRoom(member, event.getChannelJoined().asVoiceChannel().getParentCategory());
-            }
-        }
 
         // Handle Leaving Room (Delete if empty)
         if (event.getChannelLeft() != null) {
@@ -76,32 +65,28 @@ public class VoiceListener extends ListenerAdapter {
             String parentId = leftChannel.getParentCategoryId();
             
             // CRITICAL SHIELD: Never delete main channels
-            if (leftChannelId.equals(JOIN_TO_CREATE_ID) || leftChannelId.equals(VOICE_DASHBOARD_ID)) {
-                return;
-            }
-
-            // Check if it belongs to our managed category
-            boolean isInCategory = VOICE_CATEGORY_ID.equals(parentId);
-            
-            if (isInCategory) {
-                int memberCount = leftChannel.getMembers().size();
-                log.info("🔍 Voice Update [LEAVE]: {} | Members: {} | CategoryMatch: {}", leftName, memberCount, isInCategory);
-
-                if (memberCount == 0) {
+            if (!leftChannelId.equals(JOIN_TO_CREATE_ID) && !leftChannelId.equals(VOICE_DASHBOARD_ID)) {
+                // Check if it belongs to our managed category
+                if (VOICE_CATEGORY_ID.equals(parentId) && leftChannel.getMembers().isEmpty()) {
                     log.info("🗑️ Deleting vacated channel: {}", leftName);
                     
                     // Cleanup DB reference if exists
                     voiceRoomRepository.findByChannelId(leftChannelId).ifPresent(room -> {
                         room.setChannelId(null);
                         voiceRoomRepository.save(room);
-                        log.info("💾 Unlinked DB record for owner: {}", room.getOwnerId());
                     });
 
-                    leftChannel.delete().queue(
-                        v -> log.info("✅ Successfully deleted channel: {}", leftName),
-                        err -> log.error("❌ Failed to delete channel {}: {}", leftName, err.getMessage())
-                    );
+                    leftChannel.delete().queue(null, err -> log.error("❌ Delete failed: {}", err.getMessage()));
                 }
+            }
+        }
+
+        // Handle Joining "Join to Create"
+        if (event.getChannelJoined() != null) {
+            String joinedId = event.getChannelJoined().getId();
+            if (joinedId.equals(JOIN_TO_CREATE_ID)) {
+                log.info("✨ Triggering Room Creation for {}", member.getEffectiveName());
+                handleCreateRoom(member, event.getChannelJoined().getParentCategory());
             }
         }
     }
