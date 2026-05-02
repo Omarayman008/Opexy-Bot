@@ -42,35 +42,38 @@ public class VoiceCommand implements SlashCommand {
                 "● **الإدارة** — الطرد أو نقل الملكية";
 
         ActionRow row1 = ActionRow.of(
-            Button.secondary("voice_lock", "قفل"),
-            Button.secondary("voice_unlock", "فتح"),
-            Button.secondary("voice_hide", "إخفاء"),
-            Button.secondary("voice_unhide", "إظهار"),
-            Button.secondary("voice_rename", "تغيير الاسم")
+            Button.secondary("voice_lock", "قفل").withEmoji(Emoji.fromUnicode("🔒")),
+            Button.secondary("voice_unlock", "فتح").withEmoji(Emoji.fromUnicode("🔓")),
+            Button.secondary("voice_rename", "تغيير الاسم").withEmoji(Emoji.fromUnicode("📝"))
         );
-
+        
         ActionRow row2 = ActionRow.of(
-            Button.secondary("voice_limit", "تحديد العدد"),
-            Button.secondary("voice_claim", "استلام الملكية"),
-            Button.secondary("voice_kick", "طرد"),
-            Button.secondary("voice_permit", "سماح"),
-            Button.secondary("voice_reject", "رفض")
+            Button.secondary("voice_hide", "إخفاء").withEmoji(Emoji.fromUnicode("👻")),
+            Button.secondary("voice_unhide", "إظهار").withEmoji(Emoji.fromUnicode("👁️")),
+            Button.secondary("voice_limit", "تحديد العدد").withEmoji(Emoji.fromUnicode("👥"))
         );
 
         ActionRow row3 = ActionRow.of(
-            Button.secondary("voice_trust", "توثيق"),
-            Button.secondary("voice_untrust", "إلغاء التوثيق"),
-            Button.secondary("voice_ghost", "شبح"),
-            Button.secondary("voice_unghost", "إلغاء الشبح"),
-            Button.secondary("voice_silence", "صمت")
+            Button.secondary("voice_claim", "استلام الملكية").withEmoji(Emoji.fromUnicode("👑")),
+            Button.secondary("voice_transfer", "نقل الملكية").withEmoji(Emoji.fromUnicode("🔄")),
+            Button.secondary("voice_kick", "طرد").withEmoji(Emoji.fromUnicode("👞"))
         );
 
         ActionRow row4 = ActionRow.of(
-            Button.secondary("voice_unsilence", "إلغاء الصمت"),
-            Button.secondary("voice_transfer", "نقل الملكية")
+            Button.secondary("voice_permit", "سماح").withEmoji(Emoji.fromUnicode("✅")),
+            Button.secondary("voice_reject", "رفض").withEmoji(Emoji.fromUnicode("❌")),
+            Button.secondary("voice_trust", "توثيق").withEmoji(Emoji.fromUnicode("🤝"))
         );
 
-        Container container = EmbedUtil.containerBranded("الصوت", "لوحة التحكم", body, EmbedUtil.BANNER_MAIN, row1, row2, row3, row4);
+        ActionRow row5 = ActionRow.of(
+            Button.secondary("voice_untrust", "إلغاء التوثيق").withEmoji(Emoji.fromUnicode("🚫")),
+            Button.secondary("voice_ghost", "شبح").withEmoji(Emoji.fromUnicode("🎭")),
+            Button.secondary("voice_unghost", "إلغاء الشبح").withEmoji(Emoji.fromUnicode("🕶️")),
+            Button.secondary("voice_silence", "صمت").withEmoji(Emoji.fromUnicode("🔇")),
+            Button.secondary("voice_unsilence", "إلغاء الصمت").withEmoji(Emoji.fromUnicode("🔊"))
+        );
+
+        Container container = EmbedUtil.containerBranded("الصوت", "لوحة التحكم", body, EmbedUtil.BANNER_MAIN, row1, row2, row3, row4, row5);
 
         MessageCreateBuilder builder = new MessageCreateBuilder();
         builder.setComponents(container);
