@@ -357,15 +357,33 @@ public class VoiceListener extends ListenerAdapter {
     }
 
     private void sendMemberPanel(VoiceChannel channel, ButtonInteractionEvent event) {
-        StringBuilder sb = new StringBuilder("### Member Management\n");
+        Optional<VoiceRoomEntity> roomOpt = voiceRoomRepository.findByChannelId(channel.getId());
+        if (roomOpt.isEmpty()) {
+            event.reply("Room data not found.").setEphemeral(true).queue();
+            return;
+        }
+        VoiceRoomEntity room = roomOpt.get();
+        
+        StringBuilder sb = new StringBuilder("### Member Management\n\n");
+        
+        sb.append("**Active Members:**\n");
         channel.getMembers().forEach(m -> {
             boolean canSpeak = m.hasPermission(channel, Permission.VOICE_SPEAK);
             boolean canWrite = m.hasPermission(channel, Permission.MESSAGE_SEND);
-            sb.append("● ").append(m.getAsMention()).append(" — ")
-              .append(canSpeak ? "SPEAK " : "")
-              .append(canWrite ? "CHAT " : "")
-              .append("\n");
+            sb.append("● ").append(m.getAsMention()).append(" (")
+              .append(canSpeak ? "S " : "")
+              .append(canWrite ? "W " : "")
+              .append(")\n");
         });
+
+        if (room.getTrustedUserIds() != null && !room.getTrustedUserIds().isEmpty()) {
+            sb.append("\n**Trusted Users:**\n");
+            for (String id : room.getTrustedUserIds().split(",")) {
+                if (id.isEmpty()) continue;
+                sb.append("● <@").append(id).append(">\n");
+            }
+        }
+        
         event.reply(sb.toString()).setEphemeral(true).queue();
     }
 
