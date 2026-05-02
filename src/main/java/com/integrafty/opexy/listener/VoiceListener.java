@@ -50,45 +50,53 @@ public class VoiceListener extends ListenerAdapter {
 
     @Override
     public void onGuildVoiceUpdate(GuildVoiceUpdateEvent event) {
+        Member member = event.getMember();
+        
         // Handle Joining "Join to Create"
         if (event.getChannelJoined() != null && event.getChannelJoined().getId().equals(JOIN_TO_CREATE_ID)) {
-            handleCreateRoom(event.getMember(), event.getChannelJoined().getParentCategory());
+            log.info("👤 {} joined Join-to-Create", member.getEffectiveName());
+            handleCreateRoom(member, event.getChannelJoined().asVoiceChannel().getParentCategory());
         }
 
         // Handle Leaving Room (Delete if empty)
         if (event.getChannelLeft() != null) {
-            String leftChannelId = event.getChannelLeft().getId();
-            Optional<VoiceRoomEntity> roomOpt = voiceRoomRepository.findByChannelId(leftChannelId);
-            if (roomOpt.isPresent() && event.getChannelLeft().getMembers().isEmpty()) {
-                VoiceRoomEntity room = roomOpt.get();
-                // Save current state before deletion
-                room.setRoomName(event.getChannelLeft().getName());
-                room.setUserLimit(event.getChannelLeft().getUserLimit());
-                room.setBitrate(event.getChannelLeft().getBitrate());
-                room.setChannelId(null); 
-                voiceRoomRepository.save(room);
+            VoiceChannel leftChannel = event.getChannelLeft().asVoiceChannel();
+            log.info("🚪 {} left channel: {}", member.getEffectiveName(), leftChannel.getName());
+            
+            if (leftChannel.getMembers().isEmpty()) {
+                // Check if it's a managed room (by DB or Category)
+                Optional<VoiceRoomEntity> roomOpt = voiceRoomRepository.findByChannelId(leftChannel.getId());
+                boolean isInCategory = leftChannel.getParentCategoryId() != null && leftChannel.getParentCategoryId().equals(VOICE_CATEGORY_ID);
                 
-                event.getChannelLeft().delete().queue();
+                if (roomOpt.isPresent() || isInCategory) {
+                    log.info("🗑️ Deleting empty managed channel: {}", leftChannel.getName());
+                    
+                    if (roomOpt.isPresent()) {
+                        VoiceRoomEntity room = roomOpt.get();
+                        // Save current state before clearing channel association
+                        room.setRoomName(leftChannel.getName());
+                        room.setUserLimit(leftChannel.getUserLimit());
+                        room.setBitrate(leftChannel.getBitrate());
+                        room.setChannelId(null); 
+                        voiceRoomRepository.save(room);
+                    }
+                    
+                    leftChannel.delete().queue(
+                        v -> log.info("✅ Channel deleted successfully"),
+                        err -> log.error("❌ Failed to delete channel: {}", err.getMessage())
+                    );
+                }
             }
         }
     }
 
     private void handleCreateRoom(Member member, Category category) {
-        // Load saved profile or defaults - Clean up duplicates if any
-        List<VoiceRoomEntity> rooms = voiceRoomRepository.findAllByOwnerId(member.getId());
-        VoiceRoomEntity room;
+        // Capture existing settings before wipe if any
+        List<VoiceRoomEntity> existing = voiceRoomRepository.findAllByOwnerId(member.getId());
+        VoiceRoomEntity room = existing.isEmpty() ? new VoiceRoomEntity() : existing.get(0);
         
-        if (rooms.isEmpty()) {
-            room = new VoiceRoomEntity();
-        } else {
-            room = rooms.get(0);
-            // Cleanup duplicates from old schema
-            if (rooms.size() > 1) {
-                for (int i = 1; i < rooms.size(); i++) {
-                    voiceRoomRepository.delete(rooms.get(i));
-                }
-            }
-        }
+        // Wipe ALL records for this user (including duplicates) using Native SQL
+        voiceRoomRepository.deleteAllByOwnerIdNative(member.getId());
         
         String channelName = room.getRoomName() != null ? room.getRoomName() : "🔊 | " + member.getEffectiveName();
         int userLimit = room.getUserLimit() != null ? room.getUserLimit() : 0;
