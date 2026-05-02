@@ -117,17 +117,18 @@ public class NotificationScheduler {
         if (channel == null) return;
 
         String body = String.format("### %s is Live on %s!\n**%s**\n\nClick the button below to join the stream.", entity.getDisplayName(), platform, title);
-        
+
         Container container = EmbedUtil.containerBranded(platform, "Live Stream", body, thumbnail, ActionRow.of(Button.link(url, "Watch Stream")));
 
         MessageCreateBuilder builder = new MessageCreateBuilder()
-            .setContent("@everyone")
             .setComponents(container)
             .useComponentsV2(true);
 
-        channel.sendMessage(builder.build()).useComponentsV2(true).queue(msg -> {
-            entity.setLastContentId(contentId);
-            notificationRepository.save(entity);
+        channel.sendMessage("@everyone").queue(ping -> {
+            channel.sendMessage(builder.build()).useComponentsV2(true).queue(msg -> {
+                entity.setLastContentId(contentId);
+                notificationRepository.save(entity);
+            });
         });
     }
 
@@ -136,17 +137,18 @@ public class NotificationScheduler {
         if (channel == null) return;
 
         String body = String.format("### New Video from %s!\n**%s**\n\nClick the button below to watch the video.", entity.getDisplayName(), title);
-        
+
         Container container = EmbedUtil.containerBranded("YOUTUBE", "New Upload", body, thumbnail, ActionRow.of(Button.link(url, "Watch Video")));
 
         MessageCreateBuilder builder = new MessageCreateBuilder()
-            .setContent("@everyone")
             .setComponents(container)
             .useComponentsV2(true);
 
-        channel.sendMessage(builder.build()).useComponentsV2(true).queue(msg -> {
-            entity.setLastContentId(contentId);
-            notificationRepository.save(entity);
+        channel.sendMessage("@everyone").queue(ping -> {
+            channel.sendMessage(builder.build()).useComponentsV2(true).queue(msg -> {
+                entity.setLastContentId(contentId);
+                notificationRepository.save(entity);
+            });
         });
     }
 }
