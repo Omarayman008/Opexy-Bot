@@ -3,7 +3,6 @@ package com.integrafty.opexy.command;
 import com.integrafty.opexy.command.base.SlashCommand;
 import com.integrafty.opexy.utils.EmbedUtil;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
