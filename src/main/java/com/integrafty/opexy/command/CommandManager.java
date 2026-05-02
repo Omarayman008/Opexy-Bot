@@ -49,6 +49,9 @@ public class CommandManager extends ListenerAdapter {
         if (guildId != null && !guildId.isEmpty()) {
             net.dv8tion.jda.api.entities.Guild guild = jda.getGuildById(guildId);
             if (guild != null) {
+                // Clear global commands to avoid duplicates (shown in user screenshot)
+                jda.updateCommands().addCommands().queue();
+                
                 guild.updateCommands().addCommands(commandDataList).queue(
                     success -> log.info("Successfully registered all modular commands to guild: {}", guild.getName()),
                     error -> log.error("Failed to register commands to guild.", error)

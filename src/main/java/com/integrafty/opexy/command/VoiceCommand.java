@@ -73,7 +73,8 @@ public class VoiceCommand implements SlashCommand {
 
         ActionRow row6 = ActionRow.of(
             Button.danger("voice_request_staff", "Request Staff"),
-            Button.danger("voice_delete", "Delete Channel")
+            Button.danger("voice_delete", "Delete Channel"),
+            Button.danger("voice_info", "Dashboard Info")
         );
 
         Container container = EmbedUtil.containerBranded("Voice Control", "Dashboard Center", body, EmbedUtil.BANNER_MAIN, row1, row2, row3, row4, row5, row6);

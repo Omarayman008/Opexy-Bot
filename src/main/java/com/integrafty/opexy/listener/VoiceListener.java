@@ -61,19 +61,28 @@ public class VoiceListener extends ListenerAdapter {
         // Handle Leaving Room (Delete if empty)
         if (event.getChannelLeft() != null) {
             VoiceChannel leftChannel = event.getChannelLeft().asVoiceChannel();
-            log.info("🚪 {} left channel: {}", member.getEffectiveName(), leftChannel.getName());
+            String leftChannelId = leftChannel.getId();
+            String parentId = leftChannel.getParentCategoryId();
+            
+            // CRITICAL: Never delete the Join-to-Create or Dashboard channels
+            if (leftChannelId.equals(JOIN_TO_CREATE_ID) || leftChannelId.equals(VOICE_DASHBOARD_ID)) {
+                return;
+            }
+
+            log.info("🚪 {} left channel: {} (Parent: {})", member.getEffectiveName(), leftChannel.getName(), parentId);
             
             if (leftChannel.getMembers().isEmpty()) {
                 // Check if it's a managed room (by DB or Category)
-                Optional<VoiceRoomEntity> roomOpt = voiceRoomRepository.findByChannelId(leftChannel.getId());
-                boolean isInCategory = leftChannel.getParentCategoryId() != null && leftChannel.getParentCategoryId().equals(VOICE_CATEGORY_ID);
+                Optional<VoiceRoomEntity> roomOpt = voiceRoomRepository.findByChannelId(leftChannelId);
+                boolean isInCategory = parentId != null && parentId.equals(VOICE_CATEGORY_ID);
                 
+                log.info("🔍 Deletion Check: inDB={}, isInCategory={}", roomOpt.isPresent(), isInCategory);
+
                 if (roomOpt.isPresent() || isInCategory) {
                     log.info("🗑️ Deleting empty managed channel: {}", leftChannel.getName());
                     
                     if (roomOpt.isPresent()) {
                         VoiceRoomEntity room = roomOpt.get();
-                        // Save current state before clearing channel association
                         room.setRoomName(leftChannel.getName());
                         room.setUserLimit(leftChannel.getUserLimit());
                         room.setBitrate(leftChannel.getBitrate());
@@ -86,6 +95,8 @@ public class VoiceListener extends ListenerAdapter {
                         err -> log.error("❌ Failed to delete channel: {}", err.getMessage())
                     );
                 }
+            } else {
+                log.info("ℹ️ Channel not empty, skipping deletion. (Members: {})", leftChannel.getMembers().size());
             }
         }
     }
@@ -102,6 +113,7 @@ public class VoiceListener extends ListenerAdapter {
         int userLimit = room.getUserLimit() != null ? room.getUserLimit() : 0;
         
         member.getGuild().createVoiceChannel(channelName, category)
+            .addPermissionOverride(member.getGuild().getSelfMember(), EnumSet.of(Permission.VIEW_CHANNEL, Permission.MANAGE_CHANNEL), null)
             .addPermissionOverride(member.getGuild().getPublicRole(), null, EnumSet.of(Permission.VIEW_CHANNEL))
             .addPermissionOverride(member, EnumSet.of(Permission.VIEW_CHANNEL, Permission.VOICE_MOVE_OTHERS, Permission.MANAGE_CHANNEL), null)
             .queue(channel -> {
