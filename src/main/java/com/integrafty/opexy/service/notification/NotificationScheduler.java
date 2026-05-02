@@ -30,6 +30,8 @@ public class NotificationScheduler {
 
     private static final String LIVE_CHANNEL_ID = "1487140470172815574";
     private static final String VIDEO_CHANNEL_ID = "1487204004076191946";
+    private static final String LIVE_ROLE_MENTION = "<@&1487196786488770610>";
+    private static final String VIDEO_ROLE_MENTION = "<@&1500269236583399454>";
 
     @Scheduled(fixedRate = 300000) // 5 Minutes
     public void checkNotifications() {
@@ -124,7 +126,7 @@ public class NotificationScheduler {
             .setComponents(container)
             .useComponentsV2(true);
 
-        channel.sendMessage("@everyone").queue(ping -> {
+        channel.sendMessage(LIVE_ROLE_MENTION).queue(ping -> {
             channel.sendMessage(builder.build()).useComponentsV2(true).queue(msg -> {
                 entity.setLastContentId(contentId);
                 notificationRepository.save(entity);
@@ -144,7 +146,7 @@ public class NotificationScheduler {
             .setComponents(container)
             .useComponentsV2(true);
 
-        channel.sendMessage("@everyone").queue(ping -> {
+        channel.sendMessage(VIDEO_ROLE_MENTION).queue(ping -> {
             channel.sendMessage(builder.build()).useComponentsV2(true).queue(msg -> {
                 entity.setLastContentId(contentId);
                 notificationRepository.save(entity);
