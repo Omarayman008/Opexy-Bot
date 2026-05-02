@@ -143,41 +143,39 @@ public class VoiceListener extends ListenerAdapter {
     }
 
     private void sendControlPanel(VoiceChannel channel, Member owner) {
-        String body = "### 🎙️ وحدة التحكم الصوتي\n" +
-                "أهلاً بك في غرفتك الخاصة! يمكنك التحكم في كافة إعدادات الغرفة من هنا.\n\n" +
-                "● **الهوية** — تغيير الاسم أو تحديد عدد الأعضاء\n" +
-                "● **الإدارة** — الطرد أو نقل الملكية";
-
+        String body = "### Room Management\n" +
+                "Control your voice session using the dashboard below.\n" +
+                "Changes are applied instantly to the channel.";
         ActionRow row1 = ActionRow.of(
-            Button.secondary("voice_rename", "إعادة تسمية"),
-            Button.secondary("voice_limit", "حد الأعضاء"),
-            Button.secondary("voice_bitrate", "البيترات")
+            Button.secondary("voice_rename", "Rename"),
+            Button.secondary("voice_limit", "Limit"),
+            Button.secondary("voice_bitrate", "Bitrate"),
+            Button.primary("voice_region", "Region")
         );
         
         ActionRow row2 = ActionRow.of(
-            Button.danger("voice_kick", "طرد عضو"),
-            Button.success("voice_video_perm", "صلاحية الفيديو"),
-            Button.success("voice_write_perm", "صلاحية الكتابة")
+            Button.success("voice_speak_perm", "Speak"),
+            Button.success("voice_write_perm", "Write"),
+            Button.success("voice_video_perm", "Video"),
+            Button.secondary("voice_lock", "Lock/Unlock")
         );
  
         ActionRow row3 = ActionRow.of(
-            Button.success("voice_speak_perm", "صلاحية التحدث"),
-            Button.primary("voice_region", "تغيير المنطقة"),
-            Button.primary("voice_trust", "إعطاء دخول"),
-            Button.primary("voice_block", "حظر دخول")
+            Button.danger("voice_kick", "Kick"),
+            Button.primary("voice_trust", "Trust"),
+            Button.primary("voice_block", "Block"),
+            Button.primary("voice_panel", "Members")
         );
  
         ActionRow row4 = ActionRow.of(
-            Button.primary("voice_ownership", "المالك الحالي"),
-            Button.primary("voice_panel", "لوحة الصلاحيات")
+            Button.primary("voice_ownership", "Owner"),
+            Button.success("voice_shop", "Shop"),
+            Button.danger("voice_request_staff", "Staff"),
+            Button.danger("voice_delete", "Delete")
         );
  
-        ActionRow row5 = ActionRow.of(
-            Button.danger("voice_request_staff", "طلب طاقم"),
-            Button.danger("voice_delete", "حذف الغرفة")
-        );
+        Container container = EmbedUtil.containerBranded("Voice Control", "Room Management Panel", body, EmbedUtil.BANNER_MAIN, row1, row2, row3, row4);
 
-        Container container = EmbedUtil.containerBranded("Voice Control", "مركز التحكم في الغرف", body, EmbedUtil.BANNER_MAIN, row1, row2, row3, row4, row5);
 
         MessageCreateBuilder builder = new MessageCreateBuilder();
         builder.setComponents(container);
@@ -224,27 +222,27 @@ public class VoiceListener extends ListenerAdapter {
 
         switch (id) {
             case "voice_rename":
-                event.replyModal(Modal.create("modal_voice_rename", "تغيير اسم الغرفة")
-                    .addComponents(Label.of("الاسم الجديد", TextInput.create("voice_new_name", TextInputStyle.SHORT).setPlaceholder("🔊 | My Room").build())).build()).queue();
+                event.replyModal(Modal.create("modal_voice_rename", "Rename Room")
+                    .addComponents(Label.of("New Name", TextInput.create("voice_new_name", TextInputStyle.SHORT).setPlaceholder("🔊 | My Room").build())).build()).queue();
                 break;
             case "voice_limit":
-                event.replyModal(Modal.create("modal_voice_limit", "حد الأعضاء")
-                    .addComponents(Label.of("العدد (0-99)", TextInput.create("voice_new_limit", TextInputStyle.SHORT).setPlaceholder("0 = لا يوجد حد").build())).build()).queue();
+                event.replyModal(Modal.create("modal_voice_limit", "User Limit")
+                    .addComponents(Label.of("Limit (0-99)", TextInput.create("voice_new_limit", TextInputStyle.SHORT).setPlaceholder("0 = No Limit").build())).build()).queue();
                 break;
             case "voice_bitrate":
                 StringSelectMenu bitrateMenu = StringSelectMenu.create("menu_voice_bitrate")
-                    .setPlaceholder("اختر جودة الصوت (Bitrate)")
+                    .setPlaceholder("Choose Audio Quality")
                     .addOption("64 kbps (Standard)", "64")
                     .addOption("96 kbps (High)", "96")
-                    .addOption("128 kbps (Elite)", "128")
-                    .addOption("256 kbps (Premium)", "256")
-                    .addOption("384 kbps (Ultra)", "384")
+                    .addOption("128 kbps (Ultra)", "128")
+                    .addOption("256 kbps (Nitro)", "256")
+                    .addOption("384 kbps (Studio)", "384")
                     .build();
-                event.reply("⚙️ يرجى اختيار جودة الصوت المطلوبة:").setEphemeral(true).addComponents(ActionRow.of(bitrateMenu)).queue();
+                event.reply("Select the audio quality for your room:").setEphemeral(true).addComponents(ActionRow.of(bitrateMenu)).queue();
                 break;
             case "voice_kick":
                 StringSelectMenu.Builder kickMenu = StringSelectMenu.create("menu_voice_kick")
-                    .setPlaceholder("اختر العضو المراد طرده");
+                    .setPlaceholder("Select user to kick");
                 
                 List<Member> membersInRoom = channel.getMembers().stream()
                     .filter(m -> !m.getUser().isBot())
@@ -252,88 +250,95 @@ public class VoiceListener extends ListenerAdapter {
                     .toList();
 
                 if (membersInRoom.isEmpty()) {
-                    event.reply("❌ لا يوجد أعضاء آخرون في الغرفة حالياً.").setEphemeral(true).queue();
+                    event.reply("No other members are in the room.").setEphemeral(true).queue();
                     return;
                 }
 
                 membersInRoom.forEach(m -> kickMenu.addOption(m.getEffectiveName(), m.getId()));
-                event.reply("👞 اختر العضو الذي تريد طرده من الغرفة:").setEphemeral(true).addComponents(ActionRow.of(kickMenu.build())).queue();
+                event.reply("Select the member you want to kick:").setEphemeral(true).addComponents(ActionRow.of(kickMenu.build())).queue();
                 break;
             case "voice_video_perm":
-                togglePermission(channel, event, Permission.PRIORITY_SPEAKER, "صلاحية الفيديو/الشير");
+                togglePermission(channel, event, Permission.PRIORITY_SPEAKER, "Video/Screen Share");
                 break;
             case "voice_write_perm":
-                togglePermission(channel, event, Permission.MESSAGE_SEND, "صلاحية الكتابة");
+                togglePermission(channel, event, Permission.MESSAGE_SEND, "Chat Access");
                 break;
             case "voice_speak_perm":
-                togglePermission(channel, event, Permission.VOICE_SPEAK, "صلاحية التحدث");
+                togglePermission(channel, event, Permission.VOICE_SPEAK, "Speak Access");
                 break;
             case "voice_region":
                 StringSelectMenu regionMenu = StringSelectMenu.create("menu_voice_region")
-                    .setPlaceholder("اختر منطقة الاتصال")
+                    .setPlaceholder("Select Voice Region")
                     .addOption("Automatic (Recommended)", "auto")
                     .addOption("US East", "us-east")
                     .addOption("US West", "us-west")
-                    .addOption("US Central", "us-central")
-                    .addOption("US South", "us-south")
                     .addOption("Europe (Rotterdam)", "rotterdam")
-                    .addOption("Russia", "russia")
                     .addOption("Singapore", "singapore")
                     .addOption("Japan", "japan")
-                    .addOption("Hong Kong", "hongkong")
-                    .addOption("India", "india")
-                    .addOption("Brazil", "brazil")
                     .build();
-                event.reply("🌍 اختر المنطقة الجغرافية لخادم الغرفة:").setEphemeral(true).addComponents(ActionRow.of(regionMenu)).queue();
+                event.reply("Choose the server location for your room:").setEphemeral(true).addComponents(ActionRow.of(regionMenu)).queue();
                 break;
             case "voice_trust":
-                event.replyModal(Modal.create("modal_voice_trust", "إعطاء صلاحية دخول")
-                    .addComponents(Label.of("ID العضو", TextInput.create("voice_user_id", TextInputStyle.SHORT).build())).build()).queue();
+                event.replyModal(Modal.create("modal_voice_trust", "Grant Access")
+                    .addComponents(Label.of("User ID", TextInput.create("voice_user_id", TextInputStyle.SHORT).build())).build()).queue();
                 break;
             case "voice_block":
-                event.replyModal(Modal.create("modal_voice_block", "حظر عضو من الدخول")
-                    .addComponents(Label.of("ID العضو", TextInput.create("voice_user_id", TextInputStyle.SHORT).build())).build()).queue();
+                event.replyModal(Modal.create("modal_voice_block", "Block User")
+                    .addComponents(Label.of("User ID", TextInput.create("voice_user_id", TextInputStyle.SHORT).build())).build()).queue();
+                break;
+            case "voice_lock":
+                boolean isLocked = channel.getPermissionOverride(event.getGuild().getPublicRole()) != null && 
+                                   channel.getPermissionOverride(event.getGuild().getPublicRole()).getDenied().contains(Permission.VOICE_CONNECT);
+                if (isLocked) {
+                    channel.getManager().putRolePermissionOverride(event.getGuild().getPublicRole().getIdLong(), EnumSet.of(Permission.VIEW_CHANNEL, Permission.VOICE_CONNECT), null).queue();
+                    event.reply("Room unlocked for everyone.").setEphemeral(true).queue();
+                } else {
+                    channel.getManager().putRolePermissionOverride(event.getGuild().getPublicRole().getIdLong(), null, EnumSet.of(Permission.VOICE_CONNECT)).queue();
+                    event.reply("Room locked for everyone.").setEphemeral(true).queue();
+                }
+                break;
+            case "voice_shop":
+                event.reply("### Voice Shop\nFeatures coming soon! Stay tuned for premium upgrades.").setEphemeral(true).queue();
                 break;
             case "voice_ownership":
                 String ownerMention = event.getGuild().getMemberById(room.getOwnerId()).getAsMention();
-                event.reply("👑 المالك الحالي للغرفة هو: " + ownerMention)
+                event.reply("Current room owner is: " + ownerMention)
                     .setEphemeral(true)
-                    .addComponents(ActionRow.of(Button.danger("voice_transfer_start", "نقل الملكية")))
+                    .addComponents(ActionRow.of(Button.danger("voice_transfer_start", "Transfer Ownership")))
                     .queue();
                 break;
             case "voice_transfer_start":
-                event.replyModal(Modal.create("modal_voice_transfer", "نقل ملكية الغرفة")
-                    .addComponents(Label.of("ID المالك الجديد", TextInput.create("voice_user_id", TextInputStyle.SHORT).build())).build()).queue();
+                event.replyModal(Modal.create("modal_voice_transfer", "Transfer Ownership")
+                    .addComponents(Label.of("New Owner ID", TextInput.create("voice_user_id", TextInputStyle.SHORT).build())).build()).queue();
                 break;
             case "voice_panel":
                 sendMemberPanel(channel, event);
                 break;
             case "voice_request_staff":
-                event.reply("🛠️ هل أنت متأكد من رغبتك في فتح تذكرة دعم فني؟")
+                event.reply("Are you sure you want to open a support ticket?")
                     .setEphemeral(true)
                     .addComponents(ActionRow.of(
-                        Button.danger("voice_staff_confirm", "تأكيد"),
-                        Button.secondary("voice_cancel", "إلغاء")
+                        Button.danger("voice_staff_confirm", "Confirm"),
+                        Button.secondary("voice_cancel", "Cancel")
                     )).queue();
                 break;
             case "voice_staff_confirm":
-                event.reply("✅ تم فتح التذكرة بنجاح. سيقوم الطاقم بالتواصل معك قريباً.").setEphemeral(true).queue();
-                // Logic to open ticket would go here - integrating with TicketListener if needed
+                event.reply("Ticket opened successfully. Staff will contact you shortly.").setEphemeral(true).queue();
                 break;
             case "voice_delete":
-                event.reply("⚠️ هل أنت متأكد من حذف الغرفة الصوتية بالكامل؟")
+                event.reply("Are you sure you want to delete this room permanently?")
                     .setEphemeral(true)
                     .addComponents(ActionRow.of(
-                        Button.danger("voice_delete_confirm", "حذف نهائي"),
-                        Button.secondary("voice_cancel", "إلغاء")
+                        Button.danger("voice_delete_confirm", "Delete Now"),
+                        Button.secondary("voice_cancel", "Cancel")
                     )).queue();
                 break;
             case "voice_delete_confirm":
                 channel.delete().queue();
-                event.reply("🗑️ تم إغلاق التردد وحذف الغرفة.").setEphemeral(true).queue();
+                event.reply("Room has been deleted.").setEphemeral(true).queue();
                 break;
             case "voice_cancel":
-                event.reply("❌ تم إلغاء العملية.").setEphemeral(true).queue();
+                event.reply("Operation cancelled.").setEphemeral(true).queue();
                 break;
         }
     }
@@ -344,21 +349,21 @@ public class VoiceListener extends ListenerAdapter {
         
         if (isDenied) {
             channel.getManager().putRolePermissionOverride(event.getGuild().getPublicRole().getIdLong(), EnumSet.of(perm), null).queue();
-            event.reply("✅ تم **تفعيل** " + label + " للجميع.").setEphemeral(true).queue();
+            event.reply("Enabled " + label + " for everyone.").setEphemeral(true).queue();
         } else {
             channel.getManager().putRolePermissionOverride(event.getGuild().getPublicRole().getIdLong(), null, EnumSet.of(perm)).queue();
-            event.reply("❌ تم **تعطيل** " + label + " للجميع.").setEphemeral(true).queue();
+            event.reply("Disabled " + label + " for everyone.").setEphemeral(true).queue();
         }
     }
 
     private void sendMemberPanel(VoiceChannel channel, ButtonInteractionEvent event) {
-        StringBuilder sb = new StringBuilder("### 👥 إدارة أفراد الغرفة\n");
+        StringBuilder sb = new StringBuilder("### Member Management\n");
         channel.getMembers().forEach(m -> {
             boolean canSpeak = m.hasPermission(channel, Permission.VOICE_SPEAK);
             boolean canWrite = m.hasPermission(channel, Permission.MESSAGE_SEND);
             sb.append("● ").append(m.getAsMention()).append(" — ")
-              .append(canSpeak ? "🎙️ " : "")
-              .append(canWrite ? "✍️ " : "")
+              .append(canSpeak ? "SPEAK " : "")
+              .append(canWrite ? "CHAT " : "")
               .append("\n");
         });
         event.reply(sb.toString()).setEphemeral(true).queue();
@@ -370,7 +375,7 @@ public class VoiceListener extends ListenerAdapter {
         VoiceChannel channel = event.getMember().getVoiceState().getChannel() != null ? event.getMember().getVoiceState().getChannel().asVoiceChannel() : null;
 
         if (channel == null) {
-            event.reply("❌ يجب أن تكون داخل الغرفة الصوتية لاستخدام القائمة.").setEphemeral(true).queue();
+            event.reply("You must be in a voice room to use this menu.").setEphemeral(true).queue();
             return;
         }
 
@@ -381,9 +386,9 @@ public class VoiceListener extends ListenerAdapter {
                 int maxBitrate = event.getGuild().getMaxBitrate();
                 if (bitrate > maxBitrate) {
                     bitrate = maxBitrate;
-                    event.reply("⚠️ تم ضبط الجودة على " + (maxBitrate/1000) + " kbps (الحد الأقصى للسيرفر).").setEphemeral(true).queue();
+                    event.reply("Bitrate set to " + (maxBitrate/1000) + " kbps (Server Maximum).").setEphemeral(true).queue();
                 } else {
-                    event.reply("✅ تم تحديث جودة الصوت إلى: " + value + " kbps").setEphemeral(true).queue();
+                    event.reply("Bitrate updated to: " + value + " kbps").setEphemeral(true).queue();
                 }
                 channel.getManager().setBitrate(bitrate).queue();
                 break;
@@ -391,13 +396,13 @@ public class VoiceListener extends ListenerAdapter {
                 event.getGuild().retrieveMemberById(value).queue(m -> {
                     if (channel.getMembers().contains(m)) {
                         event.getGuild().kickVoiceMember(m).queue();
-                        event.reply("👞 تم طرد " + m.getAsMention() + " من الغرفة.").setEphemeral(true).queue();
+                        event.reply("Kicked " + m.getAsMention() + " from the room.").setEphemeral(true).queue();
                     }
                 });
                 break;
             case "menu_voice_region":
                 channel.getManager().setRegion(value.equals("auto") ? null : net.dv8tion.jda.api.Region.fromKey(value)).queue();
-                event.reply("🌍 تم تغيير منطقة الاتصال إلى: " + value).setEphemeral(true).queue();
+                event.reply("Voice region changed to: " + value).setEphemeral(true).queue();
                 break;
         }
     }
@@ -409,12 +414,12 @@ public class VoiceListener extends ListenerAdapter {
         
         Optional<VoiceRoomEntity> roomOpt = voiceRoomRepository.findById(event.getUser().getId());
         if (roomOpt.isEmpty() || roomOpt.get().getChannelId() == null) {
-            event.reply("❌ لا يمكن العثور على غرفتك الخاصة.").setEphemeral(true).queue();
+            event.reply("Cannot find your private room.").setEphemeral(true).queue();
             return;
         }
         VoiceChannel channel = event.getGuild().getVoiceChannelById(roomOpt.get().getChannelId());
         if (channel == null) {
-            event.reply("❌ غرفتك ليست نشطة حالياً.").setEphemeral(true).queue();
+            event.reply("Your room is not active.").setEphemeral(true).queue();
             return;
         }
 
@@ -425,7 +430,7 @@ public class VoiceListener extends ListenerAdapter {
                 VoiceRoomEntity roomRen = roomOpt.get();
                 roomRen.setRoomName(newName);
                 voiceRoomRepository.save(roomRen);
-                event.reply("✅ تم تحديث اسم الغرفة إلى: " + newName).setEphemeral(true).queue();
+                event.reply("Room renamed to: " + newName).setEphemeral(true).queue();
                 break;
             case "modal_voice_limit":
                 try {
@@ -434,8 +439,8 @@ public class VoiceListener extends ListenerAdapter {
                     VoiceRoomEntity roomLim = roomOpt.get();
                     roomLim.setUserLimit(limit);
                     voiceRoomRepository.save(roomLim);
-                    event.reply("✅ تم تحديث حد الأعضاء إلى: " + limit).setEphemeral(true).queue();
-                } catch (Exception e) { event.reply("❌ يرجى إدخال رقم صحيح.").setEphemeral(true).queue(); }
+                    event.reply("User limit updated to: " + limit).setEphemeral(true).queue();
+                } catch (Exception e) { event.reply("Please enter a valid number.").setEphemeral(true).queue(); }
                 break;
             case "modal_voice_trust":
                 String trustId = event.getValue("voice_user_id").getAsString();
@@ -447,8 +452,8 @@ public class VoiceListener extends ListenerAdapter {
                         roomTru.setTrustedUserIds(current.isEmpty() ? trustId : current + "," + trustId);
                         voiceRoomRepository.save(roomTru);
                     }
-                    event.reply("🤝 تم إعطاء صلاحية الدخول لـ " + m.getAsMention()).setEphemeral(true).queue();
-                }, err -> event.reply("❌ لم يتم العثور على العضو.").setEphemeral(true).queue());
+                    event.reply("Access granted to " + m.getAsMention()).setEphemeral(true).queue();
+                }, err -> event.reply("Member not found.").setEphemeral(true).queue());
                 break;
             case "modal_voice_block":
                 String blockId = event.getValue("voice_user_id").getAsString();
@@ -463,8 +468,8 @@ public class VoiceListener extends ListenerAdapter {
                         voiceRoomRepository.save(roomBlk);
                     }
                     if (channel.getMembers().contains(m)) event.getGuild().kickVoiceMember(m).queue();
-                    event.reply("🚫 تم حظر " + m.getAsMention() + " من دخول الغرفة.").setEphemeral(true).queue();
-                }, err -> event.reply("❌ لم يتم العثور على العضو.").setEphemeral(true).queue());
+                    event.reply("Blocked " + m.getAsMention() + " from the room.").setEphemeral(true).queue();
+                }, err -> event.reply("Member not found.").setEphemeral(true).queue());
                 break;
             case "modal_voice_transfer":
                 String transferId = event.getValue("voice_user_id").getAsString();
@@ -473,8 +478,8 @@ public class VoiceListener extends ListenerAdapter {
                     roomTra.setOwnerId(m.getId());
                     voiceRoomRepository.save(roomTra);
                     channel.getManager().putMemberPermissionOverride(m.getIdLong(), EnumSet.of(Permission.MANAGE_CHANNEL, Permission.VOICE_MOVE_OTHERS), null).queue();
-                    event.reply("👑 تم نقل ملكية الغرفة إلى " + m.getAsMention()).setEphemeral(true).queue();
-                }, err -> event.reply("❌ لم يتم العثور على العضو.").setEphemeral(true).queue());
+                    event.reply("Ownership transferred to " + m.getAsMention()).setEphemeral(true).queue();
+                }, err -> event.reply("Member not found.").setEphemeral(true).queue());
                 break;
         }
     }
