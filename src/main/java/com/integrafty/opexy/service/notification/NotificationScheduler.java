@@ -59,21 +59,19 @@ public class NotificationScheduler {
     }
 
     private void handleKick(NotificationEntity entity) {
-        kickService.getStreamStatus(entity.getChannelId()).ifPresent(json -> {
-            JsonObject livestream = json.has("livestream") && !json.get("livestream").isJsonNull() ? json.getAsJsonObject("livestream") : null;
-            if (livestream != null) {
-                String streamId = livestream.get("id").getAsString();
-                if (!streamId.equals(entity.getLastContentId())) {
-                    String title = livestream.get("session_title").getAsString();
-                    String thumbnail = livestream.getAsJsonObject("thumbnail").get("url").getAsString();
-                    String url = "https://kick.com/" + entity.getChannelId();
-                    sendLiveNotification(entity, streamId, url, title, thumbnail, "KICK");
-                }
-            } else {
-                entity.setLastContentId(null);
-                notificationRepository.save(entity);
+        kickService.getStreamStatus(entity.getChannelId()).ifPresent(livestream -> {
+            String streamId = livestream.get("id").getAsString();
+            if (!streamId.equals(entity.getLastContentId())) {
+                String title = livestream.get("session_title").getAsString();
+                String thumbnail = livestream.getAsJsonObject("thumbnail").get("url").getAsString();
+                String url = "https://kick.com/" + entity.getChannelId();
+                sendLiveNotification(entity, streamId, url, title, thumbnail, "KICK");
             }
         });
+        if (!kickService.getStreamStatus(entity.getChannelId()).isPresent()) {
+            entity.setLastContentId(null);
+            notificationRepository.save(entity);
+        }
     }
 
     private void handleTwitch(NotificationEntity entity) {

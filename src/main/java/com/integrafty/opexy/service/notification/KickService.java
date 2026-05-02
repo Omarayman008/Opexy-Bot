@@ -20,52 +20,51 @@ public class KickService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public Optional<JsonObject> getStreamStatus(String username) {
-        try {
-            // Priority 1: Use Kick API v1 with browser-like headers
-            String url = "https://kick.com/api/v1/channels/" + username;
-            
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-            headers.set("Accept", "application/json");
-            headers.set("Referer", "https://kick.com/");
-            
-            HttpEntity<String> entity = new HttpEntity<>(headers);
+    private HttpHeaders buildHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
+        headers.set("Accept", "application/json");
+        headers.set("Accept-Language", "en-US,en;q=0.9");
+        headers.set("Referer", "https://kick.com/");
+        headers.set("Origin", "https://kick.com");
+        return headers;
+    }
 
+    public Optional<JsonObject> getStreamStatus(String username) {
+        // Priority 1: Kick API v2
+        try {
+            String url = "https://kick.com/api/v2/channels/" + username;
+            HttpEntity<String> entity = new HttpEntity<>(buildHeaders());
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
             String body = response.getBody();
-            
             if (body != null) {
                 JsonObject json = JsonParser.parseString(body).getAsJsonObject();
                 if (json.has("livestream") && !json.get("livestream").isJsonNull()) {
                     return Optional.of(json.getAsJsonObject("livestream"));
                 }
+                return Optional.empty();
             }
         } catch (Exception e) {
-            // API blocked, try fallbacks
+            log.warn("Kick API v2: Failed for {}: {}", username, e.getMessage());
         }
-        
-        // Priority 2: Use decapi.me proxy (Case sensitivity might matter for some proxies)
-        return fetchFromDecapi(username);
-    }
 
-    private Optional<JsonObject> fetchFromDecapi(String username) {
+        // Priority 2: Kick API v1
         try {
-            // Decapi is usually the most reliable for cloud environments
-            String isLive = restTemplate.getForObject("https://decapi.me/kick/is_live/" + username, String.class);
-            
-            if (isLive != null && (isLive.trim().equalsIgnoreCase("true") || isLive.trim().equalsIgnoreCase("online"))) {
-                JsonObject status = new JsonObject();
-                status.addProperty("is_live", true);
-                
-                String title = restTemplate.getForObject("https://decapi.me/kick/title/" + username, String.class);
-                status.addProperty("title", title != null ? title : "Live on Kick!");
-                
-                return Optional.of(status);
+            String url = "https://kick.com/api/v1/channels/" + username;
+            HttpEntity<String> entity = new HttpEntity<>(buildHeaders());
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            String body = response.getBody();
+            if (body != null) {
+                JsonObject json = JsonParser.parseString(body).getAsJsonObject();
+                if (json.has("livestream") && !json.get("livestream").isJsonNull()) {
+                    return Optional.of(json.getAsJsonObject("livestream"));
+                }
+                return Optional.empty();
             }
         } catch (Exception e) {
-            log.warn("Decapi Fallback: Failed for {}: {}", username, e.getMessage());
+            log.warn("Kick API v1: Failed for {}: {}", username, e.getMessage());
         }
+
         return Optional.empty();
     }
 }
