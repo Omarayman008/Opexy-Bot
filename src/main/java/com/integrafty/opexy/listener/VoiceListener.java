@@ -99,7 +99,7 @@ public class VoiceListener extends ListenerAdapter {
                         room.setRoomName(leftName);
                         room.setUserLimit(leftChannel.getUserLimit());
                         room.setBitrate(leftChannel.getBitrate());
-                        room.setChannelId("0"); // Use "0" to satisfy NOT NULL constraint
+                        room.setChannelId(null); // Use null now that SQL fix is provided
                         voiceRoomRepository.save(room);
                     }
                     
@@ -154,46 +154,41 @@ public class VoiceListener extends ListenerAdapter {
     }
 
     private void sendControlPanel(VoiceChannel channel, Member owner) {
-        String body = "### 🎙️ Voice Control Module\n" +
-                "Manage your dynamic frequency, " + owner.getAsMention() + ".\n" +
-                "Configurations persist across sessions.";
+        String body = "### 🎙️ وحدة التحكم الصوتي\n" +
+                "أهلاً بك في غرفتك الخاصة! يمكنك التحكم في كافة إعدادات الغرفة من هنا.\n\n" +
+                "● **الهوية** — تغيير الاسم أو تحديد عدد الأعضاء\n" +
+                "● **الإدارة** — الطرد أو نقل الملكية";
 
         ActionRow row1 = ActionRow.of(
-            Button.secondary("voice_rename", "Change Name"),
-            Button.secondary("voice_limit", "Change Limit"),
-            Button.secondary("voice_bitrate", "Change Bitrate")
+            Button.secondary("voice_rename", "إعادة تسمية"),
+            Button.secondary("voice_limit", "حد الأعضاء"),
+            Button.secondary("voice_bitrate", "البيترات")
         );
         
         ActionRow row2 = ActionRow.of(
-            Button.success("voice_permit", "Add Member"),
-            Button.success("voice_kick", "Kick Member"),
-            Button.success("voice_join_perm", "Join Permission")
+            Button.danger("voice_kick", "طرد عضو"),
+            Button.success("voice_video_perm", "صلاحية الفيديو"),
+            Button.success("voice_write_perm", "صلاحية الكتابة")
         );
-
+ 
         ActionRow row3 = ActionRow.of(
-            Button.success("voice_speak_perm", "Speak Permission"),
-            Button.success("voice_write_perm", "Write Permission"),
-            Button.success("voice_video_perm", "Video Permission")
+            Button.success("voice_speak_perm", "صلاحية التحدث"),
+            Button.primary("voice_region", "تغيير المنطقة"),
+            Button.primary("voice_trust", "إعطاء دخول"),
+            Button.primary("voice_block", "حظر دخول")
         );
-
+ 
         ActionRow row4 = ActionRow.of(
-            Button.primary("voice_region", "Change Region"),
-            Button.primary("voice_trust", "Trust Manage"),
-            Button.primary("voice_block", "Block Manage")
+            Button.primary("voice_ownership", "المالك الحالي"),
+            Button.primary("voice_panel", "لوحة الصلاحيات")
         );
-
+ 
         ActionRow row5 = ActionRow.of(
-            Button.primary("voice_ownership", "Ownership"),
-            Button.primary("voice_shop", "Shop"),
-            Button.primary("voice_member_panel", "Member Panel")
+            Button.danger("voice_request_staff", "طلب طاقم"),
+            Button.danger("voice_delete", "حذف الغرفة")
         );
 
-        ActionRow row6 = ActionRow.of(
-            Button.danger("voice_request_staff", "Request Staff"),
-            Button.danger("voice_delete", "Delete Channel")
-        );
-
-        Container container = EmbedUtil.containerBranded("VOICE", "Management Terminal", body, EmbedUtil.BANNER_MAIN, row1, row2, row3, row4, row5, row6);
+        Container container = EmbedUtil.containerBranded("Voice Control", "مركز التحكم في الغرف", body, EmbedUtil.BANNER_MAIN, row1, row2, row3, row4, row5);
 
         MessageCreateBuilder builder = new MessageCreateBuilder();
         builder.setComponents(container);
