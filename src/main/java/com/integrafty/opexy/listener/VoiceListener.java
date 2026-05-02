@@ -99,7 +99,7 @@ public class VoiceListener extends ListenerAdapter {
                         room.setRoomName(leftName);
                         room.setUserLimit(leftChannel.getUserLimit());
                         room.setBitrate(leftChannel.getBitrate());
-                        room.setChannelId(null); // This is now nullable in the entity
+                        room.setChannelId("0"); // Use "0" to satisfy NOT NULL constraint
                         voiceRoomRepository.save(room);
                     }
                     
@@ -115,38 +115,35 @@ public class VoiceListener extends ListenerAdapter {
     }
 
     private void handleCreateRoom(Member member, Category category) {
-        // Capture existing settings before wipe if any
+        // 🛡️ HARD DUPLICATION PREVENTION: Find and delete ANY existing room for this owner
         List<VoiceRoomEntity> existing = voiceRoomRepository.findAllByOwnerId(member.getId());
-        VoiceRoomEntity room = existing.isEmpty() ? new VoiceRoomEntity() : existing.get(0);
-        
-        // Wipe ALL records for this user (including duplicates) using Native SQL
+        for (VoiceRoomEntity room : existing) {
+            if (room.getChannelId() != null && !room.getChannelId().equals("0")) {
+                VoiceChannel oldChannel = member.getGuild().getVoiceChannelById(room.getChannelId());
+                if (oldChannel != null) {
+                    oldChannel.delete().queue(null, err -> {}); // Ignore errors if already deleted
+                }
+            }
+        }
+        // Wipe from DB to start fresh
         voiceRoomRepository.deleteAllByOwnerIdNative(member.getId());
-        
-        String channelName = room.getRoomName() != null ? room.getRoomName() : "🔊 | " + member.getEffectiveName();
-        int userLimit = room.getUserLimit() != null ? room.getUserLimit() : 0;
-        
-        // Prevent Duplication: Check if user already has a voice channel in this category
-        member.getGuild().getVoiceChannels().stream()
-            .filter(vc -> vc.getParentCategoryId() != null && vc.getParentCategoryId().equals(category.getId()))
-            .filter(vc -> vc.getName().contains(member.getEffectiveName()))
-            .forEach(vc -> vc.delete().queue());
 
+        String channelName = "🔊 | " + member.getEffectiveName();
+        
         member.getGuild().createVoiceChannel(channelName, category)
             .addPermissionOverride(member.getGuild().getSelfMember(), EnumSet.of(Permission.VIEW_CHANNEL, Permission.MANAGE_CHANNEL), null)
             .addPermissionOverride(member.getGuild().getPublicRole(), null, EnumSet.of(Permission.VIEW_CHANNEL))
             .addPermissionOverride(member, EnumSet.of(Permission.VIEW_CHANNEL, Permission.VOICE_MOVE_OTHERS, Permission.MANAGE_CHANNEL), null)
             .queue(channel -> {
-                // Apply voice settings
-                if (userLimit > 0) channel.getManager().setUserLimit(userLimit).queue();
-                if (room.getBitrate() != null) channel.getManager().setBitrate(room.getBitrate()).queue();
-
-                // Update DB
-                room.setOwnerId(member.getId());
-                room.setChannelId(channel.getId());
-                room.setRoomName(channelName);
-                room.setUserLimit(userLimit);
-                room.setStatus("OPEN");
-                voiceRoomRepository.save(room);
+                // Save to DB
+                VoiceRoomEntity newRoom = new VoiceRoomEntity();
+                newRoom.setOwnerId(member.getId());
+                newRoom.setChannelId(channel.getId());
+                newRoom.setRoomName(channelName);
+                newRoom.setUserLimit(0);
+                newRoom.setBitrate(channel.getBitrate());
+                newRoom.setStatus("OPEN");
+                voiceRoomRepository.save(newRoom);
 
                 // Move member
                 member.getGuild().moveVoiceMember(member, channel).queue();
@@ -293,10 +290,15 @@ public class VoiceListener extends ListenerAdapter {
                     .addOption("Automatic (Recommended)", "auto")
                     .addOption("US East", "us-east")
                     .addOption("US West", "us-west")
+                    .addOption("US Central", "us-central")
+                    .addOption("US South", "us-south")
                     .addOption("Europe (Rotterdam)", "rotterdam")
                     .addOption("Russia", "russia")
                     .addOption("Singapore", "singapore")
                     .addOption("Japan", "japan")
+                    .addOption("Hong Kong", "hongkong")
+                    .addOption("India", "india")
+                    .addOption("Brazil", "brazil")
                     .build();
                 event.reply("🌍 اختر المنطقة الجغرافية لخادم الغرفة:").setEphemeral(true).addComponents(ActionRow.of(regionMenu)).queue();
                 break;
@@ -392,8 +394,14 @@ public class VoiceListener extends ListenerAdapter {
         switch (id) {
             case "menu_voice_bitrate":
                 int bitrate = Integer.parseInt(value) * 1000;
+                int maxBitrate = event.getGuild().getMaxBitrate();
+                if (bitrate > maxBitrate) {
+                    bitrate = maxBitrate;
+                    event.reply("⚠️ تم ضبط الجودة على " + (maxBitrate/1000) + " kbps (الحد الأقصى للسيرفر).").setEphemeral(true).queue();
+                } else {
+                    event.reply("✅ تم تحديث جودة الصوت إلى: " + value + " kbps").setEphemeral(true).queue();
+                }
                 channel.getManager().setBitrate(bitrate).queue();
-                event.reply("✅ تم تحديث جودة الصوت إلى: " + value + " kbps").setEphemeral(true).queue();
                 break;
             case "menu_voice_kick":
                 event.getGuild().retrieveMemberById(value).queue(m -> {
