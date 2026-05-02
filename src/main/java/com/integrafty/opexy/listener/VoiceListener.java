@@ -54,34 +54,28 @@ public class VoiceListener extends ListenerAdapter {
     public void onGuildVoiceUpdate(GuildVoiceUpdateEvent event) {
         Member member = event.getMember();
         
-        // Handle Joining "Join to Create"
-        if (event.getChannelJoined() != null) {
-
-        // Handle Leaving Room (Delete if empty)
+        // 1. Handle Leaving Room (Delete if empty)
         if (event.getChannelLeft() != null) {
             VoiceChannel leftChannel = event.getChannelLeft().asVoiceChannel();
-            String leftChannelId = leftChannel.getId();
-            String leftName = leftChannel.getName();
+            String leftId = leftChannel.getId();
             String parentId = leftChannel.getParentCategoryId();
             
             // CRITICAL SHIELD: Never delete main channels
-            if (!leftChannelId.equals(JOIN_TO_CREATE_ID) && !leftChannelId.equals(VOICE_DASHBOARD_ID)) {
-                // Check if it belongs to our managed category
+            if (!leftId.equals(JOIN_TO_CREATE_ID) && !leftId.equals(VOICE_DASHBOARD_ID)) {
                 if (VOICE_CATEGORY_ID.equals(parentId) && leftChannel.getMembers().isEmpty()) {
-                    log.info("🗑️ Deleting vacated channel: {}", leftName);
+                    log.info("🗑️ Deleting vacated channel: {}", leftChannel.getName());
                     
-                    // Cleanup DB reference if exists
-                    voiceRoomRepository.findByChannelId(leftChannelId).ifPresent(room -> {
+                    voiceRoomRepository.findByChannelId(leftId).ifPresent(room -> {
                         room.setChannelId(null);
                         voiceRoomRepository.save(room);
                     });
 
-                    leftChannel.delete().queue(null, err -> log.error("❌ Delete failed: {}", err.getMessage()));
+                    leftChannel.delete().queue(null, err -> {});
                 }
             }
         }
 
-        // Handle Joining "Join to Create"
+        // 2. Handle Joining "Join to Create"
         if (event.getChannelJoined() != null) {
             String joinedId = event.getChannelJoined().getId();
             if (joinedId.equals(JOIN_TO_CREATE_ID)) {
