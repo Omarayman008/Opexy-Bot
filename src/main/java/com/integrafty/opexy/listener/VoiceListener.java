@@ -71,7 +71,7 @@ public class VoiceListener extends ListenerAdapter {
                             room.setRoomName(leftChannel.getName());
                             room.setBitrate(leftChannel.getBitrate());
                             room.setUserLimit(leftChannel.getUserLimit());
-                            room.setChannelId(null);
+                            room.setChannelId("0"); // Mark as inactive but keep settings
                             voiceRoomRepository.save(room);
                         } catch (Exception e) {
                             log.warn("⚠️ Database update failed during channel deletion, but proceeding.");

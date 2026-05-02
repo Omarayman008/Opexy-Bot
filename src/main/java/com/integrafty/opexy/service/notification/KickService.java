@@ -22,14 +22,13 @@ public class KickService {
 
     public Optional<JsonObject> getStreamStatus(String username) {
         try {
+            // Priority 1: Use Kick API v1 with browser headers
             String url = "https://kick.com/api/v1/channels/" + username;
             
             HttpHeaders headers = new HttpHeaders();
             headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36");
-            headers.set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8");
-            headers.set("Accept-Language", "en-US,en;q=0.9");
+            headers.set("Accept", "application/json");
             headers.set("Referer", "https://kick.com/" + username);
-            headers.set("Cache-Control", "max-age=0");
             
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
@@ -43,10 +42,13 @@ public class KickService {
                 }
             }
         } catch (Exception e) {
-            // If API is blocked (403), try to scrape HTML
-            return scrapeHtml(username);
+            // Priority 2: Try scraping HTML if API is blocked
+            Optional<JsonObject> scraped = scrapeHtml(username);
+            if (scraped.isPresent()) return scraped;
         }
-        return Optional.empty();
+        
+        // Priority 3: Final fallback using decapi.me proxy (Most reliable for cloud IPs)
+        return fetchFromDecapi(username);
     }
 
     private Optional<JsonObject> scrapeHtml(String username) {
@@ -71,6 +73,22 @@ public class KickService {
             }
         } catch (Exception ex) {
             log.warn("Kick Scraper: Could not fetch status for {}: {}", username, ex.getMessage());
+        }
+        return Optional.empty();
+    }
+
+    private Optional<JsonObject> fetchFromDecapi(String username) {
+        try {
+            String isLive = restTemplate.getForObject("https://decapi.me/kick/is_live/" + username, String.class);
+            if (isLive != null && isLive.trim().equalsIgnoreCase("true")) {
+                JsonObject status = new JsonObject();
+                status.addProperty("is_live", true);
+                String title = restTemplate.getForObject("https://decapi.me/kick/title/" + username, String.class);
+                status.addProperty("title", title != null ? title : "Live on Kick!");
+                return Optional.of(status);
+            }
+        } catch (Exception e) {
+            log.warn("Decapi Fallback: Failed for {}: {}", username, e.getMessage());
         }
         return Optional.empty();
     }
