@@ -258,13 +258,13 @@ public class VoiceListener extends ListenerAdapter {
                 event.reply("Select the member you want to kick:").setEphemeral(true).addComponents(ActionRow.of(kickMenu.build())).queue();
                 break;
             case "voice_video_perm":
-                togglePermission(channel, event, Permission.PRIORITY_SPEAKER, "Video/Screen Share");
+                openMemberSelectMenu(channel, event, "video", "Select member to toggle Video/Share");
                 break;
             case "voice_write_perm":
-                togglePermission(channel, event, Permission.MESSAGE_SEND, "Chat Access");
+                openMemberSelectMenu(channel, event, "write", "Select member to toggle Chat Access");
                 break;
             case "voice_speak_perm":
-                togglePermission(channel, event, Permission.VOICE_SPEAK, "Speak Access");
+                openMemberSelectMenu(channel, event, "speak", "Select member to toggle Speak Access");
                 break;
             case "voice_region":
                 StringSelectMenu regionMenu = StringSelectMenu.create("menu_voice_region")
@@ -343,17 +343,34 @@ public class VoiceListener extends ListenerAdapter {
         }
     }
 
-    private void togglePermission(VoiceChannel channel, ButtonInteractionEvent event, Permission perm, String label) {
-        boolean isDenied = channel.getPermissionOverride(event.getGuild().getPublicRole()) != null && 
-                           channel.getPermissionOverride(event.getGuild().getPublicRole()).getDenied().contains(perm);
+    private void openMemberSelectMenu(VoiceChannel channel, ButtonInteractionEvent event, String type, String placeholder) {
+        StringSelectMenu.Builder menu = StringSelectMenu.create("menu_voice_perm_" + type)
+            .setPlaceholder(placeholder);
         
-        if (isDenied) {
-            channel.getManager().putRolePermissionOverride(event.getGuild().getPublicRole().getIdLong(), EnumSet.of(perm), null).queue();
-            event.reply("Enabled " + label + " for everyone.").setEphemeral(true).queue();
-        } else {
-            channel.getManager().putRolePermissionOverride(event.getGuild().getPublicRole().getIdLong(), null, EnumSet.of(perm)).queue();
-            event.reply("Disabled " + label + " for everyone.").setEphemeral(true).queue();
+        List<Member> members = channel.getMembers().stream()
+            .filter(m -> !m.getUser().isBot())
+            .toList();
+
+        if (members.isEmpty()) {
+            event.reply("No other members are in the room.").setEphemeral(true).queue();
+            return;
         }
+
+        members.forEach(m -> menu.addOption(m.getEffectiveName(), m.getId()));
+        event.reply(placeholder + ":").setEphemeral(true).addComponents(ActionRow.of(menu.build())).queue();
+    }
+
+    private void toggleUserPermission(VoiceChannel channel, String userId, Permission perm, String label, StringSelectInteractionEvent event) {
+        event.getGuild().retrieveMemberById(userId).queue(m -> {
+            boolean isAllowed = m.hasPermission(channel, perm);
+            if (isAllowed) {
+                channel.getManager().putMemberPermissionOverride(m.getIdLong(), null, EnumSet.of(perm)).queue();
+                event.reply("Disabled " + label + " for " + m.getAsMention()).setEphemeral(true).queue();
+            } else {
+                channel.getManager().putMemberPermissionOverride(m.getIdLong(), EnumSet.of(perm), null).queue();
+                event.reply("Enabled " + label + " for " + m.getAsMention()).setEphemeral(true).queue();
+            }
+        }, err -> event.reply("Member not found.").setEphemeral(true).queue());
     }
 
     private void sendMemberPanel(VoiceChannel channel, ButtonInteractionEvent event) {
@@ -421,6 +438,15 @@ public class VoiceListener extends ListenerAdapter {
             case "menu_voice_region":
                 channel.getManager().setRegion(value.equals("auto") ? null : net.dv8tion.jda.api.Region.fromKey(value)).queue();
                 event.reply("Voice region changed to: " + value).setEphemeral(true).queue();
+                break;
+            case "menu_voice_perm_speak":
+                toggleUserPermission(channel, value, Permission.VOICE_SPEAK, "Speak Access", event);
+                break;
+            case "menu_voice_perm_write":
+                toggleUserPermission(channel, value, Permission.MESSAGE_SEND, "Chat Access", event);
+                break;
+            case "menu_voice_perm_video":
+                toggleUserPermission(channel, value, Permission.PRIORITY_SPEAKER, "Video/Share", event);
                 break;
         }
     }
