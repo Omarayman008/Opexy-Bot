@@ -87,6 +87,16 @@ public class NotificationScheduler {
     }
 
     private void handleYouTube(NotificationEntity entity) {
+        // AUTO-FIX: If ID is not a UC... ID, try to resolve it now and save for future cycles
+        if (entity.getChannelId() != null && !entity.getChannelId().startsWith("UC")) {
+            log.info("🚀 Auto-fixing YouTube ID for {}", entity.getChannelId());
+            String resolved = youtubeService.resolveChannelId(entity.getChannelId());
+            if (resolved != null && resolved.startsWith("UC")) {
+                entity.setChannelId(resolved);
+                notificationRepository.save(entity);
+            }
+        }
+
         youtubeService.getLatestVideo(entity.getChannelId()).ifPresent(json -> {
             String videoId = json.get("videoId").getAsString();
             if (!videoId.equals(entity.getLastContentId())) {
