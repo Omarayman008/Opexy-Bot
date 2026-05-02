@@ -43,16 +43,16 @@ public class NotificationListener extends ListenerAdapter {
             case "notify_add_live":
                 event.replyModal(Modal.create("modal_notify_add_live", "Add Live Channel")
                     .addComponents(
-                        ActionRow.of(TextInput.create("platform", "Platform (KICK or TWITCH)", TextInputStyle.SHORT).setPlaceholder("KICK").setRequired(true).build()),
-                        ActionRow.of(TextInput.create("channel_id", "Channel Username/ID", TextInputStyle.SHORT).setPlaceholder("shroud").setRequired(true).build()),
-                        ActionRow.of(TextInput.create("display_name", "Display Name", TextInputStyle.SHORT).setPlaceholder("Shroud").setRequired(true).build())
+                        ActionRow.of(Label.of("Platform (KICK or TWITCH)", TextInput.create("platform", TextInputStyle.SHORT).setPlaceholder("KICK").setRequired(true).build())),
+                        ActionRow.of(Label.of("Channel Username/ID", TextInput.create("channel_id", TextInputStyle.SHORT).setPlaceholder("shroud").setRequired(true).build())),
+                        ActionRow.of(Label.of("Display Name", TextInput.create("display_name", TextInputStyle.SHORT).setPlaceholder("Shroud").setRequired(true).build()))
                     ).build()).queue();
                 break;
             case "notify_add_video":
                 event.replyModal(Modal.create("modal_notify_add_video", "Add YouTube Channel")
                     .addComponents(
-                        ActionRow.of(TextInput.create("channel_id", "YouTube Channel ID", TextInputStyle.SHORT).setPlaceholder("UC...").setRequired(true).build()),
-                        ActionRow.of(TextInput.create("display_name", "Display Name", TextInputStyle.SHORT).setPlaceholder("MrBeast").setRequired(true).build())
+                        ActionRow.of(Label.of("YouTube Channel ID", TextInput.create("channel_id", TextInputStyle.SHORT).setPlaceholder("UC...").setRequired(true).build())),
+                        ActionRow.of(Label.of("Display Name", TextInput.create("display_name", TextInputStyle.SHORT).setPlaceholder("MrBeast").setRequired(true).build()))
                     ).build()).queue();
                 break;
             case "notify_remove_live":
