@@ -75,41 +75,33 @@ public class VoiceListener extends ListenerAdapter {
             String leftName = leftChannel.getName();
             String parentId = leftChannel.getParentCategoryId();
             
-            log.info("🚪 {} left channel: {} ({}) (Parent: {})", member.getEffectiveName(), leftName, leftChannelId, parentId);
-
-            // CRITICAL: Never delete the Join-to-Create or Dashboard channels
-            boolean isJoinToCreate = leftChannelId.equals(JOIN_TO_CREATE_ID) || leftName.toLowerCase().contains("join to create");
-            if (isJoinToCreate || leftChannelId.equals(VOICE_DASHBOARD_ID)) {
-                log.info("🛡️ Shielding channel from deletion: {}", leftName);
+            // CRITICAL SHIELD: Never delete main channels
+            if (leftChannelId.equals(JOIN_TO_CREATE_ID) || leftChannelId.equals(VOICE_DASHBOARD_ID)) {
                 return;
             }
-            
-            if (leftChannel.getMembers().isEmpty()) {
-                // Check if it's a managed room (by DB or Category)
-                Optional<VoiceRoomEntity> roomOpt = voiceRoomRepository.findByChannelId(leftChannelId);
-                boolean isInCategory = parentId != null && parentId.equals(VOICE_CATEGORY_ID);
-                
-                log.info("🔍 Deletion Check for {}: inDB={}, isInCategory={}", leftName, roomOpt.isPresent(), isInCategory);
 
-                if (roomOpt.isPresent() || isInCategory) {
-                    log.info("🗑️ Deleting empty managed channel: {}", leftName);
+            // Check if it belongs to our managed category
+            boolean isInCategory = VOICE_CATEGORY_ID.equals(parentId);
+            
+            if (isInCategory) {
+                int memberCount = leftChannel.getMembers().size();
+                log.info("🔍 Voice Update [LEAVE]: {} | Members: {} | CategoryMatch: {}", leftName, memberCount, isInCategory);
+
+                if (memberCount == 0) {
+                    log.info("🗑️ Deleting vacated channel: {}", leftName);
                     
-                    if (roomOpt.isPresent()) {
-                        VoiceRoomEntity room = roomOpt.get();
-                        room.setRoomName(leftName);
-                        room.setUserLimit(leftChannel.getUserLimit());
-                        room.setBitrate(leftChannel.getBitrate());
-                        room.setChannelId(null); // Use null now that SQL fix is provided
+                    // Cleanup DB reference if exists
+                    voiceRoomRepository.findByChannelId(leftChannelId).ifPresent(room -> {
+                        room.setChannelId(null);
                         voiceRoomRepository.save(room);
-                    }
-                    
+                        log.info("💾 Unlinked DB record for owner: {}", room.getOwnerId());
+                    });
+
                     leftChannel.delete().queue(
-                        v -> log.info("✅ Channel deleted successfully"),
-                        err -> log.error("❌ Failed to delete channel: {}", err.getMessage())
+                        v -> log.info("✅ Successfully deleted channel: {}", leftName),
+                        err -> log.error("❌ Failed to delete channel {}: {}", leftName, err.getMessage())
                     );
                 }
-            } else {
-                log.info("ℹ️ Channel not empty, skipping deletion. (Members: {})", leftChannel.getMembers().size());
             }
         }
     }
