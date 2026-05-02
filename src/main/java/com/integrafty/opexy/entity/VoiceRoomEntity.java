@@ -23,4 +23,7 @@ public class VoiceRoomEntity {
     private Integer bitrate;
 
     private String status; // OPEN, LOCKED, HIDDEN
+
+    @Column(columnDefinition = "TEXT")
+    private String trustedUserIds; // Comma separated IDs
 }

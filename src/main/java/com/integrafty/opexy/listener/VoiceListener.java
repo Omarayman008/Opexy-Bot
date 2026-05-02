@@ -67,10 +67,14 @@ public class VoiceListener extends ListenerAdapter {
                     
                     voiceRoomRepository.findByChannelId(leftId).ifPresent(room -> {
                         try {
+                            // Capture current settings
+                            room.setRoomName(leftChannel.getName());
+                            room.setBitrate(leftChannel.getBitrate());
+                            room.setUserLimit(leftChannel.getUserLimit());
                             room.setChannelId(null);
                             voiceRoomRepository.save(room);
                         } catch (Exception e) {
-                            log.warn("⚠️ Database update failed during channel deletion (likely constraint issue), but proceeding with channel cleanup.");
+                            log.warn("⚠️ Database update failed during channel deletion, but proceeding.");
                         }
                     });
 
@@ -90,40 +94,50 @@ public class VoiceListener extends ListenerAdapter {
     }
 
     private void handleCreateRoom(Member member, Category category) {
-        // 🛡️ HARD DUPLICATION PREVENTION: Find and delete ANY existing room for this owner
-        List<VoiceRoomEntity> existing = voiceRoomRepository.findAllByOwnerId(member.getId());
-        for (VoiceRoomEntity room : existing) {
-            if (room.getChannelId() != null && !room.getChannelId().equals("0")) {
-                VoiceChannel oldChannel = member.getGuild().getVoiceChannelById(room.getChannelId());
-                if (oldChannel != null) {
-                    oldChannel.delete().queue(null, err -> {}); // Ignore errors if already deleted
-                }
+        // 🛡️ HARD DUPLICATION PREVENTION
+        List<VoiceRoomEntity> existingList = voiceRoomRepository.findAllByOwnerId(member.getId());
+        VoiceRoomEntity room = existingList.isEmpty() ? new VoiceRoomEntity() : existingList.get(0);
+
+        for (VoiceRoomEntity old : existingList) {
+            if (old.getChannelId() != null && !old.getChannelId().equals("0")) {
+                VoiceChannel oldChannel = member.getGuild().getVoiceChannelById(old.getChannelId());
+                if (oldChannel != null) oldChannel.delete().queue(null, err -> {});
             }
         }
-        // Wipe from DB to start fresh
+        
+        // Wipe all records for owner to start fresh with ONE clean record
         voiceRoomRepository.deleteAllByOwnerIdNative(member.getId());
 
-        String channelName = "🔊 | " + member.getEffectiveName();
+        String channelName = room.getRoomName() != null ? room.getRoomName() : "🔊 | " + member.getEffectiveName();
+        int bitrate = room.getBitrate() != null ? room.getBitrate() : member.getGuild().getMaxBitrate();
+        int userLimit = room.getUserLimit() != null ? room.getUserLimit() : 0;
         
         member.getGuild().createVoiceChannel(channelName, category)
             .addPermissionOverride(member.getGuild().getSelfMember(), EnumSet.of(Permission.VIEW_CHANNEL, Permission.MANAGE_CHANNEL), null)
             .addPermissionOverride(member.getGuild().getPublicRole(), null, EnumSet.of(Permission.VIEW_CHANNEL))
-            .addPermissionOverride(member, EnumSet.of(Permission.VIEW_CHANNEL, Permission.VOICE_MOVE_OTHERS, Permission.MANAGE_CHANNEL), null)
+            .addPermissionOverride(member, EnumSet.of(Permission.VIEW_CHANNEL, Permission.VOICE_MOVE_OTHERS, Permission.MANAGE_CHANNEL, Permission.VOICE_CONNECT), null)
             .queue(channel -> {
-                // Save to DB
-                VoiceRoomEntity newRoom = new VoiceRoomEntity();
-                newRoom.setOwnerId(member.getId());
-                newRoom.setChannelId(channel.getId());
-                newRoom.setRoomName(channelName);
-                newRoom.setUserLimit(0);
-                newRoom.setBitrate(channel.getBitrate());
-                newRoom.setStatus("OPEN");
-                voiceRoomRepository.save(newRoom);
+                // Apply Settings
+                channel.getManager().setBitrate(Math.min(bitrate, member.getGuild().getMaxBitrate())).setUserLimit(userLimit).queue();
+                
+                // Restore Trusted Users
+                if (room.getTrustedUserIds() != null) {
+                    for (String trustId : room.getTrustedUserIds().split(",")) {
+                        if (trustId.isEmpty()) continue;
+                        channel.getManager().putMemberPermissionOverride(Long.parseLong(trustId), EnumSet.of(Permission.VIEW_CHANNEL, Permission.VOICE_CONNECT), null).queue(null, err -> {});
+                    }
+                }
 
-                // Move member
+                // Save new record
+                room.setOwnerId(member.getId());
+                room.setChannelId(channel.getId());
+                room.setRoomName(channelName);
+                room.setBitrate(bitrate);
+                room.setUserLimit(userLimit);
+                room.setStatus("OPEN");
+                voiceRoomRepository.save(room);
+
                 member.getGuild().moveVoiceMember(member, channel).queue();
-
-                // Send Control Panel
                 sendControlPanel(channel, member);
             });
     }
@@ -408,12 +422,18 @@ public class VoiceListener extends ListenerAdapter {
             case "modal_voice_rename":
                 String newName = event.getValue("voice_new_name").getAsString();
                 channel.getManager().setName(newName).queue();
+                VoiceRoomEntity roomRen = roomOpt.get();
+                roomRen.setRoomName(newName);
+                voiceRoomRepository.save(roomRen);
                 event.reply("✅ تم تحديث اسم الغرفة إلى: " + newName).setEphemeral(true).queue();
                 break;
             case "modal_voice_limit":
                 try {
                     int limit = Integer.parseInt(event.getValue("voice_new_limit").getAsString());
                     channel.getManager().setUserLimit(limit).queue();
+                    VoiceRoomEntity roomLim = roomOpt.get();
+                    roomLim.setUserLimit(limit);
+                    voiceRoomRepository.save(roomLim);
                     event.reply("✅ تم تحديث حد الأعضاء إلى: " + limit).setEphemeral(true).queue();
                 } catch (Exception e) { event.reply("❌ يرجى إدخال رقم صحيح.").setEphemeral(true).queue(); }
                 break;
@@ -421,6 +441,12 @@ public class VoiceListener extends ListenerAdapter {
                 String trustId = event.getValue("voice_user_id").getAsString();
                 event.getGuild().retrieveMemberById(trustId).queue(m -> {
                     channel.getManager().putMemberPermissionOverride(m.getIdLong(), EnumSet.of(Permission.VIEW_CHANNEL, Permission.VOICE_CONNECT), null).queue();
+                    VoiceRoomEntity roomTru = roomOpt.get();
+                    String current = roomTru.getTrustedUserIds() != null ? roomTru.getTrustedUserIds() : "";
+                    if (!current.contains(trustId)) {
+                        roomTru.setTrustedUserIds(current.isEmpty() ? trustId : current + "," + trustId);
+                        voiceRoomRepository.save(roomTru);
+                    }
                     event.reply("🤝 تم إعطاء صلاحية الدخول لـ " + m.getAsMention()).setEphemeral(true).queue();
                 }, err -> event.reply("❌ لم يتم العثور على العضو.").setEphemeral(true).queue());
                 break;
@@ -428,6 +454,14 @@ public class VoiceListener extends ListenerAdapter {
                 String blockId = event.getValue("voice_user_id").getAsString();
                 event.getGuild().retrieveMemberById(blockId).queue(m -> {
                     channel.getManager().putMemberPermissionOverride(m.getIdLong(), null, EnumSet.of(Permission.VOICE_CONNECT)).queue();
+                    VoiceRoomEntity roomBlk = roomOpt.get();
+                    if (roomBlk.getTrustedUserIds() != null) {
+                        String updated = roomBlk.getTrustedUserIds().replace(blockId, "").replace(",,", ",");
+                        if (updated.startsWith(",")) updated = updated.substring(1);
+                        if (updated.endsWith(",")) updated = updated.substring(0, updated.length()-1);
+                        roomBlk.setTrustedUserIds(updated.isEmpty() ? null : updated);
+                        voiceRoomRepository.save(roomBlk);
+                    }
                     if (channel.getMembers().contains(m)) event.getGuild().kickVoiceMember(m).queue();
                     event.reply("🚫 تم حظر " + m.getAsMention() + " من دخول الغرفة.").setEphemeral(true).queue();
                 }, err -> event.reply("❌ لم يتم العثور على العضو.").setEphemeral(true).queue());
@@ -435,9 +469,9 @@ public class VoiceListener extends ListenerAdapter {
             case "modal_voice_transfer":
                 String transferId = event.getValue("voice_user_id").getAsString();
                 event.getGuild().retrieveMemberById(transferId).queue(m -> {
-                    VoiceRoomEntity room = roomOpt.get();
-                    room.setOwnerId(m.getId());
-                    voiceRoomRepository.save(room);
+                    VoiceRoomEntity roomTra = roomOpt.get();
+                    roomTra.setOwnerId(m.getId());
+                    voiceRoomRepository.save(roomTra);
                     channel.getManager().putMemberPermissionOverride(m.getIdLong(), EnumSet.of(Permission.MANAGE_CHANNEL, Permission.VOICE_MOVE_OTHERS), null).queue();
                     event.reply("👑 تم نقل ملكية الغرفة إلى " + m.getAsMention()).setEphemeral(true).queue();
                 }, err -> event.reply("❌ لم يتم العثور على العضو.").setEphemeral(true).queue());
