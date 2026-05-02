@@ -28,6 +28,8 @@ public class NotificationListener extends ListenerAdapter {
 
     private final JDA jda;
     private final NotificationRepository notificationRepository;
+    private final YouTubeService youtubeService;
+    private final KickService kickService;
 
     @PostConstruct
     public void init() {
@@ -91,24 +93,33 @@ public class NotificationListener extends ListenerAdapter {
         NotificationEntity entity = new NotificationEntity();
         entity.setGuildId(event.getGuild().getId());
 
+        String rawId;
         if (urlLower.contains("kick.com/")) {
             entity.setPlatform("KICK");
-            entity.setChannelId(extractFromUrl(url, "kick.com/"));
+            rawId = extractFromUrl(url, "kick.com/");
+            entity.setChannelId(rawId);
         } else if (urlLower.contains("twitch.tv/")) {
             entity.setPlatform("TWITCH");
-            entity.setChannelId(extractFromUrl(url, "twitch.tv/"));
+            rawId = extractFromUrl(url, "twitch.tv/");
+            entity.setChannelId(rawId);
         } else if (urlLower.contains("youtube.com/") || urlLower.contains("youtu.be/")) {
             entity.setPlatform("YOUTUBE");
-            if (urlLower.contains("/@")) entity.setChannelId(extractFromUrl(url, "/@"));
-            else if (urlLower.contains("/channel/")) entity.setChannelId(extractFromUrl(url, "/channel/"));
-            else if (urlLower.contains("/user/")) entity.setChannelId(extractFromUrl(url, "/user/"));
-            else entity.setChannelId(extractFromUrl(url, "youtube.com/"));
+            if (urlLower.contains("/@")) rawId = extractFromUrl(url, "/@");
+            else if (urlLower.contains("/channel/")) rawId = extractFromUrl(url, "/channel/");
+            else if (urlLower.contains("/user/")) rawId = extractFromUrl(url, "/user/");
+            else rawId = extractFromUrl(url, "youtube.com/");
+            
+            // Resolve to UC... ID right now!
+            String resolved = youtubeService.resolveChannelId(rawId);
+            entity.setChannelId(resolved);
+            entity.setDisplayName(rawId); // Keep the handle as display name
         } else {
-            event.reply("Invalid URL! Please provide a valid Kick, Twitch, or YouTube link.").setEphemeral(true).queue();
+            event.reply("Invalid URL!").setEphemeral(true).queue();
             return;
         }
 
-        entity.setDisplayName(entity.getChannelId());
+        if (entity.getDisplayName() == null) entity.setDisplayName(entity.getChannelId());
+        
         notificationRepository.save(entity);
         event.reply("Successfully added **" + entity.getDisplayName() + "** from " + entity.getPlatform() + "!").setEphemeral(true).queue();
     }

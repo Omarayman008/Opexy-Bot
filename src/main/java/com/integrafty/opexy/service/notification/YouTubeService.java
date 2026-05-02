@@ -55,7 +55,7 @@ public class YouTubeService {
         return Optional.empty();
     }
 
-    private String resolveChannelId(String input) {
+    public String resolveChannelId(String input) {
         // Step 1: Try oembed (Official metadata API)
         try {
             String handle = input.startsWith("@") ? input : "@" + input;
