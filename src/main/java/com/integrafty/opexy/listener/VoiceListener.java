@@ -336,4 +336,3 @@ public class VoiceListener extends ListenerAdapter {
         }
     }
 }
-}
