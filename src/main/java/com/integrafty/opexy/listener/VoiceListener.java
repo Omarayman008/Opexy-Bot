@@ -452,13 +452,26 @@ public class VoiceListener extends ListenerAdapter {
                 break;
             case "modal_voice_limit":
                 try {
-                    int limit = Integer.parseInt(event.getValue("voice_new_limit").getAsString());
-                    channel.getManager().setUserLimit(limit).queue();
+                    String val = event.getValue("voice_new_limit").getAsString();
+                    int limit = Integer.parseInt(val);
+                    if (limit < 0 || limit > 99) {
+                        event.reply("Limit must be between 0 and 99.").setEphemeral(true).queue();
+                        return;
+                    }
+                    
+                    channel.getManager().setUserLimit(limit).queue(v -> {
+                        log.info("✅ Updated user limit for {} to {}", event.getUser().getName(), limit);
+                    }, err -> {
+                        log.error("❌ Failed to update user limit: {}", err.getMessage());
+                    });
+
                     VoiceRoomEntity roomLim = roomOpt.get();
                     roomLim.setUserLimit(limit);
                     voiceRoomRepository.save(roomLim);
-                    event.reply("User limit updated to: " + limit).setEphemeral(true).queue();
-                } catch (Exception e) { event.reply("Please enter a valid number.").setEphemeral(true).queue(); }
+                    event.reply("User limit updated to: " + (limit == 0 ? "Unlimited" : limit)).setEphemeral(true).queue();
+                } catch (Exception e) { 
+                    event.reply("Please enter a valid number (0-99).").setEphemeral(true).queue(); 
+                }
                 break;
             case "modal_voice_trust":
                 String trustId = event.getValue("voice_user_id").getAsString();
