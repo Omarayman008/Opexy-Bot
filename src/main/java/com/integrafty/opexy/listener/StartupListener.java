@@ -39,7 +39,8 @@ public class StartupListener extends ListenerAdapter {
         "ping_event", "1487196787893731428",
         "ping_mcserver", "1499896841150402692",
         "ping_dcserver", "1499896994003681310",
-        "ping_apply", "1499897044897366056"
+        "ping_apply", "1499897044897366056",
+        "ping_youtube", "1500269236583399454"
     );
 
     @PostConstruct
@@ -159,6 +160,7 @@ public class StartupListener extends ListenerAdapter {
         );
         ActionRow row2 = ActionRow.of(
             Button.secondary("ping_apply", "Staff Apply"),
+            Button.secondary("ping_youtube", "YouTube"),
             Button.secondary("support_direct", "Support")
         );
 
