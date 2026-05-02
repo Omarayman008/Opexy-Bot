@@ -42,39 +42,39 @@ public class VoiceCommand implements SlashCommand {
                 "● **الإدارة** — الطرد أو نقل الملكية";
 
         ActionRow row1 = ActionRow.of(
-            Button.secondary("voice_rename", "Change Name"),
-            Button.secondary("voice_limit", "Change Limit"),
-            Button.secondary("voice_bitrate", "Change Bitrate")
+            Button.secondary("voice_rename", "Rename"),
+            Button.secondary("voice_limit", "Limit"),
+            Button.secondary("voice_bitrate", "Bitrate")
         );
         
         ActionRow row2 = ActionRow.of(
-            Button.success("voice_permit", "Add Member"),
-            Button.success("voice_kick", "Kick Member"),
-            Button.success("voice_join_perm", "Join Permission")
+            Button.success("voice_permit", "Permit"),
+            Button.success("voice_kick", "Kick"),
+            Button.success("voice_join_perm", "Access")
         );
-
+ 
         ActionRow row3 = ActionRow.of(
-            Button.success("voice_speak_perm", "Speak Permission"),
-            Button.success("voice_write_perm", "Write Permission"),
-            Button.success("voice_video_perm", "Video Permission")
+            Button.success("voice_speak_perm", "Speak"),
+            Button.success("voice_write_perm", "Write"),
+            Button.success("voice_video_perm", "Video")
         );
-
+ 
         ActionRow row4 = ActionRow.of(
-            Button.primary("voice_region", "Change Region"),
-            Button.primary("voice_trust", "Trust Manage"),
-            Button.primary("voice_block", "Block Manage")
+            Button.primary("voice_region", "Region"),
+            Button.primary("voice_trust", "Trust"),
+            Button.primary("voice_block", "Block")
         );
-
+ 
         ActionRow row5 = ActionRow.of(
-            Button.primary("voice_ownership", "Ownership"),
+            Button.primary("voice_ownership", "Owner"),
             Button.primary("voice_shop", "Shop"),
-            Button.primary("voice_member_panel", "Member Panel")
+            Button.primary("voice_member_panel", "Panel")
         );
-
+ 
         ActionRow row6 = ActionRow.of(
-            Button.danger("voice_request_staff", "Request Staff"),
-            Button.danger("voice_delete", "Delete Channel"),
-            Button.danger("voice_info", "Dashboard Info")
+            Button.danger("voice_request_staff", "Staff"),
+            Button.danger("voice_delete", "Delete"),
+            Button.danger("voice_info", "Info")
         );
 
         Container container = EmbedUtil.containerBranded("Voice Control", "Dashboard Center", body, EmbedUtil.BANNER_MAIN, row1, row2, row3, row4, row5, row6);
