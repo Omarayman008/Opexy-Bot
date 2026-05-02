@@ -27,7 +27,11 @@ public class KickService {
             // Set User-Agent to avoid 403/Forbidden from Cloudflare/Kick
             HttpHeaders headers = new HttpHeaders();
             headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36");
-            headers.set("Accept", "application/json");
+            headers.set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8");
+            headers.set("Accept-Language", "en-US,en;q=0.9");
+            headers.set("Referer", "https://kick.com/" + username);
+            headers.set("Cache-Control", "max-age=0");
+            
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);

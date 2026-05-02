@@ -19,8 +19,11 @@ public class YouTubeService {
 
     public Optional<JsonObject> getLatestVideo(String channelId) {
         try {
-            // YouTube RSS feed provides the latest videos without an API key
-            String url = "https://www.youtube.com/feeds/videos.xml?channel_id=" + channelId;
+            // Support both standard Channel IDs (UC...) and usernames/handles
+            String url = channelId.startsWith("UC") 
+                ? "https://www.youtube.com/feeds/videos.xml?channel_id=" + channelId
+                : "https://www.youtube.com/feeds/videos.xml?user=" + channelId.replace("@", "");
+            
             String xml = restTemplate.getForObject(url, String.class);
             
             if (xml != null && xml.contains("<entry>")) {
