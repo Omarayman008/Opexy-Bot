@@ -22,6 +22,7 @@ import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.components.label.Label;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
