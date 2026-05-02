@@ -45,7 +45,7 @@ public class KickService {
                 return Optional.empty();
             }
         } catch (Exception e) {
-            log.warn("Kick API v2: Failed for {}: {}", username, e.getMessage());
+            log.debug("Kick API v2: Failed for {}: {}", username, e.getMessage());
         }
 
         // Priority 2: Kick API v1
@@ -62,7 +62,7 @@ public class KickService {
                 return Optional.empty();
             }
         } catch (Exception e) {
-            log.warn("Kick API v1: Failed for {}: {}", username, e.getMessage());
+            log.debug("Kick API v1: Failed for {}: {}", username, e.getMessage());
         }
 
         return Optional.empty();
