@@ -4,7 +4,6 @@ import com.integrafty.opexy.entity.GuildConfigEntity;
 import com.integrafty.opexy.repository.GuildConfigRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
@@ -16,7 +15,6 @@ import com.integrafty.opexy.utils.EmbedUtil;
 import net.dv8tion.jda.api.components.container.Container;
 import org.springframework.stereotype.Component;
 
-import java.awt.Color;
 import java.util.Optional;
 
 @Component

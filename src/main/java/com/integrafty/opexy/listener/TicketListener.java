@@ -6,7 +6,6 @@ import com.integrafty.opexy.repository.TicketRepository;
 import com.integrafty.opexy.service.WhitelistSyncService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -29,8 +28,6 @@ import net.dv8tion.jda.api.JDA;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
-import java.awt.Color;
-import java.time.Instant;
 import java.util.EnumSet;
 import java.util.Optional;
 
