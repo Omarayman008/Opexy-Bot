@@ -103,6 +103,7 @@ public class NotificationScheduler {
 
         youtubeService.getLatestVideo(entity.getChannelId()).ifPresent(json -> {
             String videoId = json.get("videoId").getAsString();
+            log.info("YouTube check for {}: latestVideoId={}, lastContentId={}", entity.getDisplayName(), videoId, entity.getLastContentId());
             if (!videoId.equals(entity.getLastContentId())) {
                 String title = json.get("title").getAsString();
                 String thumbnail = json.get("thumbnail").getAsString();
@@ -134,8 +135,12 @@ public class NotificationScheduler {
 
     private void sendVideoNotification(NotificationEntity entity, String contentId, String url, String title, String thumbnail) {
         TextChannel channel = jda.getTextChannelById(VIDEO_CHANNEL_ID);
-        if (channel == null) return;
+        if (channel == null) {
+            log.error("Video channel not found: {}", VIDEO_CHANNEL_ID);
+            return;
+        }
 
+        log.info("Sending video notification for {} to channel {}", entity.getDisplayName(), VIDEO_CHANNEL_ID);
         String body = String.format("### New Video from %s!\n**%s**\n\nClick the button below to watch the video.", entity.getDisplayName(), title);
 
         Container container = EmbedUtil.containerBranded("YOUTUBE", "New Upload", body, thumbnail, ActionRow.of(Button.link(url, "Watch Video")));
@@ -148,7 +153,8 @@ public class NotificationScheduler {
             channel.sendMessage(builder.build()).useComponentsV2(true).queue(msg -> {
                 entity.setLastContentId(contentId);
                 notificationRepository.save(entity);
-            });
-        });
+                log.info("Video notification sent successfully for {}", entity.getDisplayName());
+            }, err -> log.error("Failed to send video container for {}: {}", entity.getDisplayName(), err.getMessage()));
+        }, err -> log.error("Failed to send video role ping for {}: {}", entity.getDisplayName(), err.getMessage()));
     }
 }
