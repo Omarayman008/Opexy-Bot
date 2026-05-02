@@ -39,7 +39,7 @@ public class VoiceListener extends ListenerAdapter {
     private final VoiceRoomRepository voiceRoomRepository;
 
     // TODO: Move these to database/config
-    private static final String JOIN_TO_CREATE_ID = "1499728555754520667";
+    private static final String JOIN_TO_CREATE_ID = "1500190617353851037";
     private static final String VOICE_CATEGORY_ID = "1486872074369892392";
     private static final String VOICE_DASHBOARD_ID = "1486872077263835157";
 
