@@ -42,38 +42,41 @@ public class VoiceCommand implements SlashCommand {
                 "● **الإدارة** — الطرد أو نقل الملكية";
 
         ActionRow row1 = ActionRow.of(
-            Button.secondary("voice_lock", "قفل").withEmoji(Emoji.fromUnicode("🔒")),
-            Button.secondary("voice_unlock", "فتح").withEmoji(Emoji.fromUnicode("🔓")),
-            Button.secondary("voice_rename", "تغيير الاسم").withEmoji(Emoji.fromUnicode("📝"))
+            Button.secondary("voice_rename", "Change Name"),
+            Button.secondary("voice_limit", "Change Limit"),
+            Button.secondary("voice_bitrate", "Change Bitrate")
         );
         
         ActionRow row2 = ActionRow.of(
-            Button.secondary("voice_hide", "إخفاء").withEmoji(Emoji.fromUnicode("👻")),
-            Button.secondary("voice_unhide", "إظهار").withEmoji(Emoji.fromUnicode("👁️")),
-            Button.secondary("voice_limit", "تحديد العدد").withEmoji(Emoji.fromUnicode("👥"))
+            Button.success("voice_permit", "Add Member"),
+            Button.success("voice_kick", "Kick Member"),
+            Button.success("voice_join_perm", "Join Permission")
         );
 
         ActionRow row3 = ActionRow.of(
-            Button.secondary("voice_claim", "استلام الملكية").withEmoji(Emoji.fromUnicode("👑")),
-            Button.secondary("voice_transfer", "نقل الملكية").withEmoji(Emoji.fromUnicode("🔄")),
-            Button.secondary("voice_kick", "طرد").withEmoji(Emoji.fromUnicode("👞"))
+            Button.success("voice_speak_perm", "Speak Permission"),
+            Button.success("voice_write_perm", "Write Permission"),
+            Button.success("voice_video_perm", "Video Permission")
         );
 
         ActionRow row4 = ActionRow.of(
-            Button.secondary("voice_permit", "سماح").withEmoji(Emoji.fromUnicode("✅")),
-            Button.secondary("voice_reject", "رفض").withEmoji(Emoji.fromUnicode("❌")),
-            Button.secondary("voice_trust", "توثيق").withEmoji(Emoji.fromUnicode("🤝"))
+            Button.primary("voice_region", "Change Region"),
+            Button.primary("voice_trust", "Trust Manage"),
+            Button.primary("voice_block", "Block Manage")
         );
 
         ActionRow row5 = ActionRow.of(
-            Button.secondary("voice_untrust", "إلغاء التوثيق").withEmoji(Emoji.fromUnicode("🚫")),
-            Button.secondary("voice_ghost", "شبح").withEmoji(Emoji.fromUnicode("🎭")),
-            Button.secondary("voice_unghost", "إلغاء الشبح").withEmoji(Emoji.fromUnicode("🕶️")),
-            Button.secondary("voice_silence", "صمت").withEmoji(Emoji.fromUnicode("🔇")),
-            Button.secondary("voice_unsilence", "إلغاء الصمت").withEmoji(Emoji.fromUnicode("🔊"))
+            Button.primary("voice_ownership", "Ownership"),
+            Button.primary("voice_shop", "Shop"),
+            Button.primary("voice_member_panel", "Member Panel")
         );
 
-        Container container = EmbedUtil.containerBranded("الصوت", "لوحة التحكم", body, EmbedUtil.BANNER_MAIN, row1, row2, row3, row4, row5);
+        ActionRow row6 = ActionRow.of(
+            Button.danger("voice_request_staff", "Request Staff"),
+            Button.danger("voice_delete", "Delete Channel")
+        );
+
+        Container container = EmbedUtil.containerBranded("Voice Control", "Dashboard Center", body, EmbedUtil.BANNER_MAIN, row1, row2, row3, row4, row5, row6);
 
         MessageCreateBuilder builder = new MessageCreateBuilder();
         builder.setComponents(container);

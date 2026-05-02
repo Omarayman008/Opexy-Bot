@@ -11,9 +11,15 @@ import lombok.Setter;
 public class VoiceRoomEntity {
 
     @Id
+    private String ownerId;
+
     private String channelId;
 
-    private String ownerId;
+    private String roomName;
+
+    private Integer userLimit;
+
+    private Integer bitrate;
 
     private String status; // OPEN, LOCKED, HIDDEN
 }

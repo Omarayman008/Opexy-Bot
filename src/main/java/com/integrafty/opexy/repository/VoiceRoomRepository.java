@@ -6,6 +6,5 @@ import java.util.Optional;
 
 public interface VoiceRoomRepository extends JpaRepository<VoiceRoomEntity, String> {
     Optional<VoiceRoomEntity> findByChannelId(String channelId);
-    Optional<VoiceRoomEntity> findByOwnerId(String ownerId);
     void deleteByChannelId(String channelId);
 }
