@@ -26,15 +26,12 @@ public class YouTubeService {
         try {
             String resolvedId = channelId;
             
-            // If it's a handle, try to resolve it to a UC... ID
             if (!channelId.startsWith("UC")) {
                 resolvedId = resolveChannelId(channelId);
             }
 
-            // Always try RSS with the best ID we have
             String url = "https://www.youtube.com/feeds/videos.xml?channel_id=" + resolvedId;
             
-            // Fallback for legacy usernames if resolution failed
             if (!resolvedId.startsWith("UC")) {
                 url = "https://www.youtube.com/feeds/videos.xml?user=" + resolvedId.replace("@", "");
             }
@@ -59,35 +56,49 @@ public class YouTubeService {
     }
 
     private String resolveChannelId(String input) {
+        // Step 1: Try oembed (Official metadata API)
         try {
-            // Using YouTube's oembed to find the canonical channel URL/ID
             String handle = input.startsWith("@") ? input : "@" + input;
             String oembedUrl = "https://www.youtube.com/oembed?url=https://www.youtube.com/" + handle + "&format=json";
-            
             String jsonResponse = restTemplate.getForObject(oembedUrl, String.class);
             if (jsonResponse != null) {
                 JsonObject json = JsonParser.parseString(jsonResponse).getAsJsonObject();
                 if (json.has("author_url")) {
                     String authorUrl = json.get("author_url").getAsString();
                     if (authorUrl.contains("/channel/")) {
-                        String id = authorUrl.substring(authorUrl.lastIndexOf("/") + 1);
-                        log.info("YouTube Resolver: Resolved {} to {} via oembed", input, id);
-                        return id;
+                        return authorUrl.substring(authorUrl.lastIndexOf("/") + 1);
                     }
                 }
             }
         } catch (Exception e) {
-            log.warn("YouTube Resolver (oembed): Failed for {}: {}", input, e.getMessage());
+            // oembed failed, move to scraping
         }
+
+        // Step 2: Scrape HTML for channelId
+        try {
+            String handle = input.startsWith("@") ? input : "@" + input;
+            String url = "https://www.youtube.com/" + handle;
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            String html = response.getBody();
+            if (html != null) {
+                Pattern p = Pattern.compile("channelId\":\"(UC[a-zA-Z0-9_-]+)\"");
+                Matcher m = p.matcher(html);
+                if (m.find()) return m.group(1);
+            }
+        } catch (Exception e) {
+            log.warn("YouTube Resolver (Scrape): Failed for {}: {}", input, e.getMessage());
+        }
+        
         return input;
     }
 
     private String extractValue(String xml, String regex) {
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(xml);
-        if (matcher.find()) {
-            return matcher.group(1);
-        }
+        if (matcher.find()) return matcher.group(1);
         return "";
     }
 }

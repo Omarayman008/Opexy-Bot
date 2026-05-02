@@ -86,21 +86,22 @@ public class NotificationListener extends ListenerAdapter {
         String id = event.getModalId();
         if (!id.startsWith("modal_notify_")) return;
 
-        String url = event.getValue("url").getAsString().toLowerCase();
+        String url = event.getValue("url").getAsString();
+        String urlLower = url.toLowerCase();
         NotificationEntity entity = new NotificationEntity();
         entity.setGuildId(event.getGuild().getId());
 
-        if (url.contains("kick.com/")) {
+        if (urlLower.contains("kick.com/")) {
             entity.setPlatform("KICK");
             entity.setChannelId(extractFromUrl(url, "kick.com/"));
-        } else if (url.contains("twitch.tv/")) {
+        } else if (urlLower.contains("twitch.tv/")) {
             entity.setPlatform("TWITCH");
             entity.setChannelId(extractFromUrl(url, "twitch.tv/"));
-        } else if (url.contains("youtube.com/") || url.contains("youtu.be/")) {
+        } else if (urlLower.contains("youtube.com/") || urlLower.contains("youtu.be/")) {
             entity.setPlatform("YOUTUBE");
-            if (url.contains("/@")) entity.setChannelId(extractFromUrl(url, "/@"));
-            else if (url.contains("/channel/")) entity.setChannelId(extractFromUrl(url, "/channel/"));
-            else if (url.contains("/user/")) entity.setChannelId(extractFromUrl(url, "/user/"));
+            if (urlLower.contains("/@")) entity.setChannelId(extractFromUrl(url, "/@"));
+            else if (urlLower.contains("/channel/")) entity.setChannelId(extractFromUrl(url, "/channel/"));
+            else if (urlLower.contains("/user/")) entity.setChannelId(extractFromUrl(url, "/user/"));
             else entity.setChannelId(extractFromUrl(url, "youtube.com/"));
         } else {
             event.reply("Invalid URL! Please provide a valid Kick, Twitch, or YouTube link.").setEphemeral(true).queue();
@@ -113,7 +114,12 @@ public class NotificationListener extends ListenerAdapter {
     }
 
     private String extractFromUrl(String url, String marker) {
-        String part = url.substring(url.indexOf(marker) + marker.length());
+        String urlLower = url.toLowerCase();
+        String markerLower = marker.toLowerCase();
+        int index = urlLower.indexOf(markerLower);
+        if (index == -1) return url;
+        
+        String part = url.substring(index + marker.length());
         if (part.contains("/")) part = part.substring(0, part.indexOf("/"));
         if (part.contains("?")) part = part.substring(0, part.indexOf("?"));
         return part;
