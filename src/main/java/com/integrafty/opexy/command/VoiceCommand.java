@@ -41,42 +41,35 @@ public class VoiceCommand implements SlashCommand {
                 "● **الإدارة** — الطرد أو نقل الملكية";
 
         ActionRow row1 = ActionRow.of(
-            Button.secondary("voice_rename", "Rename"),
-            Button.secondary("voice_limit", "Limit"),
-            Button.secondary("voice_bitrate", "Bitrate")
+            Button.secondary("voice_rename", "إعادة تسمية"),
+            Button.secondary("voice_limit", "حد الأعضاء"),
+            Button.secondary("voice_bitrate", "البيترات")
         );
         
         ActionRow row2 = ActionRow.of(
-            Button.success("voice_permit", "Permit"),
-            Button.success("voice_kick", "Kick"),
-            Button.success("voice_join_perm", "Access")
+            Button.danger("voice_kick", "طرد عضو"),
+            Button.success("voice_video_perm", "صلاحية الفيديو"),
+            Button.success("voice_write_perm", "صلاحية الكتابة")
         );
  
         ActionRow row3 = ActionRow.of(
-            Button.success("voice_speak_perm", "Speak"),
-            Button.success("voice_write_perm", "Write"),
-            Button.success("voice_video_perm", "Video")
+            Button.success("voice_speak_perm", "صلاحية التحدث"),
+            Button.primary("voice_region", "تغيير المنطقة"),
+            Button.primary("voice_trust", "إعطاء دخول"),
+            Button.primary("voice_block", "حظر دخول")
         );
  
         ActionRow row4 = ActionRow.of(
-            Button.primary("voice_region", "Region"),
-            Button.primary("voice_trust", "Trust"),
-            Button.primary("voice_block", "Block")
+            Button.primary("voice_ownership", "المالك الحالي"),
+            Button.primary("voice_panel", "لوحة الصلاحيات")
         );
  
         ActionRow row5 = ActionRow.of(
-            Button.primary("voice_ownership", "Owner"),
-            Button.primary("voice_shop", "Shop"),
-            Button.primary("voice_member_panel", "Panel")
-        );
- 
-        ActionRow row6 = ActionRow.of(
-            Button.danger("voice_request_staff", "Staff"),
-            Button.danger("voice_delete", "Delete"),
-            Button.danger("voice_info", "Info")
+            Button.danger("voice_request_staff", "طلب طاقم"),
+            Button.danger("voice_delete", "حذف الغرفة")
         );
 
-        Container container = EmbedUtil.containerBranded("Voice Control", "Dashboard Center", body, EmbedUtil.BANNER_MAIN, row1, row2, row3, row4, row5, row6);
+        Container container = EmbedUtil.containerBranded("Voice Control", "مركز التحكم في الغرف", body, EmbedUtil.BANNER_MAIN, row1, row2, row3, row4, row5);
 
         MessageCreateBuilder builder = new MessageCreateBuilder();
         builder.setComponents(container);

@@ -13,6 +13,7 @@ public class VoiceRoomEntity {
     @Id
     private String ownerId;
 
+    @Column(nullable = true)
     private String channelId;
 
     private String roomName;

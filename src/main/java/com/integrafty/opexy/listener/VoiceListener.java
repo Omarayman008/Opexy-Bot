@@ -21,6 +21,8 @@ import net.dv8tion.jda.api.components.textinput.TextInputStyle;
 import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.components.label.Label;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
+import net.dv8tion.jda.api.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import org.springframework.stereotype.Component;
@@ -97,7 +99,7 @@ public class VoiceListener extends ListenerAdapter {
                         room.setRoomName(leftName);
                         room.setUserLimit(leftChannel.getUserLimit());
                         room.setBitrate(leftChannel.getBitrate());
-                        room.setChannelId(null); 
+                        room.setChannelId(null); // This is now nullable in the entity
                         voiceRoomRepository.save(room);
                     }
                     
@@ -123,6 +125,12 @@ public class VoiceListener extends ListenerAdapter {
         String channelName = room.getRoomName() != null ? room.getRoomName() : "🔊 | " + member.getEffectiveName();
         int userLimit = room.getUserLimit() != null ? room.getUserLimit() : 0;
         
+        // Prevent Duplication: Check if user already has a voice channel in this category
+        member.getGuild().getVoiceChannels().stream()
+            .filter(vc -> vc.getParentCategoryId() != null && vc.getParentCategoryId().equals(category.getId()))
+            .filter(vc -> vc.getName().contains(member.getEffectiveName()))
+            .forEach(vc -> vc.delete().queue());
+
         member.getGuild().createVoiceChannel(channelName, category)
             .addPermissionOverride(member.getGuild().getSelfMember(), EnumSet.of(Permission.VIEW_CHANNEL, Permission.MANAGE_CHANNEL), null)
             .addPermissionOverride(member.getGuild().getPublicRole(), null, EnumSet.of(Permission.VIEW_CHANNEL))
@@ -235,71 +243,169 @@ public class VoiceListener extends ListenerAdapter {
 
         switch (id) {
             case "voice_rename":
-                event.replyModal(Modal.create("modal_voice_rename", "Change Name").addComponents(Label.of("New Name", TextInput.create("voice_new_name", TextInputStyle.SHORT).build())).build()).queue();
+                event.replyModal(Modal.create("modal_voice_rename", "تغيير اسم الغرفة")
+                    .addComponents(ActionRow.of(TextInput.create("voice_new_name", "الاسم الجديد", TextInputStyle.SHORT).setPlaceholder("🔊 | My Room").build())).build()).queue();
                 break;
             case "voice_limit":
-                event.replyModal(Modal.create("modal_voice_limit", "Change Limit").addComponents(Label.of("Limit (0-99)", TextInput.create("voice_new_limit", TextInputStyle.SHORT).build())).build()).queue();
+                event.replyModal(Modal.create("modal_voice_limit", "حد الأعضاء")
+                    .addComponents(ActionRow.of(TextInput.create("voice_new_limit", "العدد (0-99)", TextInputStyle.SHORT).setPlaceholder("0 = لا يوجد حد").build())).build()).queue();
                 break;
             case "voice_bitrate":
-                event.replyModal(Modal.create("modal_voice_bitrate", "Change Bitrate").addComponents(Label.of("Bitrate (kbps)", TextInput.create("voice_new_bitrate", TextInputStyle.SHORT).build())).build()).queue();
-                break;
-            case "voice_permit":
-                event.replyModal(Modal.create("modal_voice_permit", "Add Member").addComponents(Label.of("Member ID", TextInput.create("voice_user_id", TextInputStyle.SHORT).build())).build()).queue();
+                StringSelectMenu bitrateMenu = StringSelectMenu.create("menu_voice_bitrate")
+                    .setPlaceholder("اختر جودة الصوت (Bitrate)")
+                    .addOption("64 kbps (Standard)", "64")
+                    .addOption("96 kbps (High)", "96")
+                    .addOption("128 kbps (Elite)", "128")
+                    .addOption("256 kbps (Premium)", "256")
+                    .addOption("384 kbps (Ultra)", "384")
+                    .build();
+                event.reply("⚙️ يرجى اختيار جودة الصوت المطلوبة:").setEphemeral(true).addComponents(ActionRow.of(bitrateMenu)).queue();
                 break;
             case "voice_kick":
-                event.replyModal(Modal.create("modal_voice_kick", "Kick Member").addComponents(Label.of("Member ID", TextInput.create("voice_user_id", TextInputStyle.SHORT).build())).build()).queue();
-                break;
-            case "voice_join_perm":
-                boolean canJoin = channel.getPermissionOverride(event.getGuild().getPublicRole()) != null && channel.getPermissionOverride(event.getGuild().getPublicRole()).getAllowed().contains(Permission.VOICE_CONNECT);
-                channel.getManager().putRolePermissionOverride(event.getGuild().getPublicRole().getIdLong(), canJoin ? null : EnumSet.of(Permission.VOICE_CONNECT), canJoin ? EnumSet.of(Permission.VOICE_CONNECT) : null).queue();
-                event.reply("🚪 Join permission " + (canJoin ? "DISABLED" : "ENABLED")).setEphemeral(true).queue();
-                break;
-            case "voice_speak_perm":
-                boolean canSpeak = channel.getPermissionOverride(event.getGuild().getPublicRole()) == null || !channel.getPermissionOverride(event.getGuild().getPublicRole()).getDenied().contains(Permission.VOICE_SPEAK);
-                channel.getManager().putRolePermissionOverride(event.getGuild().getPublicRole().getIdLong(), !canSpeak ? EnumSet.of(Permission.VOICE_SPEAK) : null, canSpeak ? EnumSet.of(Permission.VOICE_SPEAK) : null).queue();
-                event.reply("🎙️ Speak permission " + (canSpeak ? "DISABLED" : "ENABLED")).setEphemeral(true).queue();
-                break;
-            case "voice_write_perm":
-                boolean canWrite = channel.getPermissionOverride(event.getGuild().getPublicRole()) == null || !channel.getPermissionOverride(event.getGuild().getPublicRole()).getDenied().contains(Permission.MESSAGE_SEND);
-                channel.getManager().putRolePermissionOverride(event.getGuild().getPublicRole().getIdLong(), !canWrite ? EnumSet.of(Permission.MESSAGE_SEND) : null, canWrite ? EnumSet.of(Permission.MESSAGE_SEND) : null).queue();
-                event.reply("✍️ Write permission " + (canWrite ? "DISABLED" : "ENABLED")).setEphemeral(true).queue();
+                StringSelectMenu.Builder kickMenu = StringSelectMenu.create("menu_voice_kick")
+                    .setPlaceholder("اختر العضو المراد طرده");
+                
+                List<Member> membersInRoom = channel.getMembers().stream()
+                    .filter(m -> !m.getUser().isBot())
+                    .filter(m -> !m.getId().equals(event.getUser().getId()))
+                    .toList();
+
+                if (membersInRoom.isEmpty()) {
+                    event.reply("❌ لا يوجد أعضاء آخرون في الغرفة حالياً.").setEphemeral(true).queue();
+                    return;
+                }
+
+                membersInRoom.forEach(m -> kickMenu.addOption(m.getEffectiveName(), m.getId()));
+                event.reply("👞 اختر العضو الذي تريد طرده من الغرفة:").setEphemeral(true).addComponents(ActionRow.of(kickMenu.build())).queue();
                 break;
             case "voice_video_perm":
-                boolean canVideo = channel.getPermissionOverride(event.getGuild().getPublicRole()) == null || !channel.getPermissionOverride(event.getGuild().getPublicRole()).getDenied().contains(Permission.PRIORITY_SPEAKER);
-                channel.getManager().putRolePermissionOverride(event.getGuild().getPublicRole().getIdLong(), !canVideo ? EnumSet.of(Permission.PRIORITY_SPEAKER) : null, canVideo ? EnumSet.of(Permission.PRIORITY_SPEAKER) : null).queue();
-                event.reply("📹 Video/Priority permission " + (canVideo ? "DISABLED" : "ENABLED")).setEphemeral(true).queue();
+                togglePermission(channel, event, Permission.PRIORITY_SPEAKER, "صلاحية الفيديو/الشير");
+                break;
+            case "voice_write_perm":
+                togglePermission(channel, event, Permission.MESSAGE_SEND, "صلاحية الكتابة");
+                break;
+            case "voice_speak_perm":
+                togglePermission(channel, event, Permission.VOICE_SPEAK, "صلاحية التحدث");
                 break;
             case "voice_region":
-                event.replyModal(Modal.create("modal_voice_region", "Change Region").addComponents(Label.of("Region ID (e.g. us-east)", TextInput.create("voice_new_region", TextInputStyle.SHORT).build())).build()).queue();
+                StringSelectMenu regionMenu = StringSelectMenu.create("menu_voice_region")
+                    .setPlaceholder("اختر منطقة الاتصال")
+                    .addOption("Automatic (Recommended)", "auto")
+                    .addOption("US East", "us-east")
+                    .addOption("US West", "us-west")
+                    .addOption("Europe (Rotterdam)", "rotterdam")
+                    .addOption("Russia", "russia")
+                    .addOption("Singapore", "singapore")
+                    .addOption("Japan", "japan")
+                    .build();
+                event.reply("🌍 اختر المنطقة الجغرافية لخادم الغرفة:").setEphemeral(true).addComponents(ActionRow.of(regionMenu)).queue();
                 break;
             case "voice_trust":
-                event.replyModal(Modal.create("modal_voice_trust", "Trust Manage").addComponents(Label.of("Member ID", TextInput.create("voice_user_id", TextInputStyle.SHORT).build())).build()).queue();
+                event.replyModal(Modal.create("modal_voice_trust", "إعطاء صلاحية دخول")
+                    .addComponents(ActionRow.of(TextInput.create("voice_user_id", "ID العضو", TextInputStyle.SHORT).build())).build()).queue();
                 break;
             case "voice_block":
-                event.replyModal(Modal.create("modal_voice_block", "Block Manage").addComponents(Label.of("Member ID", TextInput.create("voice_user_id", TextInputStyle.SHORT).build())).build()).queue();
+                event.replyModal(Modal.create("modal_voice_block", "حظر عضو من الدخول")
+                    .addComponents(ActionRow.of(TextInput.create("voice_user_id", "ID العضو", TextInputStyle.SHORT).build())).build()).queue();
                 break;
             case "voice_ownership":
-                if (channel.getMembers().stream().noneMatch(m -> m.getId().equals(room.getOwnerId()))) {
-                    room.setOwnerId(event.getUser().getId());
-                    voiceRoomRepository.save(room);
-                    event.reply("👑 Ownership claimed.").setEphemeral(true).queue();
-                } else {
-                    event.replyModal(Modal.create("modal_voice_transfer", "Transfer Ownership").addComponents(Label.of("New Owner ID", TextInput.create("voice_user_id", TextInputStyle.SHORT).build())).build()).queue();
-                }
+                String ownerMention = event.getGuild().getMemberById(room.getOwnerId()).getAsMention();
+                event.reply("👑 المالك الحالي للغرفة هو: " + ownerMention)
+                    .setEphemeral(true)
+                    .addComponents(ActionRow.of(Button.danger("voice_transfer_start", "نقل الملكية")))
+                    .queue();
                 break;
-            case "voice_shop":
-                event.reply("🛒 The Agency Shop is under maintenance. Merit system required.").setEphemeral(true).queue();
+            case "voice_transfer_start":
+                event.replyModal(Modal.create("modal_voice_transfer", "نقل ملكية الغرفة")
+                    .addComponents(ActionRow.of(TextInput.create("voice_user_id", "ID المالك الجديد", TextInputStyle.SHORT).build())).build()).queue();
                 break;
-            case "voice_member_panel":
-                String members = channel.getMembers().stream().map(Member::getAsMention).reduce((a, b) -> a + ", " + b).orElse("None");
-                event.reply("ℹ️ **Active Personnel:** " + members).setEphemeral(true).queue();
+            case "voice_panel":
+                sendMemberPanel(channel, event);
                 break;
             case "voice_request_staff":
-                event.reply("🎧 Staff notification dispatched. Remain on frequency.").setEphemeral(true).queue();
+                event.reply("🛠️ هل أنت متأكد من رغبتك في فتح تذكرة دعم فني؟")
+                    .setEphemeral(true)
+                    .addComponents(ActionRow.of(
+                        Button.danger("voice_staff_confirm", "تأكيد"),
+                        Button.secondary("voice_cancel", "إلغاء")
+                    )).queue();
+                break;
+            case "voice_staff_confirm":
+                event.reply("✅ تم فتح التذكرة بنجاح. سيقوم الطاقم بالتواصل معك قريباً.").setEphemeral(true).queue();
+                // Logic to open ticket would go here - integrating with TicketListener if needed
                 break;
             case "voice_delete":
+                event.reply("⚠️ هل أنت متأكد من حذف الغرفة الصوتية بالكامل؟")
+                    .setEphemeral(true)
+                    .addComponents(ActionRow.of(
+                        Button.danger("voice_delete_confirm", "حذف نهائي"),
+                        Button.secondary("voice_cancel", "إلغاء")
+                    )).queue();
+                break;
+            case "voice_delete_confirm":
                 channel.delete().queue();
-                event.reply("🗑️ Frequency terminated.").setEphemeral(true).queue();
+                event.reply("🗑️ تم إغلاق التردد وحذف الغرفة.").setEphemeral(true).queue();
+                break;
+            case "voice_cancel":
+                event.reply("❌ تم إلغاء العملية.").setEphemeral(true).queue();
+                break;
+        }
+    }
+
+    private void togglePermission(VoiceChannel channel, ButtonInteractionEvent event, Permission perm, String label) {
+        boolean isDenied = channel.getPermissionOverride(event.getGuild().getPublicRole()) != null && 
+                           channel.getPermissionOverride(event.getGuild().getPublicRole()).getDenied().contains(perm);
+        
+        if (isDenied) {
+            channel.getManager().putRolePermissionOverride(event.getGuild().getPublicRole().getIdLong(), EnumSet.of(perm), null).queue();
+            event.reply("✅ تم **تفعيل** " + label + " للجميع.").setEphemeral(true).queue();
+        } else {
+            channel.getManager().putRolePermissionOverride(event.getGuild().getPublicRole().getIdLong(), null, EnumSet.of(perm)).queue();
+            event.reply("❌ تم **تعطيل** " + label + " للجميع.").setEphemeral(true).queue();
+        }
+    }
+
+    private void sendMemberPanel(VoiceChannel channel, ButtonInteractionEvent event) {
+        StringBuilder sb = new StringBuilder("### 👥 إدارة أفراد الغرفة\n");
+        channel.getMembers().forEach(m -> {
+            boolean canSpeak = m.hasPermission(channel, Permission.VOICE_SPEAK);
+            boolean canWrite = m.hasPermission(channel, Permission.MESSAGE_SEND);
+            sb.append("● ").append(m.getAsMention()).append(" — ")
+              .append(canSpeak ? "🎙️ " : "")
+              .append(canWrite ? "✍️ " : "")
+              .append("\n");
+        });
+        event.reply(sb.toString()).setEphemeral(true).queue();
+    }
+
+    @Override
+    public void onStringSelectInteraction(StringSelectInteractionEvent event) {
+        String id = event.getComponentId();
+        VoiceChannel channel = event.getMember().getVoiceState().getChannel() != null ? event.getMember().getVoiceState().getChannel().asVoiceChannel() : null;
+
+        if (channel == null) {
+            event.reply("❌ يجب أن تكون داخل الغرفة الصوتية لاستخدام القائمة.").setEphemeral(true).queue();
+            return;
+        }
+
+        String value = event.getValues().get(0);
+        switch (id) {
+            case "menu_voice_bitrate":
+                int bitrate = Integer.parseInt(value) * 1000;
+                channel.getManager().setBitrate(bitrate).queue();
+                event.reply("✅ تم تحديث جودة الصوت إلى: " + value + " kbps").setEphemeral(true).queue();
+                break;
+            case "menu_voice_kick":
+                event.getGuild().retrieveMemberById(value).queue(m -> {
+                    if (channel.getMembers().contains(m)) {
+                        event.getGuild().kickVoiceMember(m).queue();
+                        event.reply("👞 تم طرد " + m.getAsMention() + " من الغرفة.").setEphemeral(true).queue();
+                    }
+                });
+                break;
+            case "menu_voice_region":
+                channel.getManager().setRegion(value.equals("auto") ? null : net.dv8tion.jda.api.Region.fromKey(value)).queue();
+                event.reply("🌍 تم تغيير منطقة الاتصال إلى: " + value).setEphemeral(true).queue();
                 break;
         }
     }
@@ -324,50 +430,29 @@ public class VoiceListener extends ListenerAdapter {
             case "modal_voice_rename":
                 String newName = event.getValue("voice_new_name").getAsString();
                 channel.getManager().setName(newName).queue();
-                event.reply("✅ Name updated: " + newName).setEphemeral(true).queue();
+                event.reply("✅ تم تحديث اسم الغرفة إلى: " + newName).setEphemeral(true).queue();
                 break;
             case "modal_voice_limit":
                 try {
                     int limit = Integer.parseInt(event.getValue("voice_new_limit").getAsString());
                     channel.getManager().setUserLimit(limit).queue();
-                    event.reply("✅ Limit updated: " + limit).setEphemeral(true).queue();
-                } catch (Exception e) { event.reply("❌ Invalid number.").setEphemeral(true).queue(); }
-                break;
-            case "modal_voice_bitrate":
-                try {
-                    int bitrate = Integer.parseInt(event.getValue("voice_new_bitrate").getAsString()) * 1000;
-                    channel.getManager().setBitrate(bitrate).queue();
-                    event.reply("✅ Bitrate updated.").setEphemeral(true).queue();
-                } catch (Exception e) { event.reply("❌ Invalid number.").setEphemeral(true).queue(); }
-                break;
-            case "modal_voice_permit":
-                String permitId = event.getValue("voice_user_id").getAsString();
-                event.getGuild().retrieveMemberById(permitId).queue(m -> {
-                    channel.getManager().putMemberPermissionOverride(m.getIdLong(), EnumSet.of(Permission.VOICE_CONNECT), null).queue();
-                    event.reply("✅ " + m.getAsMention() + " permitted.").setEphemeral(true).queue();
-                }, err -> event.reply("❌ User not found.").setEphemeral(true).queue());
-                break;
-            case "modal_voice_kick":
-                String kickId = event.getValue("voice_user_id").getAsString();
-                event.getGuild().retrieveMemberById(kickId).queue(m -> {
-                    if (channel.getMembers().contains(m)) event.getGuild().kickVoiceMember(m).queue();
-                    event.reply("👞 " + m.getAsMention() + " kicked.").setEphemeral(true).queue();
-                }, err -> event.reply("❌ User not found.").setEphemeral(true).queue());
+                    event.reply("✅ تم تحديث حد الأعضاء إلى: " + limit).setEphemeral(true).queue();
+                } catch (Exception e) { event.reply("❌ يرجى إدخال رقم صحيح.").setEphemeral(true).queue(); }
                 break;
             case "modal_voice_trust":
                 String trustId = event.getValue("voice_user_id").getAsString();
                 event.getGuild().retrieveMemberById(trustId).queue(m -> {
                     channel.getManager().putMemberPermissionOverride(m.getIdLong(), EnumSet.of(Permission.VIEW_CHANNEL, Permission.VOICE_CONNECT), null).queue();
-                    event.reply("🤝 " + m.getAsMention() + " trusted.").setEphemeral(true).queue();
-                }, err -> event.reply("❌ User not found.").setEphemeral(true).queue());
+                    event.reply("🤝 تم إعطاء صلاحية الدخول لـ " + m.getAsMention()).setEphemeral(true).queue();
+                }, err -> event.reply("❌ لم يتم العثور على العضو.").setEphemeral(true).queue());
                 break;
             case "modal_voice_block":
                 String blockId = event.getValue("voice_user_id").getAsString();
                 event.getGuild().retrieveMemberById(blockId).queue(m -> {
                     channel.getManager().putMemberPermissionOverride(m.getIdLong(), null, EnumSet.of(Permission.VOICE_CONNECT)).queue();
                     if (channel.getMembers().contains(m)) event.getGuild().kickVoiceMember(m).queue();
-                    event.reply("🚫 " + m.getAsMention() + " blocked.").setEphemeral(true).queue();
-                }, err -> event.reply("❌ User not found.").setEphemeral(true).queue());
+                    event.reply("🚫 تم حظر " + m.getAsMention() + " من دخول الغرفة.").setEphemeral(true).queue();
+                }, err -> event.reply("❌ لم يتم العثور على العضو.").setEphemeral(true).queue());
                 break;
             case "modal_voice_transfer":
                 String transferId = event.getValue("voice_user_id").getAsString();
@@ -376,8 +461,8 @@ public class VoiceListener extends ListenerAdapter {
                     room.setOwnerId(m.getId());
                     voiceRoomRepository.save(room);
                     channel.getManager().putMemberPermissionOverride(m.getIdLong(), EnumSet.of(Permission.MANAGE_CHANNEL, Permission.VOICE_MOVE_OTHERS), null).queue();
-                    event.reply("👑 Ownership transferred to " + m.getAsMention()).setEphemeral(true).queue();
-                }, err -> event.reply("❌ User not found.").setEphemeral(true).queue());
+                    event.reply("👑 تم نقل ملكية الغرفة إلى " + m.getAsMention()).setEphemeral(true).queue();
+                }, err -> event.reply("❌ لم يتم العثور على العضو.").setEphemeral(true).queue());
                 break;
         }
     }
