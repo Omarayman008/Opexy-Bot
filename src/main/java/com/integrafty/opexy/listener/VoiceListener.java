@@ -66,8 +66,12 @@ public class VoiceListener extends ListenerAdapter {
                     log.info("🗑️ Deleting vacated channel: {}", leftChannel.getName());
                     
                     voiceRoomRepository.findByChannelId(leftId).ifPresent(room -> {
-                        room.setChannelId(null);
-                        voiceRoomRepository.save(room);
+                        try {
+                            room.setChannelId(null);
+                            voiceRoomRepository.save(room);
+                        } catch (Exception e) {
+                            log.warn("⚠️ Database update failed during channel deletion (likely constraint issue), but proceeding with channel cleanup.");
+                        }
                     });
 
                     leftChannel.delete().queue(null, err -> {});
