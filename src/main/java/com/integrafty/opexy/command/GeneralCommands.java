@@ -87,24 +87,41 @@ public class GeneralCommands implements MultiSlashCommand {
         reply(event, EmbedUtil.containerBranded("GAME", "Dice Roll", "### 🎲 Result\nYou rolled a **" + res + "**", EmbedUtil.BANNER_MAIN));
     }
 
+    private static final Map<String, String> COLOR_ROLES = Map.of(
+        "color_red", "1499885720209195059",
+        "color_turquoise", "1499885336703275029",
+        "color_orange", "1499885645563166914",
+        "color_gray", "1499885533277589656",
+        "color_navy", "1499885778413813810",
+        "color_blurple", "1499884810338832394",
+        "color_asphalt", "1499885394752176190"
+    );
+
     private void handleColors(SlashCommandInteractionEvent event) {
-        // Logic to find color roles. Usually roles named by number or in a category.
-        // For now, listing roles that look like colors.
-        List<Role> colorRoles = event.getGuild().getRoles().stream()
-                .filter(r -> r.getName().matches("\\d+"))
-                .sorted((a, b) -> Integer.compare(Integer.parseInt(a.getName()), Integer.parseInt(b.getName())))
-                .collect(Collectors.toList());
+        String body = """
+                ### 🎨 نـــظـــام الألـــوان | COLOR SYSTEM
+                ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+                
+                اخـــتـــر لـــونـــك الـــمـــفـــضـــل مـــن الأزرار أدـنـــاه.
+                *ســـيـــتـــم تـــحـــديـــث لـــون رتـــبـــتـــك تـــلـــقـــائـــيـــاً.*
+                
+                ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+                """;
 
-        if (colorRoles.isEmpty()) {
-            reply(event, EmbedUtil.error("NOT FOUND", "No numbered color roles detected in this server."));
-            return;
-        }
+        net.dv8tion.jda.api.components.buttons.Button b1 = net.dv8tion.jda.api.components.buttons.Button.secondary("color_red", "Soft Red");
+        net.dv8tion.jda.api.components.buttons.Button b2 = net.dv8tion.jda.api.components.buttons.Button.secondary("color_turquoise", "Turquoise");
+        net.dv8tion.jda.api.components.buttons.Button b3 = net.dv8tion.jda.api.components.buttons.Button.secondary("color_orange", "Carrot Orange");
+        net.dv8tion.jda.api.components.buttons.Button b4 = net.dv8tion.jda.api.components.buttons.Button.secondary("color_gray", "Light Gray");
+        net.dv8tion.jda.api.components.buttons.Button b5 = net.dv8tion.jda.api.components.buttons.Button.secondary("color_navy", "Midnight Navy");
+        
+        net.dv8tion.jda.api.components.buttons.Button b6 = net.dv8tion.jda.api.components.buttons.Button.secondary("color_blurple", "Blurple");
+        net.dv8tion.jda.api.components.buttons.Button b7 = net.dv8tion.jda.api.components.buttons.Button.secondary("color_asphalt", "Wet Asphalt");
 
-        StringBuilder sb = new StringBuilder("### 🎨 Available Color Roles\n");
-        for (Role r : colorRoles) {
-            sb.append("▫️ **").append(r.getName()).append("** — ").append(r.getAsMention()).append("\n");
-        }
-        reply(event, EmbedUtil.containerBranded("IDENTITY", "Color Selection", sb.toString(), EmbedUtil.BANNER_MAIN));
+        net.dv8tion.jda.api.components.actionrow.ActionRow row1 = net.dv8tion.jda.api.components.actionrow.ActionRow.of(b1, b2, b3, b4, b5);
+        net.dv8tion.jda.api.components.actionrow.ActionRow row2 = net.dv8tion.jda.api.components.actionrow.ActionRow.of(b6, b7);
+
+        Container container = EmbedUtil.containerBranded("IDENTITY", "Color Selection", body, EmbedUtil.BANNER_MAIN, row1, row2);
+        reply(event, container);
     }
 
     private void handleColorSet(SlashCommandInteractionEvent event) {
