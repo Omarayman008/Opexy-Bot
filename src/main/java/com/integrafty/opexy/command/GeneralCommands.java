@@ -40,7 +40,7 @@ public class GeneralCommands implements MultiSlashCommand {
         
         list.add(Commands.slash("colors", "عـــرض رتـــب الألـــوان الـــمـــتـــاحـــة فـــي الـــســـيـــرفـــر"));
         list.add(Commands.slash("color-set", "تـــحـــديـــد لـــون رتـــبـــتـــك الـــخـــاصـــة")
-                .addOption(OptionType.INTEGER, "number", "رقـــم الـــلـــون", true));
+                .addOption(OptionType.ROLE, "role", "اخـــتـــر رتـــبـــة الـــلـــون", true));
 
         list.add(Commands.slash("translate", "تـــرجـــمـــة الـــنـــص إلـــى لـــغـــة مـــعـــيـــنـــة")
                 .addOption(OptionType.STRING, "text", "الـــنـــص", true)
@@ -131,27 +131,32 @@ public class GeneralCommands implements MultiSlashCommand {
     }
 
     private void handleColorSet(SlashCommandInteractionEvent event) {
-        int num = event.getOption("number").getAsInt();
-        Role targetRole = event.getGuild().getRoles().stream()
-                .filter(r -> r.getName().equals(String.valueOf(num)))
-                .findFirst().orElse(null);
+        Role targetRole = event.getOption("role").getAsRole();
 
         if (targetRole == null) {
-            replyEphemeral(event, EmbedUtil.error("INVALID SELECTION", "Color role #" + num + " does not exist."));
+            replyEphemeral(event, EmbedUtil.error("INVALID SELECTION", "الـــرتـــبـــة الـــمـــخـــتـــارة غـــيـــر صـــحـــيـــحـــة."));
             return;
         }
 
-        // Remove old color roles
+        // Optional: Check if the role is a "Color" role (e.g. has no permissions or specific name)
+        // For now, we trust the user's selection but we remove other roles that are numeric-named
+        // as per the previous logic's pattern.
+
+        // Remove old color roles (assuming roles named with numbers are color roles)
         List<Role> oldColors = event.getMember().getRoles().stream()
                 .filter(r -> r.getName().matches("\\d+"))
                 .collect(Collectors.toList());
         
         for (Role r : oldColors) {
-            event.getGuild().removeRoleFromMember(event.getMember(), r).queue();
+            if (!r.equals(targetRole)) {
+                event.getGuild().removeRoleFromMember(event.getMember(), r).queue();
+            }
         }
 
         event.getGuild().addRoleToMember(event.getMember(), targetRole).queue(v -> {
-            reply(event, EmbedUtil.success("Identity Update", "Color role #" + num + " successfully assigned."));
+            reply(event, EmbedUtil.success("Identity Update", "تـــم تـــحـــديـــد رتـــبـــة الـــلـــون [" + targetRole.getName() + "] بـــنـــجـــاح."));
+        }, error -> {
+            replyEphemeral(event, EmbedUtil.error("PERMISSION ERROR", "لا أمـــلـــك صـــلاحـــيـــات لـــإعـــطـــائـــك هـــذه الـــرتـــبـــة."));
         });
     }
 
