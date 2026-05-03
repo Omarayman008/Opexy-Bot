@@ -32,50 +32,20 @@ public class DiscordEventListener extends ListenerAdapter {
     @Override
     public void onGuildMemberJoin(GuildMemberJoinEvent event) {
         Guild guild = event.getGuild();
-        Optional<GuildConfigEntity> configOpt = guildConfigRepository.findById(guild.getId());
-
-        if (configOpt.isPresent() && configOpt.get().getWelcomeChannelId() != null) {
-            TextChannel welcomeChannel = guild.getTextChannelById(configOpt.get().getWelcomeChannelId());
-            if (welcomeChannel != null) {
-                String body = "أهلاً بك " + event.getMember().getAsMention() + "!\nأنت العضو رقم **" + guild.getMemberCount() + "**";
-                Container welcome = EmbedUtil.containerBranded("WELCOME", "مرحباً بك في " + guild.getName(), body, EmbedUtil.BANNER_WELCOME);
-                
-                MessageCreateBuilder builder = new MessageCreateBuilder();
-                builder.setComponents(welcome);
-                builder.useComponentsV2(true);
-
-                welcomeChannel.sendMessage(builder.build()).useComponentsV2(true).queue();
-            }
-        }
         
         // Auto-role for humans
         if (!event.getUser().isBot()) {
-            guild.addRoleToMember(event.getMember(), guild.getRoleById("1488278492650143854")).queue();
+            net.dv8tion.jda.api.entities.Role humanRole = guild.getRoleById("1488278492650143854");
+            if (humanRole != null) guild.addRoleToMember(event.getMember(), humanRole).queue();
         } else {
             // Auto-role for bots
-            guild.addRoleToMember(event.getMember(), guild.getRoleById("1487878039177269248")).queue();
+            net.dv8tion.jda.api.entities.Role botRole = guild.getRoleById("1487878039177269248");
+            if (botRole != null) guild.addRoleToMember(event.getMember(), botRole).queue();
         }
-        
-        // TODO: Send DM with verify link and server rules
     }
 
     @Override
     public void onGuildMemberRemove(GuildMemberRemoveEvent event) {
-        Guild guild = event.getGuild();
-        Optional<GuildConfigEntity> configOpt = guildConfigRepository.findById(guild.getId());
-
-        if (configOpt.isPresent() && configOpt.get().getLogChannelId() != null) {
-            TextChannel logChannel = guild.getTextChannelById(configOpt.get().getLogChannelId());
-            if (logChannel != null) {
-                String body = "العضو: " + event.getUser().getAsMention() + " (" + event.getUser().getName() + ")";
-                Container leave = EmbedUtil.containerBranded("LOGS", "عضو غادر السيرفر", body, EmbedUtil.BANNER_MAIN);
-                
-                MessageCreateBuilder builder = new MessageCreateBuilder();
-                builder.setComponents(leave);
-                builder.useComponentsV2(true);
-
-                logChannel.sendMessage(builder.build()).useComponentsV2(true).queue();
-            }
-        }
+        // Logging is now handled by WelcomeListener using LogManager
     }
 }
