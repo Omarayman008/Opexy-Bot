@@ -5,6 +5,7 @@ import com.integrafty.opexy.entity.AutoReplyEntity;
 import com.integrafty.opexy.repository.AutoReplyRepository;
 import com.integrafty.opexy.service.AutoReplyService;
 import com.integrafty.opexy.utils.EmbedUtil;
+import org.springframework.beans.factory.annotation.Value;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,9 @@ public class AutoReplyCommand extends ListenerAdapter implements SlashCommand {
     private final AutoReplyService autoReplyService;
     private final AutoReplyRepository autoReplyRepository;
 
+    @Value("${opexy.roles.op-staff}")
+    private String opStaffRoleId;
+
     @PostConstruct
     public void init() {
         jda.addEventListener(this);
@@ -52,7 +56,7 @@ public class AutoReplyCommand extends ListenerAdapter implements SlashCommand {
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
-        if (!event.getMember().hasPermission(Permission.MANAGE_SERVER)) {
+        if (!hasAccess(event.getMember())) {
             sendEphemeral(event, EmbedUtil.accessDenied());
             return;
         }
@@ -62,7 +66,7 @@ public class AutoReplyCommand extends ListenerAdapter implements SlashCommand {
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
         String id = event.getComponentId();
-        if (!event.getMember().hasPermission(Permission.MANAGE_SERVER)) return;
+        if (!hasAccess(event.getMember())) return;
 
         if (id.equals("ar_add")) {
             TextInput trigger = TextInput.create("trigger", TextInputStyle.SHORT)
@@ -127,6 +131,10 @@ public class AutoReplyCommand extends ListenerAdapter implements SlashCommand {
             MessageCreateBuilder builder = new MessageCreateBuilder().setComponents(container).useComponentsV2(true);
             e.reply(builder.build()).useComponentsV2(true).queue();
         }
+    }
+
+    private boolean hasAccess(net.dv8tion.jda.api.entities.Member member) {
+        return member != null && member.getRoles().stream().anyMatch(r -> r.getId().equals(opStaffRoleId));
     }
 
     private void sendEphemeral(SlashCommandInteractionEvent event, Container container) {
