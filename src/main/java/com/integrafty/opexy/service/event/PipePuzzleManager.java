@@ -39,10 +39,17 @@ public class PipePuzzleManager extends ListenerAdapter {
             
             grid[r][c] = rotatePiece(grid[r][c]);
             
-            EmbedBuilder embed = new EmbedBuilder(event.getMessage().getEmbeds().get(0))
-                    .setDescription("قم بتوصيل الأنابيب للوصول إلى المخرج!\n\n" + renderGrid(grid));
+            String renderedGrid = renderGrid(grid);
             
-            event.editMessageEmbeds(embed.build()).queue();
+            event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+                    .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("ENGINEERING", "لغز الأنابيب — قيد الحل", "قم بتوصيل الأنابيب للوصول إلى المخرج!\n\n" + renderedGrid, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN,
+                            net.dv8tion.jda.api.components.actionrow.ActionRow.of(
+                                    net.dv8tion.jda.api.components.buttons.Button.secondary("pipe_rot_1_1", "تدوير (1,1) 🔄"),
+                                    net.dv8tion.jda.api.components.buttons.Button.secondary("pipe_rot_1_2", "تدوير (1,2) 🔄"),
+                                    net.dv8tion.jda.api.components.buttons.Button.success("pipe_submit", "تحقق من الحل ✅")
+                            )))
+                    .useComponentsV2(true).build())
+                    .useComponentsV2(true).queue();
         }
     }
 

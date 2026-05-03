@@ -65,8 +65,8 @@ public class AchievementCommand implements MultiSlashCommand {
         percent = Math.min(10, percent);
         StringBuilder sb = new StringBuilder("`[");
         for (int i = 0; i < 10; i++) {
-            if (i < percent) sb.append("▰");
-            else sb.append("▱");
+            if (i < percent) sb.append("▧");
+            else sb.append("▢");
         }
         sb.append("]`");
         return sb.toString();

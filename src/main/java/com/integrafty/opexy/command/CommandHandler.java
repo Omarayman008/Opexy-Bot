@@ -38,7 +38,6 @@ public class CommandHandler extends ListenerAdapter {
 
     @PostConstruct
     public void init() {
-        jda.addEventListener(this);
         commandMap = new java.util.HashMap<>();
         commandDataMap = new java.util.HashMap<>();
 

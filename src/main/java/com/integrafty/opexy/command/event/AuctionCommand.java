@@ -37,7 +37,13 @@ public class AuctionCommand implements MultiSlashCommand {
     @Override
     public List<SlashCommandData> getCommandDataList() {
         return List.of(Commands.slash("auction", "بدء المزاد الأعمى (Blind Auction)")
-                .addOptions(new OptionData(OptionType.STRING, "prize", "اسم الجائزة (مثلاً: 100k opex أو رتبة مميزة)", true)));
+                .addOptions(new OptionData(OptionType.STRING, "prize", "اسم الجائزة (اختر من القائمة)", true)
+                        .addChoice("100k opex", "100k opex")
+                        .addChoice("200k opex", "200k opex")
+                        .addChoice("500k opex", "500k opex")
+                        .addChoice("رتبة مميزة (Elite Role)", "رتبة مميزة")
+                        .addChoice("صندوق عشوائي (Mystery Box)", "صندوق عشوائي")
+                        .addChoice("بطاقة خصم 50% (50% Voucher)", "بطاقة خصم 50%")));
     }
 
     @Override

@@ -68,11 +68,16 @@ public class MafiaManager extends ListenerAdapter {
     }
 
     private void updateLobby(ButtonInteractionEvent event) {
-        EmbedBuilder embed = new EmbedBuilder(event.getMessage().getEmbeds().get(0))
-                .clearFields()
-                .addField("اللاعبين المنضمين", String.valueOf(currentGame.getPlayers().size()), true);
-        
-        event.editMessageEmbeds(embed.build()).queue();
+        String body = "اللاعبين المنضمين: **" + currentGame.getPlayers().size() + "**\n\n**القوانين:**\n• الحد الأدنى للاعبين: 5.\n• الأدوار: مافيا، طبيب، محقق، مواطن.\n• النهار للمناقشة، والليل لتنفيذ الأدوار.";
+
+        event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+                .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("GAME", "🕵️ لعبة المافيا — Mafia Game", body, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN,
+                        net.dv8tion.jda.api.components.actionrow.ActionRow.of(
+                                net.dv8tion.jda.api.components.buttons.Button.primary("mafia_join", "انضمام ✋"),
+                                net.dv8tion.jda.api.components.buttons.Button.danger("mafia_start", "بدء اللعبة (المنظم فقط) 🚀")
+                        )))
+                .useComponentsV2(true).build())
+                .useComponentsV2(true).queue();
     }
 
     private void startGame(ButtonInteractionEvent event) {
@@ -106,12 +111,10 @@ public class MafiaManager extends ListenerAdapter {
         currentGame.setTargetToSave(null);
         currentGame.setTargetToInvestigate(null);
 
-        EmbedBuilder embed = new EmbedBuilder()
-                .setTitle("🌙 حل الليل...")
-                .setColor(Color.BLACK)
-                .setDescription("أغمض الجميع أعينهم... حان دور المافيا والطبيب والمحقق.");
-
-        event.getChannel().sendMessageEmbeds(embed.build()).queue();
+        event.getChannel().sendMessage(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
+                .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("GAME", "🌙 حل الليل...", "أغمض الجميع أعينهم... حان دور المافيا والطبيب والمحقق.", com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN))
+                .useComponentsV2(true).build())
+                .useComponentsV2(true).queue();
         
         // Show action buttons to roles privately or via ephemeral (ephemeral is safer for multi-player interaction in one channel)
         // For simplicity in this demo, we use the channel but only the role can click
@@ -171,12 +174,10 @@ public class MafiaManager extends ListenerAdapter {
             resultMsg += "\n🛡️ ليلة هادئة، لم يمت أحد!";
         }
 
-        EmbedBuilder embed = new EmbedBuilder()
-                .setTitle("☀️ بداية يوم جديد")
-                .setColor(Color.YELLOW)
-                .setDescription(resultMsg + "\n\n**وقت المناقشة (20 ثانية)**");
-
-        event.getChannel().sendMessageEmbeds(embed.build()).queue();
+        event.getChannel().sendMessage(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
+                .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("GAME", "☀️ بداية يوم جديد", resultMsg + "\n\n**وقت المناقشة (20 ثانية)**", com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN))
+                .useComponentsV2(true).build())
+                .useComponentsV2(true).queue();
 
         // Check Win Condition
         if (checkWin(event)) return;
@@ -265,13 +266,10 @@ public class MafiaManager extends ListenerAdapter {
 
     private void endGame(ButtonInteractionEvent event, String winner) {
         eventManager.endGroupEvent();
-        EmbedBuilder embed = new EmbedBuilder()
-                .setTitle("🏁 انتهت اللعبة!")
-                .setColor(Color.GREEN)
-                .setDescription("الفائز هم: **" + winner + "**")
-                .setFooter("شكراً للجميع على اللعب!");
-        
-        event.getChannel().sendMessageEmbeds(embed.build()).queue();
+        event.getChannel().sendMessage(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
+                .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("GAME", "🏁 انتهت اللعبة!", "الفائز هم: **" + winner + "**\n\nشكراً للجميع على اللعب!", com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN))
+                .useComponentsV2(true).build())
+                .useComponentsV2(true).queue();
         
         // Update wins
         for (long pid : currentGame.getPlayers().keySet()) {

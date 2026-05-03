@@ -67,13 +67,20 @@ public class AuctionManager extends ListenerAdapter {
         // Reset timer
         resetTimer(event);
 
-        // Update Embed
-        EmbedBuilder embed = new EmbedBuilder(event.getMessage().getEmbeds().get(0))
-                .clearFields()
-                .addField("المزايد الحالي", event.getUser().getAsMention(), true)
-                .addField("أعلى سعر", newTotal + " opex", true);
+        // Update Message
+        String body = "تم بدء مزاد على **" + currentPrize + "**! 📦\n\n**القوانين:**\n• المزايدة تبدأ بـ 10 opex.\n• المزايدة الأعلى تفوز بالمحتوى.\n\n" +
+                      "👤 المزايد الحالي: <@" + userId + ">\n💰 أعلى سعر: **" + newTotal + " opex**";
 
-        event.editMessageEmbeds(embed.build()).queue();
+        event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+                .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("AUCTION", "🏆 المزاد الأعمى — Blind Auction", body, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN,
+                        net.dv8tion.jda.api.components.actionrow.ActionRow.of(
+                                net.dv8tion.jda.api.components.buttons.Button.primary("bid_10", "+10"),
+                                net.dv8tion.jda.api.components.buttons.Button.primary("bid_50", "+50"),
+                                net.dv8tion.jda.api.components.buttons.Button.primary("bid_100", "+100"),
+                                net.dv8tion.jda.api.components.buttons.Button.success("bid_custom", "سعر مخصص ✏️")
+                        )))
+                .useComponentsV2(true).build())
+                .useComponentsV2(true).queue();
     }
 
     private void resetTimer(ButtonInteractionEvent event) {
@@ -87,14 +94,12 @@ public class AuctionManager extends ListenerAdapter {
     private void finishAuction(ButtonInteractionEvent event) {
         eventManager.endGroupEvent();
         
-        EmbedBuilder embed = new EmbedBuilder()
-                .setTitle("🏁 انتهى المزاد!")
-                .setColor(Color.GREEN)
-                .setDescription("الفائز هو <@" + highestBidderId + "> بسعر **" + currentHighestBid + " opex**!")
-                .addField("الجائزة", currentPrize, false)
-                .setFooter("مبروك للفائز!");
-
-        event.getChannel().sendMessageEmbeds(embed.build()).useComponentsV2(true).queue();
+        String body = "الفائز هو <@" + highestBidderId + "> بسعر **" + currentHighestBid + " opex**!\n\n**الجائزة:** " + currentPrize + "\n\nمبروك للفائز!";
+        
+        event.getChannel().sendMessage(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
+                .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("AUCTION", "🏁 انتهى المزاد!", body, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN))
+                .useComponentsV2(true).build())
+                .useComponentsV2(true).queue();
         
         // Finalize achievements
         achievementService.updateStats(highestBidderId, event.getGuild(), stats -> {
