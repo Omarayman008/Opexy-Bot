@@ -32,37 +32,32 @@ public class AchievementCommand implements MultiSlashCommand {
         
         UserStats stats = achievementService.getStats(event.getUser().getIdLong());
         
-        EmbedBuilder embed = new EmbedBuilder()
-                .setTitle("🏆 إنجازات أوبكس — " + event.getUser().getName())
-                .setColor(new Color(0xFFD700)) // Gold
-                .setThumbnail(event.getUser().getEffectiveAvatarUrl())
-                .setDescription("✨ استعرض تقدمك وإحصائياتك في عالم أوبكس التفاعلي.\nكلما زاد نشاطك، اقتربت من الرتب النادرة!");
-
-        // Auction Stats
-        embed.addField("🔨 المزاد الأعمى (Auction)", 
-                String.format("```\n• فوز بالمزاد: %d/5 %s\n• مزايدة فاشلة: %d/5 %s\n• أعلى مبلغ: %d opex\n```", 
+        StringBuilder body = new StringBuilder();
+        body.append("✨ استعرض تقدمك وإحصائياتك في عالم أوبكس التفاعلي.\nكلما زاد نشاطك، اقتربت من الرتب النادرة!\n\n");
+        
+        body.append("### 🔨 المزاد الأعمى (Auction)\n");
+        body.append(String.format("```\n• فوز بالمزاد: %d/5 %s\n• مزايدة فاشلة: %d/5 %s\n• أعلى مبلغ: %d opex\n```\n", 
                         stats.getSuccessBids(), getProgressBar(stats.getSuccessBids(), 5),
                         stats.getFailedBids(), getProgressBar(stats.getFailedBids(), 5),
-                        stats.getMaxBid()), false);
+                        stats.getMaxBid()));
 
-        // Mafia Stats
-        embed.addField("🕵️ عالم المافيا (Mafia)", 
-                String.format("```\n• فوز المافيا: %d/6 %s\n• مرات المواطن: %d/8 %s\n• أصوات ضدك: %d/15 %s\n• كشف المافيا: %d/1 %s\n• حماية ناجحة: %d/3 %s\n```", 
+        body.append("### 🕵️ عالم المافيا (Mafia)\n");
+        body.append(String.format("```\n• فوز المافيا: %d/6 %s\n• مرات المواطن: %d/8 %s\n• أصوات ضدك: %d/15 %s\n• كشف المافيا: %d/1 %s\n• حماية ناجحة: %d/3 %s\n```\n", 
                         stats.getMafiaWins(), getProgressBar(stats.getMafiaWins(), 6),
                         stats.getCitizenCount(), getProgressBar(stats.getCitizenCount(), 8),
                         stats.getVotesReceived(), getProgressBar(stats.getVotesReceived(), 15),
                         stats.getDetectiveReveals(), getProgressBar(stats.getDetectiveReveals(), 1),
-                        stats.getDoctorSaves(), getProgressBar(stats.getDoctorSaves(), 3)), false);
+                        stats.getDoctorSaves(), getProgressBar(stats.getDoctorSaves(), 3)));
 
-        // Minigames Stats
-        embed.addField("🎮 الألعاب المصغرة", 
-                String.format("```\n• سباك الأنابيب: %d/4 %s\n• الـ 7 ثواني: %d/1 %s\n```", 
+        body.append("### 🎮 الألعاب المصغرة\n");
+        body.append(String.format("```\n• سباك الأنابيب: %d/4 %s\n• الـ 7 ثواني: %d/1 %s\n```", 
                         stats.getPipeWins(), getProgressBar(stats.getPipeWins(), 4),
-                        stats.getSpeedWins(), getProgressBar(stats.getSpeedWins(), 1)), false);
+                        stats.getSpeedWins(), getProgressBar(stats.getSpeedWins(), 1)));
 
-        embed.setFooter("Opexy Bot — نظام الإنجازات المتطور", event.getGuild().getIconUrl());
-        
-        event.replyEmbeds(embed.build()).useComponentsV2(true).queue();
+        event.reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
+                .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("IDENTITY", "إنجازات أوبكس — " + event.getUser().getName(), body.toString(), com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN))
+                .useComponentsV2(true).build())
+                .useComponentsV2(true).queue();
     }
 
     private String getProgressBar(int current, int max) {

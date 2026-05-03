@@ -57,17 +57,15 @@ public class MafiaCommand implements MultiSlashCommand {
 
         mafiaManager.startNewGame(event.getChannel().getIdLong());
 
-        EmbedBuilder embed = new EmbedBuilder()
-                .setTitle("🕵️ لعبة المافيا — Mafia Game")
-                .setColor(Color.DARK_GRAY)
-                .setDescription("تم فتح باب الانضمام للعبة المافيا!\n\n**القوانين:**\n• الحد الأدنى للاعبين: 5.\n• الأدوار: مافيا، طبيب، محقق، مواطن.\n• النهار للمناقشة، والليل لتنفيذ الأدوار.")
-                .addField("اللاعبين المنضمين", "1 (المنظم)", true)
-                .setFooter("اضغط على الزر أدناه للانضمام!");
+        String body = "تم فتح باب الانضمام للعبة المافيا!\n\n**القوانين:**\n• الحد الأدنى للاعبين: 5.\n• الأدوار: مافيا، طبيب، محقق، مواطن.\n• النهار للمناقشة، والليل لتنفيذ الأدوار.";
 
-        event.replyEmbeds(embed.build())
-                .setComponents(ActionRow.of(
-                        Button.primary("mafia_join", "انضمام ✋"),
-                        Button.danger("mafia_start", "بدء اللعبة (المنظم فقط) 🚀")
-                )).useComponentsV2(true).queue();
+        event.reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
+                .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("GAME", "🕵️ لعبة المافيا — Mafia Game", body, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN,
+                        net.dv8tion.jda.api.components.actionrow.ActionRow.of(
+                                net.dv8tion.jda.api.components.buttons.Button.primary("mafia_join", "انضمام ✋"),
+                                net.dv8tion.jda.api.components.buttons.Button.danger("mafia_start", "بدء اللعبة (المنظم فقط) 🚀")
+                        )))
+                .useComponentsV2(true).build())
+                .useComponentsV2(true).queue();
     }
 }

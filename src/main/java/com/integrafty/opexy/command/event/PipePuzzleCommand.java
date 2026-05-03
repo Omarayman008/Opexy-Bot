@@ -51,19 +51,14 @@ public class PipePuzzleCommand implements MultiSlashCommand {
         
         String renderedGrid = pipePuzzleManager.startNewGame(event.getUser().getIdLong(), size);
 
-        EmbedBuilder embed = new EmbedBuilder()
-                .setTitle("🔧 لغز الأنابيب — صعوبة: " + difficulty)
-                .setColor(Color.CYAN)
-                .setDescription("قم بتوصيل الأنابيب للوصول إلى المخرج!\n\n" + renderedGrid)
-                .setFooter("اضغط على الأزرار لتدوير القطع الوسطى (مثال)");
-
-        // Add some rotation buttons for the middle pieces to demonstrate
-        event.replyEmbeds(embed.build())
-                .setComponents(ActionRow.of(
-                        Button.secondary("pipe_rot_1_1", "تدوير (1,1) 🔄"),
-                        Button.secondary("pipe_rot_1_2", "تدوير (1,2) 🔄"),
-                        Button.success("pipe_submit", "تحقق من الحل ✅")
-                ))
+        event.reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
+                .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("ENGINEERING", "لغز الأنابيب — صعوبة: " + difficulty, "قم بتوصيل الأنابيب للوصول إلى المخرج!\n\n" + renderedGrid, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN,
+                        net.dv8tion.jda.api.components.actionrow.ActionRow.of(
+                                net.dv8tion.jda.api.components.buttons.Button.secondary("pipe_rot_1_1", "تدوير (1,1) 🔄"),
+                                net.dv8tion.jda.api.components.buttons.Button.secondary("pipe_rot_1_2", "تدوير (1,2) 🔄"),
+                                net.dv8tion.jda.api.components.buttons.Button.success("pipe_submit", "تحقق من الحل ✅")
+                        )))
+                .useComponentsV2(true).build())
                 .useComponentsV2(true).queue();
     }
 

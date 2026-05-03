@@ -62,20 +62,17 @@ public class AuctionCommand implements MultiSlashCommand {
 
         auctionManager.startAuction(prize);
 
-        EmbedBuilder embed = new EmbedBuilder()
-                .setTitle("🏆 المزاد الأعمى — Blind Auction")
-                .setColor(Color.MAGENTA)
-                .setDescription("تم بدء مزاد على **" + prize + "**! 📦\n\n**القوانين:**\n• المزايدة تبدأ بـ 10 opex.\n• المزايدة الأعلى تفوز بالمحتوى.\n• قد يحتوي الصندوق على مفاجآت!")
-                .addField("المزايد الحالي", "لا يوجد", true)
-                .addField("أعلى سعر", "0 opex", true)
-                .setFooter("ينتهي المزاد عند توقف المزايدات لمدة 30 ثانية.");
+        String body = "تم بدء مزاد على **" + prize + "**! 📦\n\n**القوانين:**\n• المزايدة تبدأ بـ 10 opex.\n• المزايدة الأعلى تفوز بالمحتوى.\n• قد يحتوي الصندوق على مفاجآت!";
 
-        event.replyEmbeds(embed.build())
-                .setComponents(ActionRow.of(
-                        Button.primary("bid_10", "+10"),
-                        Button.primary("bid_50", "+50"),
-                        Button.primary("bid_100", "+100"),
-                        Button.success("bid_custom", "سعر مخصص ✏️")
-                )).useComponentsV2(true).queue();
+        event.reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
+                .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("AUCTION", "🏆 المزاد الأعمى — Blind Auction", body, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN,
+                        net.dv8tion.jda.api.components.actionrow.ActionRow.of(
+                                net.dv8tion.jda.api.components.buttons.Button.primary("bid_10", "+10"),
+                                net.dv8tion.jda.api.components.buttons.Button.primary("bid_50", "+50"),
+                                net.dv8tion.jda.api.components.buttons.Button.primary("bid_100", "+100"),
+                                net.dv8tion.jda.api.components.buttons.Button.success("bid_custom", "سعر مخصص ✏️")
+                        )))
+                .useComponentsV2(true).build())
+                .useComponentsV2(true).queue();
     }
 }

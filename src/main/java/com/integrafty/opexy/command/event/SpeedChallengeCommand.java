@@ -58,14 +58,12 @@ public class SpeedChallengeCommand implements MultiSlashCommand {
         int reward = difficulty.equals("easy") ? 35 : difficulty.equals("medium") ? 55 : 70;
 
         String word = MINECRAFT_WORDS.get(random.nextInt(MINECRAFT_WORDS.size()));
-        
-        EmbedBuilder embed = new EmbedBuilder()
-                .setTitle("⚡ تحدي الـ 7 ثواني!")
-                .setColor(Color.YELLOW)
-                .setDescription("أسرع شخص يكتب الكلمة التالية يربح **" + reward + " opex**!\n\nالكلمة هي:\n**" + word + "**")
-                .setFooter("لديك 7 ثواني فقط!");
+        String body = "أسرع شخص يكتب الكلمة التالية يربح **" + reward + " opex**!\n\nالكلمة هي:\n**" + word + "**";
 
-        event.replyEmbeds(embed.build()).useComponentsV2(true).queue(hook -> {
+        event.reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
+                .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("SPEED", "⚡ تحدي الـ 7 ثواني!", body, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN))
+                .useComponentsV2(true).build())
+                .useComponentsV2(true).queue(hook -> {
             event.getChannel().getIterableHistory().takeAsync(1).thenAccept(messages -> {
                 long startTime = System.currentTimeMillis();
                 
