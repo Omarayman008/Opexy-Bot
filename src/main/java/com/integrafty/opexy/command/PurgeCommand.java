@@ -18,12 +18,12 @@ public class PurgeCommand implements SlashCommand {
 
     @Override
     public String getName() {
-        return "purge";
+        return "clear";
     }
 
     @Override
     public SlashCommandData getCommandData() {
-        return Commands.slash("purge", "مسح رسائل")
+        return Commands.slash("clear", "مسح رسائل")
                 .addOption(OptionType.INTEGER, "amount", "عدد الرسائل (1-100)", true);
     }
 
