@@ -43,86 +43,86 @@ public class ModerationCommands implements MultiSlashCommand {
         List<SlashCommandData> list = new ArrayList<>();
 
         list.add(Commands.slash("setnick", "تـــغـــيـــيـــر لـــقـــب عـــضـــو مـــعـــيـــن")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true)
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
                 .addOption(OptionType.STRING, "nick", "الـــلـــقـــب الـــجـــديـــد", false));
 
         list.add(Commands.slash("ban", "حـــظـــر عـــضـــو مـــن الـــســـيـــرفـــر")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true)
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
                 .addOption(OptionType.STRING, "reason", "الـــســـبـــب", false));
 
-        list.add(Commands.slash("unban", "إلـــغـــاء حـــظـــر عـــضـــو")
+        list.add(Commands.slash("unban", "إلـــغـــاء حـــظـــر عـــضـــو مـــن الـــســـيـــرفـــر")
                 .addOption(OptionType.STRING, "user_id", "أي دي الـــعـــضـــو", true));
 
         list.add(Commands.slash("unban-all", "إلـــغـــاء حـــظـــر الـــجـــمـــيـــع مـــن الـــســـيـــرفـــر"));
 
         list.add(Commands.slash("kick", "طـــرد عـــضـــو مـــن الـــســـيـــرفـــر")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true)
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
                 .addOption(OptionType.STRING, "reason", "الـــســـبـــب", false));
 
         list.add(Commands.slash("vkick", "طـــرد عـــضـــو مـــن الـــروم الـــصـــوتـــي")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true));
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true));
 
         list.add(Commands.slash("mute-text", "إســـكـــات عـــضـــو مـــن الـــشـــات الـــكـــتـــابـــي")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true));
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true));
 
-        list.add(Commands.slash("unmute-text", "إلـــغـــاء إســـكـــات عـــضـــو مـــن الـــشـــات")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true));
+        list.add(Commands.slash("unmute-text", "إلـــغـــاء إســـكـــات عـــضـــو مـــن الـــشـــات الـــكـــتـــابـــي")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true));
 
         list.add(Commands.slash("mute-check", "الـــتـــحـــقـــق مـــن حـــالـــة الـــكـــتـــم لـــعـــضـــو")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true));
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true));
 
         list.add(Commands.slash("mute-voice", "إســـكـــات عـــضـــو مـــن الـــروم الـــصـــوتـــي")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true));
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true));
 
         list.add(Commands.slash("unmute-voice", "إلـــغـــاء إســـكـــات عـــضـــو مـــن الـــصـــوت")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true));
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true));
 
         list.add(Commands.slash("timeout", "إعـــطـــاء تـــايـــم أوت لـــعـــضـــو مـــعـــيـــن")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true)
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
                 .addOption(OptionType.INTEGER, "duration", "الـــمـــدة بـــالـــدقـــائـــق", true));
 
         list.add(Commands.slash("untimeout", "إلـــغـــاء الـــتـــايـــم أوت عـــن عـــضـــو")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true));
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true));
 
         list.add(Commands.slash("clear", "تـــنـــظـــيـــف الـــرســـائـــل مـــن الـــقـــنـــاة")
                 .addOption(OptionType.INTEGER, "amount", "عـــدد الـــرســـائـــل (1-100)", true));
 
         list.add(Commands.slash("move", "نـــقـــل عـــضـــو إلـــى روم صـــوتـــي آخـــر")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true)
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
                 .addOption(OptionType.CHANNEL, "channel", "الـــروم الـــمـــســـتـــهـــدف", true));
 
         list.add(Commands.slash("role", "إعـــطـــاء أو ســـحـــب رتـــبـــة مـــن عـــضـــو")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true)
-                .addOption(OptionType.ROLE, "role", "الـــرتـــبـــة", true));
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
+                .addOption(OptionType.ROLE, "role", "الـــرتـــبـــة الـــمـــســـتـــهـــدفـــة", true));
 
         list.add(Commands.slash("temprole", "إعـــطـــاء رتـــبـــة مـــؤقـــتـــة لـــعـــضـــو")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true)
-                .addOption(OptionType.ROLE, "role", "الـــرتـــبـــة", true)
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
+                .addOption(OptionType.ROLE, "role", "الـــرتـــبـــة الـــمـــســـتـــهـــدفـــة", true)
                 .addOption(OptionType.INTEGER, "duration", "الـــمـــدة بـــالـــســـاعـــات", true));
 
         list.add(Commands.slash("rar", "ســـحـــب جـــمـــيـــع الـــرتـــب مـــن الـــعـــضـــو")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true));
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true));
 
         list.add(Commands.slash("inrole", "عـــرض جـــمـــيـــع الأعـــضـــاء فـــي رتـــبـــة مـــعـــيـــنـــة")
-                .addOption(OptionType.ROLE, "role", "الـــرتـــبـــة", true));
+                .addOption(OptionType.ROLE, "role", "الـــرتـــبـــة الـــمـــســـتـــهـــدفـــة", true));
 
-        list.add(Commands.slash("warn-add", "إعـــطـــاء تـــحـــذيـــر لـــعـــضـــو (WARN1, WARN2, WARN3)")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true)
-                .addOption(OptionType.STRING, "reason", "الـــســـبـــب", false));
+        list.add(Commands.slash("warn-add", "إعـــطـــاء تـــحـــذيـــر لـــعـــضـــو مـــع رتـــبـــة")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
+                .addOption(OptionType.STRING, "reason", "ســـبـــب الـــتـــحـــذيـــر", false));
 
         list.add(Commands.slash("warn-remove", "إلـــغـــاء الـــتـــحـــذيـــرات عـــن عـــضـــو")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true));
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true));
 
         list.add(Commands.slash("warnings", "عـــرض تـــحـــذيـــرات عـــضـــو مـــعـــيـــن")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true));
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true));
 
-        list.add(Commands.slash("lock", "قـــفـــل الـــقـــنـــاة الـــحـــالـــيـــة"));
-        list.add(Commands.slash("unlock", "فـــتـــح الـــقـــنـــاة الـــحـــالـــيـــة"));
+        list.add(Commands.slash("lock", "قـــفـــل الـــقـــنـــاة الـــحـــالـــيـــة لـــلـــجـــمـــيـــع"));
+        list.add(Commands.slash("unlock", "فـــتـــح الـــقـــنـــاة الـــحـــالـــيـــة لـــلـــجـــمـــيـــع"));
         list.add(Commands.slash("hide", "إخـــفـــاء الـــقـــنـــاة الـــحـــالـــيـــة عـــن الـــجـــمـــيـــع"));
         list.add(Commands.slash("show", "إظـــهـــار الـــقـــنـــاة الـــحـــالـــيـــة لـــلـــجـــمـــيـــع"));
 
         list.add(Commands.slash("slowmode", "تـــفـــعـــيـــل وضـــع الـــتـــبـــاطـــؤ فـــي الـــقـــنـــاة")
-                .addOption(OptionType.INTEGER, "seconds", "الـــثـــوانـــي (0 لـــلإلـــغـــاء)", true));
+                .addOption(OptionType.INTEGER, "seconds", "عـــدد الـــثـــوانـــي", true));
 
         list.add(Commands.slash("add-emoji", "إضـــافـــة إيـــمـــوجـــي جـــديـــد لـــلـــســـيـــرفـــر")
                 .addOption(OptionType.STRING, "name", "إســـم الإيـــمـــوجـــي", true)

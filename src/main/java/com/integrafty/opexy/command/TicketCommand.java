@@ -26,8 +26,8 @@ public class TicketCommand implements SlashCommand {
 
     @Override
     public SlashCommandData getCommandData() {
-        return Commands.slash("tickets", "إرسـال لـوحـة الـتـذاكـر")
-                .addOption(OptionType.CHANNEL, "channel", "الـروم الـمـراد إرسـال الـلـوحـة فـيـه (اخـتـيـاري)", false);
+        return Commands.slash("tickets", "إرســـال لـــوحـــة الـــتـــذاكـــر لـــلـــســـيـــرفـــر")
+                .addOption(OptionType.CHANNEL, "channel", "الـــقـــنـــاة الـــمـــســـتـــهـــدفـــة", false);
     }
 
     @Override

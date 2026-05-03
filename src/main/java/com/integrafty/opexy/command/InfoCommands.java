@@ -31,24 +31,24 @@ public class InfoCommands implements MultiSlashCommand {
         List<SlashCommandData> list = new ArrayList<>();
 
         list.add(Commands.slash("profile", "عـــرض مـــلـــفـــك الـــشـــخـــصـــي أو مـــلـــف عـــضـــو آخـــر")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو", false));
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", false));
         
-        list.add(Commands.slash("user", "عـــرض مـــعـــلـــومـــات تـــفـــصـــيـــلـــيـــة عـــن عـــضـــو")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو", false));
+        list.add(Commands.slash("user", "عـــرض مـــعـــلـــومـــات تـــفـــصـــيـــلـــيـــة عـــن عـــضـــو مـــعـــيـــن")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", false));
         
-        list.add(Commands.slash("avatar", "الـــحـــصـــول عـــلـــى صـــورة حـــســـاب عـــضـــو")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو", false));
+        list.add(Commands.slash("avatar", "الـــحـــصـــول عـــلـــى صـــورة حـــســـاب عـــضـــو مـــعـــيـــن")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", false));
         
-        list.add(Commands.slash("banner", "الـــحـــصـــول عـــلـــى بـــانـــر حـــســـاب عـــضـــو")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو", false));
+        list.add(Commands.slash("banner", "الـــحـــصـــول عـــلـــى بـــانـــر حـــســـاب عـــضـــو مـــعـــيـــن")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", false));
 
-        list.add(Commands.slash("server", "عـــرض مـــعـــلـــومـــات تـــفـــصـــيـــلـــيـــة عـــن الـــســـيـــرفـــر"));
+        list.add(Commands.slash("server", "عـــرض مـــعـــلـــومـــات تـــفـــصـــيـــلـــيـــة عـــن الـــســـيـــرفـــر الـــحـــالـــي"));
         
         list.add(Commands.slash("roles", "عـــرض جـــمـــيـــع رتـــب الـــســـيـــرفـــر مـــع عـــدد الأعـــضـــاء"));
         
-        list.add(Commands.slash("server-avatar", "عـــرض صـــورة (أواتـــار) الـــســـيـــرفـــر"));
+        list.add(Commands.slash("server-avatar", "عـــرض صـــورة (أواتـــار) الـــســـيـــرفـــر الـــحـــالـــي"));
         
-        list.add(Commands.slash("server-banner", "عـــرض بـــانـــر الـــســـيـــرفـــر"));
+        list.add(Commands.slash("server-banner", "عـــرض بـــانـــر الـــســـيـــرفـــر الـــحـــالـــي"));
 
         return list;
     }

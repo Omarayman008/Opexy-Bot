@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -26,6 +27,9 @@ public class CommandManager extends ListenerAdapter {
     private final DiscordEventListener discordEventListener;
     private final List<SlashCommand> commands;
     private final List<MultiSlashCommand> multiCommands;
+
+    @Value("${discord.guild.id}")
+    private String guildId;
 
     @PostConstruct
     public void init() {
@@ -56,12 +60,11 @@ public class CommandManager extends ListenerAdapter {
         
         log.info("Total commands to register: {}", commandDataList.size());
 
-        // Fetch Guild ID from config (or environment)
-        String guildId = System.getenv("DISCORD_GUILD_ID");
+        // Fetch Guild ID from config
         if (guildId != null && !guildId.isEmpty()) {
             net.dv8tion.jda.api.entities.Guild guild = jda.getGuildById(guildId);
             if (guild != null) {
-                // Clear global commands to avoid duplicates (shown in user screenshot)
+                // Clear global commands to avoid duplicates
                 jda.updateCommands().addCommands().queue();
                 
                 guild.updateCommands().addCommands(commandDataList).queue(

@@ -22,7 +22,7 @@ public class StartupCommand implements SlashCommand {
 
     @Override
     public SlashCommandData getCommandData() {
-        return Commands.slash("startup", "إرسال لوحة التحكم الرئيسية للأعضاء");
+        return Commands.slash("startup", "إرســـال لـــوحـــة الـــتـــحـــكـــم الـــرئـــيـــســـيـــة لـــلأعـــضـــاء");
     }
 
     @Override

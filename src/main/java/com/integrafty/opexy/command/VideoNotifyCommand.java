@@ -31,7 +31,7 @@ public class VideoNotifyCommand implements SlashCommand {
 
     @Override
     public SlashCommandData getCommandData() {
-        return Commands.slash("video-notify", "Manage video notifications (YouTube)");
+        return Commands.slash("video-notify", "إدارة تـــنـــبـــيـــهـــات الـــفـــيـــديـــوهـــات (YouTube)");
     }
 
     @Override

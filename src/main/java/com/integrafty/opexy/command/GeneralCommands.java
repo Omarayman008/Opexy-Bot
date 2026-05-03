@@ -28,20 +28,20 @@ public class GeneralCommands implements MultiSlashCommand {
     public List<SlashCommandData> getCommandDataList() {
         List<SlashCommandData> list = new ArrayList<>();
 
-        list.add(Commands.slash("help", "قـــائـــمـــة الـــمـــســـاعـــدة لـــلـــبـــوت"));
-        list.add(Commands.slash("ping", "عـــرض ســـرعـــة اتـــصـــال الـــبـــوت"));
-        list.add(Commands.slash("roll", "رمـــي حـــجـــر الـــنـــرد"));
+        list.add(Commands.slash("help", "قـــائـــمـــة الـــمـــســـاعـــدة الـــخـــاصـــة بـــالـــبـــوت"));
+        list.add(Commands.slash("ping", "عـــرض ســـرعـــة اتـــصـــال الـــبـــوت الـــحـــالـــيـــة"));
+        list.add(Commands.slash("roll", "رمـــي حـــجـــر الـــنـــرد الـــعـــشـــوائـــي"));
         
-        list.add(Commands.slash("colors", "عـــرض رتـــب الألـــوان الـــمـــتـــاحـــة"));
-        list.add(Commands.slash("color-set", "تـــحـــديـــد لـــون رتـــبـــتـــك")
-                .addOption(OptionType.INTEGER, "number", "رقم اللون", true));
+        list.add(Commands.slash("colors", "عـــرض رتـــب الألـــوان الـــمـــتـــاحـــة فـــي الـــســـيـــرفـــر"));
+        list.add(Commands.slash("color-set", "تـــحـــديـــد لـــون رتـــبـــتـــك الـــخـــاصـــة")
+                .addOption(OptionType.INTEGER, "number", "رقـــم الـــلـــون", true));
 
         list.add(Commands.slash("translate", "تـــرجـــمـــة الـــنـــص إلـــى لـــغـــة مـــعـــيـــنـــة")
-                .addOption(OptionType.STRING, "text", "النص", true)
-                .addOption(OptionType.STRING, "language", "اللغة", true));
+                .addOption(OptionType.STRING, "text", "الـــنـــص", true)
+                .addOption(OptionType.STRING, "language", "الـــلـــغـــة", true));
 
-        list.add(Commands.slash("get-emojis", "الـــحـــصـــول عـــلـــى تـــفـــاصـــيـــل الإيـــمـــوجـــي")
-                .addOption(OptionType.STRING, "emoji", "الإيموجي", true));
+        list.add(Commands.slash("get-emojis", "الـــحـــصـــول عـــلـــى تـــفـــاصـــيـــل الإيـــمـــوجـــي الـــمـــســـتـــخـــدم")
+                .addOption(OptionType.STRING, "emoji", "الإيـــمـــوجـــي", true));
 
         return list;
     }

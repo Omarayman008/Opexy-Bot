@@ -31,7 +31,7 @@ public class LiveNotifyCommand implements SlashCommand {
 
     @Override
     public SlashCommandData getCommandData() {
-        return Commands.slash("live-notify", "Manage live stream notifications (Kick/Twitch)");
+        return Commands.slash("live-notify", "إدارة تـــنـــبـــيـــهـــات الـــبـــث الـــمـــبـــاشـــر (Kick/Twitch)");
     }
 
     @Override
