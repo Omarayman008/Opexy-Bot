@@ -1,87 +1,131 @@
 package com.integrafty.opexy.command;
 
 import com.integrafty.opexy.command.base.SlashCommand;
+import com.integrafty.opexy.entity.WordFilterEntity;
+import com.integrafty.opexy.repository.WordFilterRepository;
 import com.integrafty.opexy.service.WordFilterService;
 import com.integrafty.opexy.utils.EmbedUtil;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
+import net.dv8tion.jda.api.components.textinput.TextInput;
+import net.dv8tion.jda.api.components.textinput.TextInputStyle;
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
+import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
 import net.dv8tion.jda.api.components.container.Container;
 import org.springframework.stereotype.Component;
 
-import java.util.stream.Collectors;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class WordFilterCommand implements SlashCommand {
+@Slf4j
+public class WordFilterCommand extends ListenerAdapter implements SlashCommand {
 
+    private final JDA jda;
     private final WordFilterService wordFilterService;
+    private final WordFilterRepository wordFilterRepository;
+
+    @PostConstruct
+    public void init() {
+        jda.addEventListener(this);
+    }
 
     @Override
-    public String getName() { return "wordfilter"; }
+    public String getName() { return "banned-words"; }
 
     @Override
     public SlashCommandData getCommandData() {
-        return Commands.slash("wordfilter", "Manage the word filter list")
-                .addOption(OptionType.STRING, "action", "add / remove / list", true)
-                .addOption(OptionType.STRING, "word", "The word to add or remove", false);
+        return Commands.slash("banned-words", "Manage the banned words list");
     }
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         if (!event.getMember().hasPermission(Permission.MANAGE_SERVER)) {
-            reply(event, EmbedUtil.accessDenied(), true);
+            sendEphemeral(event, EmbedUtil.accessDenied());
             return;
         }
+        sendPanel(event, false);
+    }
 
-        String action = event.getOption("action").getAsString().toLowerCase();
+    @Override
+    public void onButtonInteraction(ButtonInteractionEvent event) {
+        String id = event.getComponentId();
+        if (!event.getMember().hasPermission(Permission.MANAGE_SERVER)) return;
 
-        switch (action) {
-            case "add" -> {
-                String word = event.getOption("word") != null ? event.getOption("word").getAsString() : null;
+        if (id.equals("bw_add")) {
+            TextInput word = TextInput.create("word", TextInputStyle.SHORT)
+                    .setPlaceholder("Banned term...").setRequired(true).build();
+            event.replyModal(Modal.create("modal_bw_add", "Add Banned Word")
+                    .addComponents(net.dv8tion.jda.api.components.label.Label.of("Banned Word", word))
+                    .build()).queue();
 
-                if (word == null) {
-                    reply(event, EmbedUtil.error("Missing Word", "Provide the word to add to the filter."), true);
-                    return;
-                }
-
-                wordFilterService.addWord(word);
-                reply(event, EmbedUtil.success("Word Added", "The word `" + word + "` is now blocked."), true);
-            }
-            case "remove" -> {
-                String word = event.getOption("word") != null ? event.getOption("word").getAsString() : null;
-
-                if (word == null) {
-                    reply(event, EmbedUtil.error("Missing Word", "Provide the word to remove from the filter."), true);
-                    return;
-                }
-
-                wordFilterService.removeWord(word);
-                reply(event, EmbedUtil.success("Word Removed", "The word `" + word + "` is no longer blocked."), true);
-            }
-            case "list" -> {
-                java.util.Set<String> all = wordFilterService.getAllWords();
-                if (all.isEmpty()) {
-                    reply(event, EmbedUtil.info("Word Filter", "No words in the filter list."), true);
-                    return;
-                }
-                String list = all.stream()
-                        .map(w -> "▸ `" + w + "`")
-                        .collect(Collectors.joining("\n"));
-                reply(event, EmbedUtil.containerBranded("WORD FILTER", "Blocked Words", list, EmbedUtil.BANNER_MAIN), true);
-            }
-            default -> reply(event, EmbedUtil.error("Invalid Action", "Use `add`, `remove`, or `list`."), true);
+        } else if (id.equals("bw_remove")) {
+            TextInput word = TextInput.create("word", TextInputStyle.SHORT)
+                    .setPlaceholder("Word to remove...").setRequired(true).build();
+            event.replyModal(Modal.create("modal_bw_remove", "Remove Banned Word")
+                    .addComponents(net.dv8tion.jda.api.components.label.Label.of("Remove Word", word))
+                    .build()).queue();
         }
     }
 
-    private void reply(SlashCommandInteractionEvent event, Container container, boolean ephemeral) {
-        MessageCreateBuilder builder = new MessageCreateBuilder();
-        builder.setComponents(container);
-        builder.useComponentsV2(true);
-        event.reply(builder.build()).setEphemeral(ephemeral).useComponentsV2(true).queue();
+    @Override
+    public void onModalInteraction(ModalInteractionEvent event) {
+        String id = event.getModalId();
+
+        if (id.equals("modal_bw_add")) {
+            String word = event.getValue("word").getAsString();
+            wordFilterService.addWord(word);
+            sendPanel(event, true);
+
+        } else if (id.equals("modal_bw_remove")) {
+            String word = event.getValue("word").getAsString();
+            wordFilterService.removeWord(word);
+            sendPanel(event, true);
+        }
+    }
+
+    // Build and send the management panel
+    private void sendPanel(Object event, boolean edit) {
+        List<WordFilterEntity> all = wordFilterRepository.findAll();
+        StringBuilder sb = new StringBuilder("### Banned Terms Registry\n\n");
+        if (all.isEmpty()) {
+            sb.append("*No terms indexed.*");
+        } else {
+            all.forEach(e -> sb.append("▫️ `").append(e.getWord()).append("`\n"));
+        }
+
+        ActionRow row = ActionRow.of(
+                Button.secondary("bw_add", "Add Term"),
+                Button.secondary("bw_remove", "Remove Term"));
+
+        Container container = EmbedUtil.containerBranded("MODERATION", "Filter Hub", sb.toString(), null, row);
+
+        if (edit) {
+            MessageEditBuilder builder = new MessageEditBuilder().setComponents(container).useComponentsV2(true);
+            if (event instanceof ButtonInteractionEvent e)
+                e.editMessage(builder.build()).useComponentsV2(true).queue();
+            else if (event instanceof ModalInteractionEvent e)
+                e.editMessage(builder.build()).useComponentsV2(true).queue();
+        } else if (event instanceof SlashCommandInteractionEvent e) {
+            MessageCreateBuilder builder = new MessageCreateBuilder().setComponents(container).useComponentsV2(true);
+            e.reply(builder.build()).useComponentsV2(true).queue();
+        }
+    }
+
+    private void sendEphemeral(SlashCommandInteractionEvent event, Container container) {
+        MessageCreateBuilder builder = new MessageCreateBuilder().setComponents(container).useComponentsV2(true);
+        event.reply(builder.build()).setEphemeral(true).useComponentsV2(true).queue();
     }
 }
