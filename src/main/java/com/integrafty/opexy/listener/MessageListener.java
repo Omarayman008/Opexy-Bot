@@ -68,7 +68,6 @@ public class MessageListener extends ListenerAdapter {
             logManager.logEmbed(event.getGuild(), LogManager.LOG_MODS_CMD, 
                     EmbedUtil.createOldLogEmbed("word-filter", logBody, event.getMember(), event.getAuthor(), event.getMember(), EmbedUtil.DANGER));
             return;
-            return;
         }
 
         // Auto Replies

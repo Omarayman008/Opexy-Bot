@@ -25,6 +25,7 @@ import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
 import net.dv8tion.jda.api.components.container.Container;
+import com.integrafty.opexy.service.LogManager;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -88,11 +89,13 @@ public class AutoReplyCommand extends ListenerAdapter implements SlashCommand {
                     .build()).queue();
         }
     }
-
     @Override
     public void onModalInteraction(ModalInteractionEvent event) {
         String id = event.getModalId();
 
+        if (id.equals("modal_ar_add")) {
+            String trigger = event.getValue("trigger").getAsString();
+            String reply   = event.getValue("reply").getAsString();
             autoReplyService.addResponse(trigger, reply, event.getUser().getName());
             sendPanel(event, true);
 

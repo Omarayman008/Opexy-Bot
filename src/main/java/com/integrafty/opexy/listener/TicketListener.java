@@ -25,6 +25,7 @@ import com.integrafty.opexy.utils.EmbedUtil;
 import net.dv8tion.jda.api.components.container.Container;
 import net.dv8tion.jda.api.components.label.Label;
 import net.dv8tion.jda.api.JDA;
+import com.integrafty.opexy.service.LogManager;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;

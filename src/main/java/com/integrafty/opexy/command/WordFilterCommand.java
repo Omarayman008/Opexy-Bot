@@ -25,6 +25,7 @@ import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
 import net.dv8tion.jda.api.components.container.Container;
+import com.integrafty.opexy.service.LogManager;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -84,11 +85,11 @@ public class WordFilterCommand extends ListenerAdapter implements SlashCommand {
                     .build()).queue();
         }
     }
-
     @Override
     public void onModalInteraction(ModalInteractionEvent event) {
         String id = event.getModalId();
 
+        if (id.equals("modal_bw_add")) {
             String word = event.getValue("word").getAsString();
             wordFilterService.addWord(word);
             sendPanel(event, true);
