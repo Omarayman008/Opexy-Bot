@@ -140,20 +140,21 @@ public class PipePuzzleManager extends ListenerAdapter {
     }
 
     public String renderGrid(char[][] grid, int cursorR, int cursorC) {
-        StringBuilder sb = new StringBuilder("```\n");
+        StringBuilder sb = new StringBuilder("```ansi\n");
         sb.append("🏁\n");
         for (int i = 0; i < grid.length; i++) {
             for (int j = 0; j < grid[i].length; j++) {
                 if (i == cursorR && j == cursorC) {
-                    sb.append("[").append(grid[i][j]).append("]");
+                    // Red background for cursor to keep 1-char width
+                    sb.append("\u001B[41m").append(grid[i][j]).append("\u001B[0m");
                 } else {
-                    sb.append(" ").append(grid[i][j]).append(" ");
+                    sb.append(grid[i][j]);
                 }
             }
             sb.append("\n");
         }
-        for (int j = 0; j < grid[0].length - 1; j++) sb.append("   ");
-        sb.append(" 🚩\n");
+        for (int j = 0; j < grid[0].length - 1; j++) sb.append(" ");
+        sb.append("🚩\n");
         sb.append("```");
         return sb.toString();
     }
