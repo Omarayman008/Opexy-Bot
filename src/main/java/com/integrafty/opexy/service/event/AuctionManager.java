@@ -41,13 +41,23 @@ public class AuctionManager extends ListenerAdapter {
     private long targetPrice = 0;
     private ScheduledFuture<?> endTask = null;
     private String activeMessageId = null;
+    private String guildId = null;
 
-    public void startAuction(String prize, int duration, long targetPrice) {
+    public void startAuction(net.dv8tion.jda.api.entities.channel.middleman.MessageChannel channel, String prize, int duration, long targetPrice) {
         this.currentPrize = prize;
         this.durationSeconds = duration > 0 ? duration : 30;
         this.targetPrice = targetPrice;
         this.currentHighestBid = 0;
         this.highestBidderId = 0;
+        
+        if (channel instanceof net.dv8tion.jda.api.entities.channel.middleman.GuildChannel gc) {
+            this.guildId = gc.getGuild().getId();
+        }
+
+        if (endTask != null) endTask.cancel(false);
+        endTask = scheduler.schedule(() -> {
+            finishAuction(channel);
+        }, durationSeconds, TimeUnit.SECONDS);
     }
 
     @Override
@@ -97,11 +107,11 @@ public class AuctionManager extends ListenerAdapter {
         // 2. Check Target Price
         if (targetPrice > 0 && newTotal >= targetPrice) {
             if (event instanceof net.dv8tion.jda.api.interactions.callbacks.IMessageEditCallback mec) mec.deferEdit().queue();
-            finishAuction(event);
+            finishAuction(event.getMessageChannel());
             return;
         }
 
-        resetTimer(event);
+        resetTimer(event.getMessageChannel());
 
         // Update Message
         String body = "تم بدء مزاد على **جائزة غامضة**! 📦\n\n**القوانين:**\n• المزايدة تبدأ بـ 10 opex.\n• المزايدة الأعلى تفوز بالمحتوى.\n\n" +
@@ -138,30 +148,33 @@ public class AuctionManager extends ListenerAdapter {
         }
     }
 
-    private void resetTimer(net.dv8tion.jda.api.interactions.callbacks.IReplyCallback event) {
+    private void resetTimer(net.dv8tion.jda.api.entities.channel.middleman.MessageChannel channel) {
         if (endTask != null) endTask.cancel(false);
         
         endTask = scheduler.schedule(() -> {
-            finishAuction(event);
+            finishAuction(channel);
         }, durationSeconds, TimeUnit.SECONDS);
     }
 
-    private void finishAuction(net.dv8tion.jda.api.interactions.callbacks.IReplyCallback event) {
+    private void finishAuction(net.dv8tion.jda.api.entities.channel.middleman.MessageChannel channel) {
         eventManager.endGroupEvent();
         
-        if (highestBidderId != 0) {
-            economyService.subtractBalance(String.valueOf(highestBidderId), event.getGuild().getId(), currentHighestBid);
+        if (highestBidderId != 0 && guildId != null) {
+            economyService.subtractBalance(String.valueOf(highestBidderId), guildId, currentHighestBid);
             
-            achievementService.updateStats(highestBidderId, event.getGuild(), stats -> {
-                stats.setSuccessBids(stats.getSuccessBids() + 1);
-            });
+            // Try to update stats - we need Guild object
+            if (channel instanceof net.dv8tion.jda.api.entities.channel.middleman.GuildChannel gc) {
+                achievementService.updateStats(highestBidderId, gc.getGuild(), stats -> {
+                    stats.setSuccessBids(stats.getSuccessBids() + 1);
+                });
+            }
         }
 
         String body = highestBidderId != 0 ? 
             "الفائز هو <@" + highestBidderId + "> بسعر **" + currentHighestBid + " opex**!\n\n**الجائزة:** " + currentPrize + "\n\nمبروك للفائز!" :
             "انتهى المزاد دون وجود أي مزايدات.";
         
-        event.getMessageChannel().sendMessage(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
+        channel.sendMessage(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
                 .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("AUCTION", "🏁 انتهى المزاد!", body, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN))
                 .useComponentsV2(true).build())
                 .useComponentsV2(true).queue();
@@ -169,6 +182,7 @@ public class AuctionManager extends ListenerAdapter {
         // Reset state
         currentHighestBid = 0;
         highestBidderId = 0;
+        guildId = null;
         if (endTask != null) endTask.cancel(false);
     }
 }

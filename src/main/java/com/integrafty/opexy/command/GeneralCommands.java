@@ -55,6 +55,14 @@ public class GeneralCommands implements MultiSlashCommand {
         list.add(Commands.slash("get-emojis", "الـــحـــصـــول عـــلـــى تـــفـــاصـــيـــل الإيـــمـــوجـــي الـــمـــســـتـــخـــدم")
                 .addOption(OptionType.STRING, "emoji", "الإيـــمـــوجـــي", true));
 
+        list.add(Commands.slash("give", "إعـــطـــاء رصـــيـــد لـــمـــســـتـــخـــدم (خـــاص بـــالادارة)")
+                .addOption(OptionType.USER, "user", "الـــمـــســـتـــخـــدم", true)
+                .addOption(OptionType.INTEGER, "amount", "الـــمـــبـــلـــغ", true));
+
+        list.add(Commands.slash("transfer", "تـــحـــويـــل رصـــيـــد لـــمـــســـتـــخـــدم آخـــر")
+                .addOption(OptionType.USER, "user", "الـــمـــســـتـــخـــدم الـــمـــرســـل إلـــيـــه", true)
+                .addOption(OptionType.INTEGER, "amount", "الـــمـــبـــلـــغ الـــمـــراد تـــحـــويـــلـــه", true));
+
         return list;
     }
 
@@ -71,7 +79,51 @@ public class GeneralCommands implements MultiSlashCommand {
             case "color-set" -> handleColorSet(event);
             case "translate" -> handleTranslate(event);
             case "get-emojis" -> handleGetEmojis(event);
+            case "give" -> handleGive(event);
+            case "transfer" -> handleTransfer(event);
         }
+    }
+
+    private void handleGive(SlashCommandInteractionEvent event) {
+        if (!event.getUser().getId().equals("1337490826326048922")) {
+            replyEphemeral(event, EmbedUtil.error("ACCESS DENIED", "هذا الأمر مخصص لصاحب البوت فقط."));
+            return;
+        }
+
+        net.dv8tion.jda.api.entities.User target = event.getOption("user").getAsUser();
+        int amount = event.getOption("amount").getAsInt();
+
+        economyService.addBalance(target.getId(), event.getGuild().getId(), amount);
+        
+        String body = String.format("تم إضافة **%d opex** بنجاح لحساب <@%s>.", amount, target.getId());
+        reply(event, EmbedUtil.success("ADMIN GIFT", body));
+    }
+
+    private void handleTransfer(SlashCommandInteractionEvent event) {
+        net.dv8tion.jda.api.entities.User target = event.getOption("user").getAsUser();
+        int amount = event.getOption("amount").getAsInt();
+
+        if (target.getId().equals(event.getUser().getId())) {
+            replyEphemeral(event, EmbedUtil.error("INVALID ACTION", "لا يمكنك تحويل الأموال لنفسك!"));
+            return;
+        }
+
+        if (amount <= 0) {
+            replyEphemeral(event, EmbedUtil.error("INVALID AMOUNT", "يجب أن يكون المبلغ أكبر من 0."));
+            return;
+        }
+
+        long senderBalance = economyService.getBalance(event.getUser().getId(), event.getGuild().getId());
+        if (senderBalance < amount) {
+            replyEphemeral(event, EmbedUtil.error("INSUFFICIENT FUNDS", "رصيدك غير كافٍ لإتمام عملية التحويل."));
+            return;
+        }
+
+        economyService.subtractBalance(event.getUser().getId(), event.getGuild().getId(), amount);
+        economyService.addBalance(target.getId(), event.getGuild().getId(), amount);
+
+        String body = String.format("تم تحويل **%d opex** بنجاح إلى <@%s>.", amount, target.getId());
+        reply(event, EmbedUtil.success("TRANSFER SUCCESS", body));
     }
 
     private void handleBalance(SlashCommandInteractionEvent event) {
