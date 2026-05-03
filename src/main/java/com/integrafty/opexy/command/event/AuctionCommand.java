@@ -80,7 +80,8 @@ public class AuctionCommand implements MultiSlashCommand {
             return;
         }
 
-        auctionManager.startAuction(event.getChannel(), prize, duration, targetPrice);
+        String roleId = (targetRole != null) ? targetRole.getId() : null;
+        auctionManager.startAuction(event.getChannel(), prize, roleId, duration, targetPrice);
 
         String body = "تم بدء مزاد على **جائزة غامضة**! 📦\n\n**القوانين:**\n• المزايدة تبدأ بـ 10 opex.\n• المزايدة الأعلى تفوز بالمحتوى.\n• المحتوى سيبقى مجهولاً حتى نهاية المزاد!";
 

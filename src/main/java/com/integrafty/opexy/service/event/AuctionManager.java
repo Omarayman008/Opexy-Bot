@@ -42,9 +42,11 @@ public class AuctionManager extends ListenerAdapter {
     private ScheduledFuture<?> endTask = null;
     private String activeMessageId = null;
     private String guildId = null;
+    private String targetRoleId = null;
 
-    public void startAuction(net.dv8tion.jda.api.entities.channel.middleman.MessageChannel channel, String prize, int duration, long targetPrice) {
+    public void startAuction(net.dv8tion.jda.api.entities.channel.middleman.MessageChannel channel, String prize, String targetRoleId, int duration, long targetPrice) {
         this.currentPrize = prize;
+        this.targetRoleId = targetRoleId;
         this.durationSeconds = duration > 0 ? duration : 30;
         this.targetPrice = targetPrice;
         this.currentHighestBid = 0;
@@ -162,11 +164,22 @@ public class AuctionManager extends ListenerAdapter {
         if (highestBidderId != 0 && guildId != null) {
             economyService.subtractBalance(String.valueOf(highestBidderId), guildId, currentHighestBid);
             
-            // Try to update stats - we need Guild object
             if (channel instanceof net.dv8tion.jda.api.entities.channel.middleman.GuildChannel gc) {
+                // Update stats
                 achievementService.updateStats(highestBidderId, gc.getGuild(), stats -> {
                     stats.setSuccessBids(stats.getSuccessBids() + 1);
                 });
+
+                // GIVE ROLE IF SET
+                if (targetRoleId != null) {
+                    net.dv8tion.jda.api.entities.Role role = gc.getGuild().getRoleById(targetRoleId);
+                    if (role != null) {
+                        gc.getGuild().addRoleToMember(net.dv8tion.jda.api.entities.User.fromId(highestBidderId), role).queue(
+                            success -> {},
+                            error -> {}
+                        );
+                    }
+                }
             }
         }
 
