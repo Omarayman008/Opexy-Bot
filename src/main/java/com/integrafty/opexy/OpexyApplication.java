@@ -83,6 +83,8 @@ public class OpexyApplication {
             log.error("Failed to start Discord Bot", e);
             throw new RuntimeException("Failed to connect to Discord", e);
         }
+    }
+
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
