@@ -32,11 +32,15 @@ public class PipePuzzleManager extends ListenerAdapter {
             return;
 
         long userId = event.getUser().getIdLong();
-        if (!games.containsKey(userId))
+        if (!games.containsKey(userId)) {
+            event.reply("❌ انتهت صلاحية هذه اللعبة أو تم إعادة تشغيل البوت. يرجى البدء بلعبة جديدة.").setEphemeral(true).queue();
             return;
+        }
 
         char[][] grid = games.get(userId);
         int[] cursor = cursors.get(userId);
+        
+        if (grid == null || cursor == null) return;
 
         if (id.startsWith("pipe_move_")) {
             String dir = id.replace("pipe_move_", "");
@@ -104,10 +108,20 @@ public class PipePuzzleManager extends ListenerAdapter {
             }
         }
 
-        // Guaranteed path (L-shape for simplicity but reliable)
+        // Guaranteed path (L-shape)
         for (int j = 0; j < size; j++) grid[0][j] = '─';
         for (int i = 0; i < size; i++) grid[i][size-1] = '│';
         grid[0][size-1] = '┐';
+        
+        // Scramble the grid (Rotate every piece randomly)
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                int rotations = random.nextInt(3) + 1;
+                for (int k = 0; k < rotations; k++) {
+                    grid[i][j] = rotatePiece(grid[i][j]);
+                }
+            }
+        }
         
         return grid;
     }
