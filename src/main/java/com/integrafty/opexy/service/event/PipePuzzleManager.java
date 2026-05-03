@@ -1,5 +1,6 @@
 package com.integrafty.opexy.service.event;
 
+import com.integrafty.opexy.service.EconomyService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
