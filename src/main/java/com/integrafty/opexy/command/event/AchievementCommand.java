@@ -45,10 +45,35 @@ public class AchievementCommand implements MultiSlashCommand {
         body.append("*Save a citizen as Doctor*\n");
         body.append(String.format("Progress %s %d%%\n\n", getProgressBar(stats.getDoctorSaves(), 3), calculatePercent(stats.getDoctorSaves(), 3)));
 
+        // Mafia - Mafia Boss
+        body.append("**Mafia Boss**\n");
+        body.append("*Win a game as the Mafia*\n");
+        body.append(String.format("Progress %s %d%%\n\n", getProgressBar(stats.getMafiaWins(), 6), calculatePercent(stats.getMafiaWins(), 6)));
+
+        // Mafia - Law Abiding Citizen
+        body.append("**Law Abiding Citizen**\n");
+        body.append("*Survive multiple rounds as a citizen*\n");
+        body.append(String.format("Progress %s %d%%\n\n", getProgressBar(stats.getCitizenCount(), 8), calculatePercent(stats.getCitizenCount(), 8)));
+
+        // Mafia - Public Enemy
+        body.append("**Public Enemy**\n");
+        body.append("*Receive many votes from other players*\n");
+        body.append(String.format("Progress %s %d%%\n\n", getProgressBar(stats.getVotesReceived(), 15), calculatePercent(stats.getVotesReceived(), 15)));
+
         // Auction - Master
         body.append("**Auction Master**\n");
         body.append("*Win a high-stakes blind auction*\n");
         body.append(String.format("Progress %s %d%%\n\n", getProgressBar(stats.getSuccessBids(), 5), calculatePercent(stats.getSuccessBids(), 5)));
+
+        // Auction - Big Spender
+        body.append("**Big Spender**\n");
+        body.append("*Place a massive bid in the auction*\n");
+        body.append(String.format("Progress %s %d%%\n\n", getProgressBar((int)(stats.getMaxBid()/1000), 100), calculatePercent((int)(stats.getMaxBid()/1000), 100)));
+
+        // Auction - Determined Bidder
+        body.append("**Determined Bidder**\n");
+        body.append("*Participate and bid in multiple auctions*\n");
+        body.append(String.format("Progress %s %d%%\n\n", getProgressBar(stats.getFailedBids(), 5), calculatePercent(stats.getFailedBids(), 5)));
 
         // Minigames - Master Plumber
         body.append("**Master Plumber**\n");
