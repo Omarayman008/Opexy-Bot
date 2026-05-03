@@ -135,12 +135,22 @@ public class InfoCommands implements MultiSlashCommand {
 
     private void handleRoles(SlashCommandInteractionEvent event) {
         Guild g = event.getGuild();
-        String roles = g.getRoles().stream()
-                .limit(15)
-                .map(r -> r.getAsMention() + " (`" + g.getMembersWithRoles(r).size() + "`)")
-                .collect(Collectors.joining("\n"));
+        if (g == null) return;
+
+        List<Role> rolesList = g.getRoles();
+        StringBuilder sb = new StringBuilder("### 📑 نـــظـــام الـــرتـــب | AUTHORITY REGISTRY\n");
         
-        reply(event, EmbedUtil.containerBranded("SECURITY", "Clearance Registry", "### 📑 Authority Levels\n" + roles + "\n\n*Showing top 15 roles*", null));
+        for (Role r : rolesList) {
+            if (r.isPublicRole()) continue; // Skip @everyone
+            String line = r.getAsMention() + " (`" + g.getMembersWithRoles(r).size() + "`)\n";
+            if (sb.length() + line.length() > 3900) {
+                sb.append("\n*... وتـــم إخـــفـــاء الـــبـــاقـــي لـــتـــجـــاوز الـــحـــد الأقـــصـــى*");
+                break;
+            }
+            sb.append(line);
+        }
+        
+        reply(event, EmbedUtil.containerBranded("SECURITY", "Clearance Registry", sb.toString(), EmbedUtil.BANNER_MAIN));
     }
 
     private void handleServerAvatar(SlashCommandInteractionEvent event) {
