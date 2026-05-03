@@ -2,12 +2,16 @@ package com.integrafty.opexy.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONArray;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.json.JSONArray;
+import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.net.URI;
 
 @Service
 @RequiredArgsConstructor
@@ -24,12 +28,24 @@ public class TranslationService {
             if (langCode.equals("ara")) langCode = "ar";
             if (langCode.length() > 2) langCode = langCode.substring(0, 2);
 
-            String url = String.format("https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=%s&dt=t&q=%s",
-                    langCode, URLEncoder.encode(text, StandardCharsets.UTF_8));
+            URI uri = UriComponentsBuilder.fromHttpUrl("https://translate.googleapis.com/translate_a/single")
+                    .queryParam("client", "gtx")
+                    .queryParam("sl", "auto")
+                    .queryParam("tl", langCode)
+                    .queryParam("dt", "t")
+                    .queryParam("q", text)
+                    .build()
+                    .toUri();
             
-            log.info("Translating to {}: {}", langCode, url);
+            log.info("Translating to {}: {}", langCode, uri);
 
-            String response = restTemplate.getForObject(url, String.class);
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
+            String response = responseEntity.getBody();
+            
             if (response == null) return "Error: No response from translation engine.";
 
             JSONArray jsonArray = new JSONArray(response);
