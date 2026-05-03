@@ -67,13 +67,15 @@ public class WelcomeListener extends ListenerAdapter {
         if (ch == null) return;
 
         String header = String.format("### - WELCOME TO HIGHCORE MC | %s", member.getAsMention());
-        String guide = """
+        String guide = String.format("""
                 **Start Here :**
+                
+                Your The Member Number %d
 
-                Highcore → <#1487138386258165820>
+                StartUp → <#1487138386258165820>
                 Verification → <#1488279212786843850>
-                Rules → <#1487138587827900486>
-                """;
+                Chating → <#1488278004919435335>
+                """, guild.getMemberCount());
 
         String bannerUrl = (image != null) ? "attachment://welcome.png" : EmbedUtil.BANNER_WELCOME;
         List<net.dv8tion.jda.api.components.container.ContainerChildComponent> layout = new ArrayList<>();
@@ -95,13 +97,15 @@ public class WelcomeListener extends ListenerAdapter {
 
     private void sendStartupDM(Member member, byte[] image) {
         String header = String.format("### - WELCOME TO HIGHCORE MC | %s", member.getUser().getAsMention());
-        String guide = """
+        String guide = String.format("""
                 **Start Here :**
+                
+                Your The Member Number %d
 
-                Highcore → <#1487138386258165820>
+                StartUp → <#1487138386258165820>
                 Verification → <#1488279212786843850>
-                Rules → <#1487138587827900486>
-                """;
+                Chating → <#1488278004919435335>
+                """, member.getGuild().getMemberCount());
 
         String bannerUrl = (image != null) ? "attachment://welcome.png" : EmbedUtil.BANNER_MAIN;
         List<net.dv8tion.jda.api.components.container.ContainerChildComponent> layout = new ArrayList<>();
