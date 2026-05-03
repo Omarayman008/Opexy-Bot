@@ -281,12 +281,20 @@ public class GeneralCommands implements MultiSlashCommand {
     }
 
     private void reply(SlashCommandInteractionEvent e, Container c) {
-        var msg = new MessageCreateBuilder().setComponents(c).useComponentsV2(true).build();
+        var msg = new MessageCreateBuilder()
+                .setComponents(c)
+                .setAllowedMentions(java.util.Collections.emptyList())
+                .useComponentsV2(true)
+                .build();
         e.reply(msg).useComponentsV2(true).queue();
     }
 
     private void replyEphemeral(SlashCommandInteractionEvent e, Container c) {
-        var msg = new MessageCreateBuilder().setComponents(c).useComponentsV2(true).build();
+        var msg = new MessageCreateBuilder()
+                .setComponents(c)
+                .setAllowedMentions(java.util.Collections.emptyList())
+                .useComponentsV2(true)
+                .build();
         e.reply(msg).setEphemeral(true).useComponentsV2(true).queue();
     }
 }
