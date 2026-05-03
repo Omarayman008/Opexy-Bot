@@ -47,6 +47,13 @@ public class UserStats {
     @Column(name = "speed_wins", columnDefinition = "int default 0")
     private int speedWins = 0;
 
+    // Shop Items
+    @Column(name = "shield_count", columnDefinition = "int default 0")
+    private int shieldCount = 0;
+
+    @Column(name = "double_reward", columnDefinition = "boolean default false")
+    private boolean doubleRewardActive = false;
+
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
 
@@ -79,4 +86,10 @@ public class UserStats {
 
     public int getSpeedWins() { return speedWins; }
     public void setSpeedWins(int speedWins) { this.speedWins = speedWins; }
+
+    public int getShieldCount() { return shieldCount; }
+    public void setShieldCount(int shieldCount) { this.shieldCount = shieldCount; }
+
+    public boolean isDoubleRewardActive() { return doubleRewardActive; }
+    public void setDoubleRewardActive(boolean doubleRewardActive) { this.doubleRewardActive = doubleRewardActive; }
 }
