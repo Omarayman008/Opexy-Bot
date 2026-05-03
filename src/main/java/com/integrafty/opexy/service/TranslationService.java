@@ -43,10 +43,11 @@ public class TranslationService {
             headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
-            String response = responseEntity.getBody();
+            ResponseEntity<byte[]> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, byte[].class);
+            byte[] body = responseEntity.getBody();
             
-            if (response == null) return "Error: No response from translation engine.";
+            if (body == null) return "Error: No response from translation engine.";
+            String response = new String(body, StandardCharsets.UTF_8);
 
             JSONArray jsonArray = new JSONArray(response);
             if (jsonArray.isNull(0)) return "Error: Unexpected response structure.";
