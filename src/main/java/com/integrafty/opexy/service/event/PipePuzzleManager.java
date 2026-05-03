@@ -86,15 +86,24 @@ public class PipePuzzleManager extends ListenerAdapter {
                 .useComponentsV2(true).queue();
     }
 
-    private char[][] generateGrid(int size) {
-        char[] pieces = {'═', '║', '╔', '╗', '╚', '╝'};
-        char[][] grid = new char[size][size];
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                grid[i][j] = pieces[random.nextInt(pieces.length)];
+    public String renderGrid(char[][] grid, int cursorR, int cursorC) {
+        StringBuilder sb = new StringBuilder("```ansi\n");
+        sb.append("🏁\n");
+        for (int i = 0; i < grid.length; i++) {
+            for (int j = 0; j < grid[i].length; j++) {
+                if (i == cursorR && j == cursorC) {
+                    // Highlight cursor piece in Cyan Bold
+                    sb.append("\u001B[1;36m").append(grid[i][j]).append("\u001B[0m");
+                } else {
+                    sb.append(grid[i][j]);
+                }
             }
+            sb.append("\n");
         }
-        return grid;
+        for (int j = 0; j < grid[0].length - 1; j++) sb.append(" ");
+        sb.append("🚩\n");
+        sb.append("```");
+        return sb.toString();
     }
 
     private char rotatePiece(char piece) {
@@ -109,24 +118,28 @@ public class PipePuzzleManager extends ListenerAdapter {
         };
     }
 
-    public String renderGrid(char[][] grid, int cursorR, int cursorC) {
-        StringBuilder sb = new StringBuilder("```\n");
-        sb.append("🏁\n"); // Start Indicator
-        for (int i = 0; i < grid.length; i++) {
-            for (int j = 0; j < grid[i].length; j++) {
-                if (i == cursorR && j == cursorC) {
-                    sb.append(">").append(grid[i][j]).append("<");
-                } else {
-                    sb.append(" ").append(grid[i][j]).append(" ");
-                }
+    private char[][] generateGrid(int size) {
+        char[][] grid = new char[size][size];
+        char[] allPieces = {'═', '║', '╔', '╗', '╚', '╝'};
+        
+        // 1. Initialize with random pieces
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                grid[i][j] = allPieces[random.nextInt(allPieces.length)];
             }
-            sb.append("\n");
         }
-        // End Indicator at the bottom right
-        for (int j = 0; j < grid[0].length - 1; j++) sb.append("   ");
-        sb.append(" 🚩\n");
-        sb.append("```");
-        return sb.toString();
+
+        // 2. Force a path from (0,0) to (size-1, size-1)
+        // Simple L-shape path for guaranteed solvability
+        for (int j = 0; j < size; j++) grid[0][j] = '═';
+        for (int i = 0; i < size; i++) grid[i][size-1] = '║';
+        
+        // Fix corners
+        grid[0][size-1] = '╗';
+        grid[0][0] = '═'; // Start
+        grid[size-1][size-1] = '║'; // End
+
+        return grid;
     }
 
     private boolean isSolved(char[][] grid) {
