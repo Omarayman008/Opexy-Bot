@@ -114,6 +114,22 @@ public class ServerLogListener extends ListenerAdapter {
     }
 
     @Override
+    public void onMessageReceived(@NotNull net.dv8tion.jda.api.events.message.MessageReceivedEvent event) {
+        if (!event.isFromGuild() || event.getAuthor().isBot()) return;
+        String content = event.getMessage().getContentRaw();
+        if (content.isEmpty() && event.getMessage().getAttachments().isEmpty()) return;
+        
+        if (content.length() > 1000) content = content.substring(0, 1000) + "...";
+
+        String details = "### 📩 New Transmission\n" +
+                "▫️ **Channel:** " + event.getChannel().getAsMention() + "\n" +
+                "▫️ **Content:** " + (content.isEmpty() ? "*Attachment Only*" : "```" + content + "```");
+        
+        logManager.logEmbed(event.getGuild(), LogManager.LOG_MESSAGE,
+                EmbedUtil.createOldLogEmbed("message-send", details, event.getMember(), event.getAuthor(), null, EmbedUtil.INFO));
+    }
+
+    @Override
     public void onMessageDelete(@NotNull MessageDeleteEvent event) {
         event.getGuild().retrieveAuditLogs().type(ActionType.MESSAGE_DELETE).limit(1).queue(logs -> {
             AuditLogEntry entry = logs.isEmpty() ? null : logs.get(0);
