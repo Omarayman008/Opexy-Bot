@@ -25,11 +25,21 @@ public class TranslationService {
             if (langCode.equals("ara")) langCode = "ar";
             if (langCode.length() > 2) langCode = langCode.substring(0, 2);
 
-            // Using MyMemory API as a more stable alternative to Google's unofficial endpoint
-            String urlStr = String.format("https://api.mymemory.translated.net/get?q=%s&langpair=auto|%s",
-                    URLEncoder.encode(text, StandardCharsets.UTF_8.toString()), langCode);
+            // Detect source language
+            String sourceLang = isArabic(text) ? "ar" : "en";
             
-            log.info("Translating to {} via MyMemory: {}", langCode, urlStr);
+            // If translating to the same language, flip source
+            if (sourceLang.equals(langCode)) {
+                sourceLang = langCode.equals("ar") ? "en" : "ar";
+            }
+
+            String langPair = sourceLang + "|" + langCode;
+
+            // Using MyMemory API with explicit language pair
+            String urlStr = String.format("https://api.mymemory.translated.net/get?q=%s&langpair=%s",
+                    URLEncoder.encode(text, StandardCharsets.UTF_8.toString()), langPair);
+            
+            log.info("Translating {} via MyMemory: {}", langPair, urlStr);
 
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -49,7 +59,9 @@ public class TranslationService {
 
             JSONObject json = new JSONObject(response);
             if (json.has("responseData")) {
-                return json.getJSONObject("responseData").getString("translatedText");
+                String result = json.getJSONObject("responseData").getString("translatedText");
+                // Fix potential HTML entities
+                return result.replace("&quot;", "\"").replace("&#39;", "'").replace("&amp;", "&");
             }
 
             return "Error: Could not parse translation response.";
@@ -57,5 +69,18 @@ public class TranslationService {
             log.error("Translation failed", e);
             return "Error: " + e.getMessage();
         }
+    }
+
+    private boolean isArabic(String text) {
+        for (char c : text.toCharArray()) {
+            Character.UnicodeBlock block = Character.UnicodeBlock.of(c);
+            if (block == Character.UnicodeBlock.ARABIC || 
+                block == Character.UnicodeBlock.ARABIC_PRESENTATION_FORMS_A ||
+                block == Character.UnicodeBlock.ARABIC_PRESENTATION_FORMS_B ||
+                block == Character.UnicodeBlock.ARABIC_SUPPLEMENT) {
+                return true;
+            }
+        }
+        return false;
     }
 }
