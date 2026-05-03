@@ -65,6 +65,7 @@ public class SpeedChallengeCommand implements MultiSlashCommand {
                 .useComponentsV2(true).build())
                 .useComponentsV2(true).queue(hook -> {
             
+            long startTime = System.currentTimeMillis();
             java.util.concurrent.atomic.AtomicBoolean finished = new java.util.concurrent.atomic.AtomicBoolean(false);
             
             net.dv8tion.jda.api.hooks.ListenerAdapter listener = new net.dv8tion.jda.api.hooks.ListenerAdapter() {
