@@ -56,8 +56,10 @@ public class AuctionManager extends ListenerAdapter {
             this.guildId = gc.getGuild().getId();
         }
 
+        log.info("[Auction] Starting auction in channel {} for {} seconds. Prize: {}", channel.getName(), durationSeconds, currentPrize);
         if (endTask != null) endTask.cancel(false);
         endTask = scheduler.schedule(() -> {
+            log.info("[Auction] Timer expired for auction in channel {}", channel.getName());
             finishAuction(channel);
         }, durationSeconds, TimeUnit.SECONDS);
     }
@@ -169,54 +171,62 @@ public class AuctionManager extends ListenerAdapter {
     }
 
     private void finishAuction(net.dv8tion.jda.api.entities.channel.middleman.MessageChannel channel) {
-        eventManager.endGroupEvent();
-        
-        if (highestBidderId != 0 && guildId != null) {
-            if (channel instanceof net.dv8tion.jda.api.entities.channel.middleman.GuildChannel gc) {
-                // Update stats
-                achievementService.updateStats(highestBidderId, gc.getGuild(), stats -> {
-                    stats.setSuccessBids(stats.getSuccessBids() + 1);
-                });
+        log.info("[Auction] Finishing auction for {}...", channel.getName());
+        try {
+            eventManager.endGroupEvent();
+            
+            if (highestBidderId != 0 && guildId != null) {
+                if (channel instanceof net.dv8tion.jda.api.entities.channel.middleman.GuildChannel gc) {
+                    // Update stats
+                    achievementService.updateStats(highestBidderId, gc.getGuild(), stats -> {
+                        stats.setSuccessBids(stats.getSuccessBids() + 1);
+                    });
 
-                // GIVE ROLE IF SET
-                if (targetRoleId != null) {
-                    net.dv8tion.jda.api.entities.Role role = gc.getGuild().getRoleById(targetRoleId);
-                    if (role != null) {
-                        gc.getGuild().addRoleToMember(net.dv8tion.jda.api.entities.User.fromId(highestBidderId), role).queue();
-                    }
-                }
-
-                // GIVE CURRENCY IF PRIZE IS OPEX
-                try {
-                    String cleanPrize = currentPrize.toLowerCase().replace(",", "");
-                    if (cleanPrize.contains("opex")) {
-                        java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d+)(\\s*k)?").matcher(cleanPrize);
-                        if (m.find()) {
-                            long amount = Long.parseLong(m.group(1));
-                            if (m.group(2) != null) amount *= 1000;
-                            economyService.addBalance(String.valueOf(highestBidderId), guildId, amount);
+                    // GIVE ROLE IF SET
+                    if (targetRoleId != null) {
+                        net.dv8tion.jda.api.entities.Role role = gc.getGuild().getRoleById(targetRoleId);
+                        if (role != null) {
+                            gc.getGuild().addRoleToMember(net.dv8tion.jda.api.entities.User.fromId(highestBidderId), role).queue();
                         }
                     }
-                } catch (Exception e) {
-                    // Silently fail if prize string doesn't follow expected currency format
+
+                    // GIVE CURRENCY IF PRIZE IS OPEX
+                    try {
+                        String cleanPrize = currentPrize.toLowerCase().replace(",", "");
+                        if (cleanPrize.contains("opex")) {
+                            java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d+)(\\s*k)?").matcher(cleanPrize);
+                            if (m.find()) {
+                                long amount = Long.parseLong(m.group(1));
+                                if (m.group(2) != null) amount *= 1000;
+                                economyService.addBalance(String.valueOf(highestBidderId), guildId, amount);
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.warn("[Auction] Failed to parse currency prize: {}", currentPrize);
+                    }
                 }
             }
-        }
 
-        String body = highestBidderId != 0 ? 
-            "الفائز هو <@" + highestBidderId + "> بسعر **" + currentHighestBid + " opex**!\n\n**الجائزة:** " + currentPrize + "\n\nمبروك للفائز!" :
-            "انتهى المزاد دون وجود أي مزايدات.";
-        
-        channel.sendMessage(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
-                .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("AUCTION", "🏁 انتهى المزاد!", body, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN))
-                .useComponentsV2(true).build())
-                .useComponentsV2(true).queue();
-        
-        // Reset state
-        currentHighestBid = 0;
-        highestBidderId = 0;
-        guildId = null;
-        if (endTask != null) endTask.cancel(false);
+            String body = highestBidderId != 0 ? 
+                "الفائز هو <@" + highestBidderId + "> بسعر **" + currentHighestBid + " opex**!\n\n**الجائزة:** " + currentPrize + "\n\nمبروك للفائز!" :
+                "انتهى المزاد دون وجود أي مزايدات.";
+            
+            channel.sendMessage(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
+                    .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("AUCTION", "🏁 انتهى المزاد!", body, com.integrafty.opexy.utils.EmbedUtil.BANNER_SUCCESS))
+                    .useComponentsV2(true).build())
+                    .useComponentsV2(true).queue();
+
+        } catch (Exception e) {
+            log.error("[Auction] Error finishing auction: ", e);
+        } finally {
+            // Reset state
+            currentHighestBid = 0;
+            highestBidderId = 0;
+            guildId = null;
+            targetRoleId = null;
+            if (endTask != null) endTask.cancel(false);
+            log.info("[Auction] Auction state reset.");
+        }
     }
 
     public void stopAuction() {
