@@ -214,7 +214,7 @@ public class AuctionManager extends ListenerAdapter {
                 "انتهى المزاد دون وجود أي مزايدات.";
             
             channel.sendMessage(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
-                    .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("AUCTION", "🏁 انتهى المزاد!", body, com.integrafty.opexy.utils.EmbedUtil.BANNER_SUCCESS))
+                    .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("AUCTION", "🏁 انتهى المزاد!", body, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN))
                     .useComponentsV2(true).build())
                     .useComponentsV2(true).queue();
 
