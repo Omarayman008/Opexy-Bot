@@ -66,7 +66,7 @@ public class WelcomeListener extends ListenerAdapter {
         TextChannel ch = guild.getTextChannelById(welcomeChannelId);
         if (ch == null) return;
 
-        String header = String.format("### - WELCOME TO HIGHCORE | %s", member.getAsMention());
+        String header = String.format("### - WELCOME TO HIGHCORE MC | %s", member.getAsMention());
         String guide = """
                 **Start Here :**
 
@@ -94,7 +94,7 @@ public class WelcomeListener extends ListenerAdapter {
     }
 
     private void sendStartupDM(Member member, byte[] image) {
-        String header = String.format("### - WELCOME TO HIGHCORE | %s", member.getUser().getAsMention());
+        String header = String.format("### - WELCOME TO HIGHCORE MC | %s", member.getUser().getAsMention());
         String guide = """
                 **Start Here :**
 
