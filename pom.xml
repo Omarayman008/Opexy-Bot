@@ -69,6 +69,13 @@
             <version>5.2.2</version>
         </dependency>
 
+        <!-- JSON Processing: org.json -->
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20231013</version>
+        </dependency>
+
         <!-- JSON Processing: GSON -->
         <dependency>
             <groupId>com.google.code.gson</groupId>

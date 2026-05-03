@@ -2,9 +2,12 @@ package com.integrafty.opexy.command;
 
 import com.integrafty.opexy.command.base.MultiSlashCommand;
 import com.integrafty.opexy.utils.EmbedUtil;
+import com.integrafty.opexy.service.TranslationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.dv8tion.jda.api.entities.Emoji;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.emoji.CustomEmoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -16,6 +19,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -23,6 +27,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class GeneralCommands implements MultiSlashCommand {
+
+    private final TranslationService translationService;
 
     @Override
     public List<SlashCommandData> getCommandDataList() {
@@ -152,13 +158,67 @@ public class GeneralCommands implements MultiSlashCommand {
     private void handleTranslate(SlashCommandInteractionEvent event) {
         String text = event.getOption("text").getAsString();
         String lang = event.getOption("language").getAsString();
-        // Placeholder for real translation
-        reply(event, EmbedUtil.containerBranded("Language", "Translation Engine", "### 🌐 Result\n*Translating to " + lang + "...*\n\n> " + text + "\n\n(AI Engine Offline)", EmbedUtil.BANNER_MAIN));
+        
+        event.deferReply().queue();
+
+        String result = translationService.translate(text, lang);
+        
+        String body = String.format("""
+                ### 🌐 نـــتـــيـــجـــة الـــتـــرجـــمـــة | TRANSLATION RESULT
+                ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+                
+                ▫️ **الـــلـــغـــة الـــمـــســـتـــهـــدفـــة:** `%s`
+                ▫️ **الـــنـــص الـــأصـــلـــي:**
+                > %s
+                
+                ▫️ **الـــتـــرجـــمـــة:**
+                > %s
+                
+                ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+                """, lang.toUpperCase(), text, result);
+
+        Container container = EmbedUtil.containerBranded("LANGUAGE", "Translation Engine", body, EmbedUtil.BANNER_MAIN);
+        event.getHook().sendMessage(new MessageCreateBuilder().setComponents(container).useComponentsV2(true).build()).useComponentsV2(true).queue();
     }
 
     private void handleGetEmojis(SlashCommandInteractionEvent event) {
-        String emoji = event.getOption("emoji").getAsString();
-        reply(event, EmbedUtil.containerBranded("ASSET", "Emoji Inspection", "### 🔍 Details\nEmoji: " + emoji + "\nFormat: `<:name:id>`", EmbedUtil.BANNER_MAIN));
+        String emojiStr = event.getOption("emoji").getAsString();
+        
+        String body;
+        String imageUrl = null;
+
+        try {
+            Emoji emoji = Emoji.fromFormatted(emojiStr);
+            if (emoji instanceof CustomEmoji custom) {
+                body = String.format("""
+                        ### 🔍 تـــفـــاصـــيـــل الإيـــمـــوجـــي | EMOJI DETAILS
+                        ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+                        
+                        ▫️ **الاســـم:** `%s`
+                        ▫️ **الـــمـــعـــرف (ID):** `%s`
+                        ▫️ **الـــصـــيـــغـــة:** `<:%s:%s>`
+                        ▫️ **رابط الصورة:** [Click Here](%s)
+                        
+                        ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+                        """, custom.getName(), custom.getId(), custom.getName(), custom.getId(), custom.getImageUrl());
+                imageUrl = custom.getImageUrl();
+            } else {
+                body = String.format("""
+                        ### 🔍 تـــفـــاصـــيـــل الإيـــمـــوجـــي | EMOJI DETAILS
+                        ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+                        
+                        ▫️ **الـــنـــوع:** إيـــمـــوجـــي افـــتـــراضـــي (Standard)
+                        ▫️ **الـــرمـــز:** %s
+                        ▫️ **الاســـم:** `%s`
+                        
+                        ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+                        """, emoji.getName(), emoji.getName());
+            }
+        } catch (Exception e) {
+            body = "❌ لـــم يـــتـــم الـــتـــعـــرف عـــلـــى الإيـــمـــوجـــي.";
+        }
+
+        reply(event, EmbedUtil.containerBranded("ASSET", "Emoji Inspection", body, imageUrl != null ? imageUrl : EmbedUtil.BANNER_MAIN));
     }
 
     private void reply(SlashCommandInteractionEvent e, Container c) {

@@ -14,8 +14,8 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 import lombok.extern.slf4j.Slf4j;
 import java.net.URI;
-
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
 @EnableScheduling
@@ -83,5 +83,8 @@ public class OpexyApplication {
             log.error("Failed to start Discord Bot", e);
             throw new RuntimeException("Failed to connect to Discord", e);
         }
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
     }
 }
