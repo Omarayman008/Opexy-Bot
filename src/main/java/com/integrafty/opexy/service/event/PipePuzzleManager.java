@@ -112,7 +112,7 @@ public class PipePuzzleManager extends ListenerAdapter {
         for (int i = 0; i < size; i++) grid[i][0] = '║'; 
         grid[size-1][0] = '╚';
         for (int j = 1; j < size - 1; j++) grid[size-1][j] = '═';
-        grid[size-1][size-1] = '╝'; 
+        grid[size-1][size-1] = '╗'; 
         
         // Scramble the grid
         for (int i = 0; i < size; i++) {
