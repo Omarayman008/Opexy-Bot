@@ -18,11 +18,14 @@ public class PipePuzzleManager extends ListenerAdapter {
 
     private final Map<Long, char[][]> games = new HashMap<>();
     private final Map<Long, int[]> cursors = new HashMap<>();
+    private final Map<Long, Integer> gameSizes = new HashMap<>();
     private final AchievementService achievementService;
+    private final EconomyService economyService;
     private final Random random = new Random();
 
-    public PipePuzzleManager(AchievementService achievementService) {
+    public PipePuzzleManager(AchievementService achievementService, EconomyService economyService) {
         this.achievementService = achievementService;
+        this.economyService = economyService;
     }
 
     @Override
@@ -76,11 +79,17 @@ public class PipePuzzleManager extends ListenerAdapter {
 
         boolean[][] visited = new boolean[rows][cols];
         if (hasPath(grid, 0, 0, rows - 1, cols - 1, visited)) {
+            int size = gameSizes.getOrDefault(userId, 3);
+            long reward = size == 3 ? 35 : size == 4 ? 50 : 80;
+            
             games.remove(userId);
             cursors.remove(userId);
+            gameSizes.remove(userId);
             
+            economyService.addBalance(String.valueOf(userId), event.getGuild().getId(), reward);
+
             event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
-                    .setComponents(com.integrafty.opexy.utils.EmbedUtil.success("تم الحل", "🎉 مبروك! لقد قمت بحل اللغز بنجاح!"))
+                    .setComponents(com.integrafty.opexy.utils.EmbedUtil.success("تم الحل", "🎉 مبروك! لقد قمت بحل اللغز بنجاح!\n💰 الجائزة: **" + reward + "** Opex"))
                     .useComponentsV2(true).build())
                     .useComponentsV2(true).queue();
             
@@ -94,6 +103,7 @@ public class PipePuzzleManager extends ListenerAdapter {
         char[][] grid = generateGrid(size);
         games.put(userId, grid);
         cursors.put(userId, new int[] { 1, 1 });
+        gameSizes.put(userId, size);
         return renderGrid(grid, 1, 1);
     }
 
@@ -122,29 +132,73 @@ public class PipePuzzleManager extends ListenerAdapter {
         char[][] grid = new char[size][size];
         char[] allPieces = {'═', '║', '╔', '╗', '╝', '╚'};
         
+        // 1. Fill everything with random pieces
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 grid[i][j] = allPieces[random.nextInt(allPieces.length)];
             }
         }
 
-        // Guaranteed path (Top-Left to Bottom-Right)
-        for (int i = 0; i < size; i++) grid[i][0] = '║'; 
-        grid[size-1][0] = '╚';
-        for (int j = 1; j < size - 1; j++) grid[size-1][j] = '═';
-        grid[size-1][size-1] = '╗'; 
+        // 2. Generate a random path from (0,0) to (size-1, size-1)
+        java.util.List<int[]> path = new java.util.ArrayList<>();
+        int currR = 0, currC = 0;
+        path.add(new int[]{currR, currC});
         
-        // Scramble the grid
+        while (currR < size - 1 || currC < size - 1) {
+            boolean moveDown = random.nextBoolean();
+            if (moveDown && currR < size - 1) currR++;
+            else if (currC < size - 1) currC++;
+            else if (currR < size - 1) currR++; // Fallback if reached edge
+            
+            path.add(new int[]{currR, currC});
+        }
+
+        // 3. Force connectivity along the path
+        // (0,0) must connect TOP (start) and next step
+        int[] next = path.get(1);
+        if (next[0] == 1) grid[0][0] = '║'; // Connects Top/Bottom
+        else grid[0][0] = '╔'; // Connects Top (we'll treat start as top) and Right
+        // Wait, '╔' connects Right and Bottom. 
+        // Let's use a mapping logic for pieces.
+        
+        for (int k = 0; k < path.size(); k++) {
+            int[] curr = path.get(k);
+            int prevR = (k == 0) ? -1 : path.get(k-1)[0];
+            int prevC = (k == 0) ? 0 : path.get(k-1)[1]; // Start effectively comes from above
+            
+            int nextR = (k == path.size() - 1) ? curr[0] + 1 : path.get(k+1)[0];
+            int nextC = (k == path.size() - 1) ? curr[1] : path.get(k+1)[1]; // End effectively goes down
+            
+            grid[curr[0]][curr[1]] = getPieceConnecting(prevR - curr[0], prevC - curr[1], nextR - curr[0], nextC - curr[1]);
+        }
+        
+        // 4. Scramble the grid
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 int rotations = random.nextInt(4);
-                for (int k = 0; k < rotations; k++) {
+                for (int r = 0; r < rotations; r++) {
                     grid[i][j] = rotatePiece(grid[i][j]);
                 }
             }
         }
         
         return grid;
+    }
+
+    private char getPieceConnecting(int dr1, int dc1, int dr2, int dc2) {
+        // dr, dc relative to center: -1,0=Top, 0,1=Right, 1,0=Bottom, 0,-1=Left
+        boolean t = (dr1 == -1 || dr2 == -1);
+        boolean r = (dc1 == 1 || dc2 == 1);
+        boolean b = (dr1 == 1 || dr2 == 1);
+        boolean l = (dc1 == -1 || dc2 == -1);
+        
+        if (t && b) return '║';
+        if (r && l) return '═';
+        if (r && b) return '╔';
+        if (l && b) return '╗';
+        if (l && t) return '╝';
+        if (r && t) return '╚';
+        return '║'; // Fallback
     }
 
     private char rotatePiece(char piece) {
