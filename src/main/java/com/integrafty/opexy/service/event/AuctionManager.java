@@ -1,7 +1,6 @@
 package com.integrafty.opexy.service.event;
 
 import com.integrafty.opexy.entity.UserStats;
-import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -16,17 +15,28 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 @Service
-@RequiredArgsConstructor
 public class AuctionManager extends ListenerAdapter {
 
     private final AchievementService achievementService;
     private final EventManager eventManager;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
+    public AuctionManager(AchievementService achievementService, EventManager eventManager) {
+        this.achievementService = achievementService;
+        this.eventManager = eventManager;
+    }
+
     private long currentHighestBid = 0;
     private long highestBidderId = 0;
+    private String currentPrize = "📦 صندوق عشوائي";
     private ScheduledFuture<?> endTask = null;
     private String activeMessageId = null;
+
+    public void startAuction(String prize) {
+        this.currentPrize = prize;
+        this.currentHighestBid = 0;
+        this.highestBidderId = 0;
+    }
 
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
@@ -81,10 +91,10 @@ public class AuctionManager extends ListenerAdapter {
                 .setTitle("🏁 انتهى المزاد!")
                 .setColor(Color.GREEN)
                 .setDescription("الفائز هو <@" + highestBidderId + "> بسعر **" + currentHighestBid + " opex**!")
-                .addField("الجائزة", "📦 فحم (Coal) - حظ أوفر!", false)
+                .addField("الجائزة", currentPrize, false)
                 .setFooter("مبروك للفائز!");
 
-        event.getChannel().sendMessageEmbeds(embed.build()).queue();
+        event.getChannel().sendMessageEmbeds(embed.build()).useComponentsV2(true).queue();
         
         // Finalize achievements
         achievementService.updateStats(highestBidderId, event.getGuild(), stats -> {

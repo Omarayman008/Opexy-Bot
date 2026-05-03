@@ -36,33 +36,33 @@ public class AchievementCommand implements MultiSlashCommand {
                 .setTitle("🏆 إنجازات أوبكس — " + event.getUser().getName())
                 .setColor(new Color(0xFFD700)) // Gold
                 .setThumbnail(event.getUser().getEffectiveAvatarUrl())
-                .setDescription("هنا تظهر إحصائياتك وتقدمك نحو الحصول على رتب الإنجازات الحصرية.");
+                .setDescription("✨ استعرض تقدمك وإحصائياتك في عالم أوبكس التفاعلي.\nكلما زاد نشاطك، اقتربت من الرتب النادرة!");
 
         // Auction Stats
-        embed.addField("🔨 المزاد (Auction)", 
-                String.format("• المزايدات الناجحة: %d/5 %s\n• المزايدات الفاشلة: %d/5 %s\n• أعلى مزايدة: %d", 
+        embed.addField("🔨 المزاد الأعمى (Auction)", 
+                String.format("```\n• فوز بالمزاد: %d/5 %s\n• مزايدة فاشلة: %d/5 %s\n• أعلى مبلغ: %d opex\n```", 
                         stats.getSuccessBids(), getProgressBar(stats.getSuccessBids(), 5),
                         stats.getFailedBids(), getProgressBar(stats.getFailedBids(), 5),
-                        stats.getMaxBid()), true);
+                        stats.getMaxBid()), false);
 
         // Mafia Stats
-        embed.addField("🕵️ المافيا (Mafia)", 
-                String.format("• فوز المافيا: %d/6 %s\n• جولات المواطن: %d/8 %s\n• أصوات ضدك: %d/15 %s\n• كشف المافيا: %d/1 %s\n• إنقاذ مواطنين: %d/3 %s", 
+        embed.addField("🕵️ عالم المافيا (Mafia)", 
+                String.format("```\n• فوز المافيا: %d/6 %s\n• مرات المواطن: %d/8 %s\n• أصوات ضدك: %d/15 %s\n• كشف المافيا: %d/1 %s\n• حماية ناجحة: %d/3 %s\n```", 
                         stats.getMafiaWins(), getProgressBar(stats.getMafiaWins(), 6),
                         stats.getCitizenCount(), getProgressBar(stats.getCitizenCount(), 8),
                         stats.getVotesReceived(), getProgressBar(stats.getVotesReceived(), 15),
                         stats.getDetectiveReveals(), getProgressBar(stats.getDetectiveReveals(), 1),
-                        stats.getDoctorSaves(), getProgressBar(stats.getDoctorSaves(), 3)), true);
+                        stats.getDoctorSaves(), getProgressBar(stats.getDoctorSaves(), 3)), false);
 
         // Minigames Stats
-        embed.addField("🎮 ألعاب مصغرة", 
-                String.format("• سباك الأنابيب: %d/4 %s\n• تحدي السرعة: %d/1 %s", 
+        embed.addField("🎮 الألعاب المصغرة", 
+                String.format("```\n• سباك الأنابيب: %d/4 %s\n• الـ 7 ثواني: %d/1 %s\n```", 
                         stats.getPipeWins(), getProgressBar(stats.getPipeWins(), 4),
-                        stats.getSpeedWins(), getProgressBar(stats.getSpeedWins(), 1)), true);
+                        stats.getSpeedWins(), getProgressBar(stats.getSpeedWins(), 1)), false);
 
         embed.setFooter("Opexy Bot — نظام الإنجازات المتطور", event.getGuild().getIconUrl());
         
-        event.replyEmbeds(embed.build()).queue();
+        event.replyEmbeds(embed.build()).useComponentsV2(true).queue();
     }
 
     private String getProgressBar(int current, int max) {

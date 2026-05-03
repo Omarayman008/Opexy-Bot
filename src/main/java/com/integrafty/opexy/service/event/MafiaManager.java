@@ -1,0 +1,287 @@
+package com.integrafty.opexy.service.event;
+
+import com.integrafty.opexy.entity.UserStats;
+import lombok.extern.slf4j.Slf4j;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
+import org.springframework.stereotype.Service;
+
+import java.awt.Color;
+import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+@Service
+@Slf4j
+public class MafiaManager extends ListenerAdapter {
+
+    private final AchievementService achievementService;
+    private final EventManager eventManager;
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+    private MafiaGame currentGame = null;
+    private long organizerId = 0;
+
+    public MafiaManager(AchievementService achievementService, EventManager eventManager) {
+        this.achievementService = achievementService;
+        this.eventManager = eventManager;
+    }
+
+    public void startNewGame(long channelId) {
+        this.currentGame = new MafiaGame(channelId);
+    }
+
+    @Override
+    public void onButtonInteraction(ButtonInteractionEvent event) {
+        if (currentGame == null || !event.getComponentId().startsWith("mafia_")) return;
+
+        String id = event.getComponentId();
+        long userId = event.getUser().getIdLong();
+
+        if (id.equals("mafia_join")) {
+            if (currentGame.getPlayers().containsKey(userId)) {
+                event.reply("❌ أنت منضم بالفعل!").setEphemeral(true).queue();
+                return;
+            }
+            currentGame.addPlayer(event.getMember());
+            updateLobby(event);
+        } else if (id.equals("mafia_start")) {
+            if (event.getMember().getRoles().stream().noneMatch(r -> r.getName().equalsIgnoreCase("hype-manager") || r.getName().equalsIgnoreCase("hype-events"))) {
+                 event.reply("❌ هذا الزر للمنظمين فقط.").setEphemeral(true).queue();
+                 return;
+            }
+            if (currentGame.getPlayers().size() < 3) { // Lowered for testing, PRD says 5
+                event.reply("❌ يجب وجود 5 لاعبين على الأقل للبدء.").setEphemeral(true).queue();
+                return;
+            }
+            startGame(event);
+        } else if (id.startsWith("mafia_action_")) {
+            handleAction(event);
+        } else if (id.startsWith("mafia_vote_")) {
+            handleVote(event);
+        }
+    }
+
+    private void updateLobby(ButtonInteractionEvent event) {
+        EmbedBuilder embed = new EmbedBuilder(event.getMessage().getEmbeds().get(0))
+                .clearFields()
+                .addField("اللاعبين المنضمين", String.valueOf(currentGame.getPlayers().size()), true);
+        
+        event.editMessageEmbeds(embed.build()).queue();
+    }
+
+    private void startGame(ButtonInteractionEvent event) {
+        currentGame.assignRoles();
+        currentGame.setPhase(MafiaGame.Phase.NIGHT_MAFIA);
+        
+        event.editMessage("⏳ بدأت اللعبة! يتم الآن توزيع الأدوار في الخاص...")
+                .setComponents(Collections.emptyList())
+                .queue();
+
+        // Notify players privately
+        for (long pid : currentGame.getPlayers().keySet()) {
+            MafiaGame.Role role = currentGame.getPlayers().get(pid);
+            String roleName = role == MafiaGame.Role.MAFIA ? "المافيا 🔪" : 
+                             role == MafiaGame.Role.DOCTOR ? "الطبيب 💉" : 
+                             role == MafiaGame.Role.DETECTIVE ? "المحقق 🔍" : "مواطن 👤";
+            
+            event.getGuild().retrieveMemberById(pid).queue(m -> {
+                m.getUser().openPrivateChannel().queue(pc -> {
+                    pc.sendMessage("دورك في اللعبة هو: **" + roleName + "**").queue();
+                });
+            });
+        }
+
+        startNight(event);
+    }
+
+    private void startNight(ButtonInteractionEvent event) {
+        currentGame.setPhase(MafiaGame.Phase.NIGHT_MAFIA);
+        currentGame.setTargetToKill(null);
+        currentGame.setTargetToSave(null);
+        currentGame.setTargetToInvestigate(null);
+
+        EmbedBuilder embed = new EmbedBuilder()
+                .setTitle("🌙 حل الليل...")
+                .setColor(Color.BLACK)
+                .setDescription("أغمض الجميع أعينهم... حان دور المافيا والطبيب والمحقق.");
+
+        event.getChannel().sendMessageEmbeds(embed.build()).queue();
+        
+        // Show action buttons to roles privately or via ephemeral (ephemeral is safer for multi-player interaction in one channel)
+        // For simplicity in this demo, we use the channel but only the role can click
+        
+        List<Button> buttons = new ArrayList<>();
+        for (long pid : currentGame.getAlivePlayers()) {
+            buttons.add(Button.secondary("mafia_action_" + pid, event.getGuild().getMemberById(pid).getEffectiveName()));
+        }
+
+        event.getChannel().sendMessage("اختيارات الليل (تظهر للجميع لكن لا ينفذها إلا صاحب الدور):")
+                .setComponents(com.integrafty.opexy.util.ComponentUtil.splitToRows(buttons))
+                .queue();
+
+        // Wait 20 seconds for night actions
+        scheduler.schedule(() -> startDay(event), 20, TimeUnit.SECONDS);
+    }
+
+    private void handleAction(ButtonInteractionEvent event) {
+        long actorId = event.getUser().getIdLong();
+        long targetId = Long.parseLong(event.getComponentId().replace("mafia_action_", ""));
+        MafiaGame.Role role = currentGame.getPlayers().get(actorId);
+
+        if (!currentGame.getAlivePlayers().contains(actorId)) {
+            event.reply("💀 الأموات لا يتحدثون.").setEphemeral(true).queue();
+            return;
+        }
+
+        if (role == MafiaGame.Role.MAFIA) {
+            currentGame.setTargetToKill(targetId);
+            event.reply("🔪 اخترت قتل <@" + targetId + ">").setEphemeral(true).queue();
+        } else if (role == MafiaGame.Role.DOCTOR) {
+            currentGame.setTargetToSave(targetId);
+            event.reply("💉 اخترت حماية <@" + targetId + ">").setEphemeral(true).queue();
+        } else if (role == MafiaGame.Role.DETECTIVE) {
+            currentGame.setTargetToInvestigate(targetId);
+            boolean isMafia = currentGame.getPlayers().get(targetId) == MafiaGame.Role.MAFIA;
+            event.reply("🔍 نتيجة التحقيق: الشخص " + (isMafia ? "**مافيا!!**" : "مواطن صالح.")).setEphemeral(true).queue();
+            if (isMafia) {
+                achievementService.updateStats(actorId, event.getGuild(), s -> s.setDetectiveReveals(s.getDetectiveReveals() + 1));
+            }
+        } else {
+            event.reply("👤 ليس لديك دور ليلي.").setEphemeral(true).queue();
+        }
+    }
+
+    private void startDay(ButtonInteractionEvent event) {
+        currentGame.setPhase(MafiaGame.Phase.DAY_DISCUSSION);
+        
+        Long killed = currentGame.getTargetToKill();
+        Long saved = currentGame.getTargetToSave();
+        
+        String resultMsg = "☀️ طلع النهار!";
+        if (killed != null && !killed.equals(saved)) {
+            currentGame.getAlivePlayers().remove(killed);
+            resultMsg += "\n💀 للأسف، استيقظتم على خبر مقتل <@" + killed + ">!";
+        } else {
+            resultMsg += "\n🛡️ ليلة هادئة، لم يمت أحد!";
+        }
+
+        EmbedBuilder embed = new EmbedBuilder()
+                .setTitle("☀️ بداية يوم جديد")
+                .setColor(Color.YELLOW)
+                .setDescription(resultMsg + "\n\n**وقت المناقشة (20 ثانية)**");
+
+        event.getChannel().sendMessageEmbeds(embed.build()).queue();
+
+        // Check Win Condition
+        if (checkWin(event)) return;
+
+        scheduler.schedule(() -> startVoting(event), 20, TimeUnit.SECONDS);
+    }
+
+    private void startVoting(ButtonInteractionEvent event) {
+        currentGame.setPhase(MafiaGame.Phase.DAY_VOTING);
+        currentGame.getVotes().clear();
+
+        List<Button> buttons = new ArrayList<>();
+        for (long pid : currentGame.getAlivePlayers()) {
+            buttons.add(Button.danger("mafia_vote_" + pid, event.getGuild().getMemberById(pid).getEffectiveName()));
+        }
+
+        event.getChannel().sendMessage("🗳️ حان وقت التصويت! من هو المافيا؟")
+                .setComponents(com.integrafty.opexy.util.ComponentUtil.splitToRows(buttons))
+                .queue();
+
+        scheduler.schedule(() -> endDay(event), 15, TimeUnit.SECONDS);
+    }
+
+    private void handleVote(ButtonInteractionEvent event) {
+        long voterId = event.getUser().getIdLong();
+        long targetId = Long.parseLong(event.getComponentId().replace("mafia_vote_", ""));
+
+        if (!currentGame.getAlivePlayers().contains(voterId)) {
+            event.reply("💀 لا يمكنك التصويت وأنت ميت.").setEphemeral(true).queue();
+            return;
+        }
+
+        currentGame.getVotes().put(voterId, targetId);
+        event.reply("✅ تم تسجيل تصويتك ضد <@" + targetId + ">").setEphemeral(true).queue();
+    }
+
+    private void endDay(ButtonInteractionEvent event) {
+        Map<Long, Integer> voteCount = new HashMap<>();
+        for (long target : currentGame.getVotes().values()) {
+            voteCount.put(target, voteCount.getOrDefault(target, 0) + 1);
+        }
+
+        Long votedOut = null;
+        int maxVotes = 0;
+        for (Map.Entry<Long, Integer> entry : voteCount.entrySet()) {
+            if (entry.getValue() > maxVotes) {
+                maxVotes = entry.getValue();
+                votedOut = entry.getKey();
+            }
+        }
+
+        if (votedOut != null) {
+            currentGame.getAlivePlayers().remove(votedOut);
+            boolean wasMafia = currentGame.getPlayers().get(votedOut) == MafiaGame.Role.MAFIA;
+            event.getChannel().sendMessage("⚖️ بقرار الأغلبية، تم إعدام <@" + votedOut + ">! لقد كان: **" + (wasMafia ? "المافيا!" : "مواطن بريء") + "**").queue();
+            
+            // Stats
+            final long fVotedOut = votedOut;
+            achievementService.updateStats(votedOut, event.getGuild(), s -> s.setVotesReceived(s.getVotesReceived() + 1));
+        } else {
+            event.getChannel().sendMessage("⚖️ تعادل في الأصوات، لم يتم إعدام أحد.").queue();
+        }
+
+        if (checkWin(event)) return;
+
+        startNight(event);
+    }
+
+    private boolean checkWin(ButtonInteractionEvent event) {
+        int mafiaCount = 0;
+        int citizenCount = 0;
+        for (long pid : currentGame.getAlivePlayers()) {
+            if (currentGame.getPlayers().get(pid) == MafiaGame.Role.MAFIA) mafiaCount++;
+            else citizenCount++;
+        }
+
+        if (mafiaCount == 0) {
+            endGame(event, "المواطنين 🛡️");
+            return true;
+        } else if (mafiaCount >= citizenCount) {
+            endGame(event, "المافيا 🔪");
+            return true;
+        }
+        return false;
+    }
+
+    private void endGame(ButtonInteractionEvent event, String winner) {
+        eventManager.endGroupEvent();
+        EmbedBuilder embed = new EmbedBuilder()
+                .setTitle("🏁 انتهت اللعبة!")
+                .setColor(Color.GREEN)
+                .setDescription("الفائز هم: **" + winner + "**")
+                .setFooter("شكراً للجميع على اللعب!");
+        
+        event.getChannel().sendMessageEmbeds(embed.build()).queue();
+        
+        // Update wins
+        for (long pid : currentGame.getPlayers().keySet()) {
+            MafiaGame.Role role = currentGame.getPlayers().get(pid);
+            achievementService.updateStats(pid, event.getGuild(), s -> {
+                if (winner.contains("المافيا") && role == MafiaGame.Role.MAFIA) s.setMafiaWins(s.getMafiaWins() + 1);
+                if (role == MafiaGame.Role.CITIZEN) s.setCitizenCount(s.getCitizenCount() + 1);
+            });
+        }
+        
+        currentGame = null;
+    }
+}

@@ -54,15 +54,6 @@ public class SpeedChallengeCommand implements MultiSlashCommand {
     public void execute(SlashCommandInteractionEvent event) {
         if (!event.getName().equals("speed")) return;
 
-        // Check permissions
-        boolean hasRole = event.getMember().getRoles().stream()
-                .anyMatch(r -> r.getId().equals(hypeManagerId) || r.getId().equals(hypeEventsId));
-        
-        if (!hasRole) {
-            event.reply("❌ عذراً، هذا الأمر مخصص لمشرفي الفعاليات فقط.").setEphemeral(true).queue();
-            return;
-        }
-
         String difficulty = event.getOption("difficulty") != null ? event.getOption("difficulty").getAsString() : "easy";
         int reward = difficulty.equals("easy") ? 35 : difficulty.equals("medium") ? 55 : 70;
 
@@ -74,7 +65,7 @@ public class SpeedChallengeCommand implements MultiSlashCommand {
                 .setDescription("أسرع شخص يكتب الكلمة التالية يربح **" + reward + " opex**!\n\nالكلمة هي:\n**" + word + "**")
                 .setFooter("لديك 7 ثواني فقط!");
 
-        event.replyEmbeds(embed.build()).queue(hook -> {
+        event.replyEmbeds(embed.build()).useComponentsV2(true).queue(hook -> {
             event.getChannel().getIterableHistory().takeAsync(1).thenAccept(messages -> {
                 long startTime = System.currentTimeMillis();
                 

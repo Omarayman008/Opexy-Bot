@@ -1,13 +1,11 @@
 package com.integrafty.opexy.command.event;
 
 import com.integrafty.opexy.command.base.MultiSlashCommand;
-import com.integrafty.opexy.service.event.AuctionManager;
 import com.integrafty.opexy.service.event.EventManager;
+import com.integrafty.opexy.service.event.MafiaManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.components.actionrow.ActionRow;
 import net.dv8tion.jda.api.components.buttons.Button;
@@ -18,10 +16,10 @@ import java.awt.Color;
 import java.util.List;
 
 @Component
-public class AuctionCommand implements MultiSlashCommand {
+public class MafiaCommand implements MultiSlashCommand {
 
     private final EventManager eventManager;
-    private final AuctionManager auctionManager;
+    private final MafiaManager mafiaManager;
 
     @Value("${opexy.roles.hype-manager}")
     private String hypeManagerId;
@@ -29,24 +27,21 @@ public class AuctionCommand implements MultiSlashCommand {
     @Value("${opexy.roles.hype-events}")
     private String hypeEventsId;
 
-    public AuctionCommand(EventManager eventManager, AuctionManager auctionManager) {
+    public MafiaCommand(EventManager eventManager, MafiaManager mafiaManager) {
         this.eventManager = eventManager;
-        this.auctionManager = auctionManager;
+        this.mafiaManager = mafiaManager;
     }
 
     @Override
     public List<SlashCommandData> getCommandDataList() {
-        return List.of(Commands.slash("auction", "بدء المزاد الأعمى (Blind Auction)")
-                .addOptions(new OptionData(OptionType.STRING, "prize", "اسم الجائزة (مثلاً: 100k opex أو رتبة مميزة)", true)));
+        return List.of(Commands.slash("mafia", "بدء لعبة المافيا (Staff Only)"));
     }
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
-        if (!event.getName().equals("auction")) return;
+        if (!event.getName().equals("mafia")) return;
 
-        String prize = event.getOption("prize").getAsString();
-
-        // Check permissions
+        // Check permissions (Group Event - Staff Only)
         boolean hasRole = event.getMember().getRoles().stream()
                 .anyMatch(r -> r.getId().equals(hypeManagerId) || r.getId().equals(hypeEventsId));
         
@@ -55,27 +50,24 @@ public class AuctionCommand implements MultiSlashCommand {
             return;
         }
 
-        if (!eventManager.startGroupEvent("المزاد الأعمى")) {
+        if (!eventManager.startGroupEvent("المافيا")) {
             event.reply("⚠️ هناك فعالية جماعية قائمة بالفعل: **" + eventManager.getActiveEventName() + "**").setEphemeral(true).queue();
             return;
         }
 
-        auctionManager.startAuction(prize);
+        mafiaManager.startNewGame(event.getChannel().getIdLong());
 
         EmbedBuilder embed = new EmbedBuilder()
-                .setTitle("🏆 المزاد الأعمى — Blind Auction")
-                .setColor(Color.MAGENTA)
-                .setDescription("تم بدء مزاد على **" + prize + "**! 📦\n\n**القوانين:**\n• المزايدة تبدأ بـ 10 opex.\n• المزايدة الأعلى تفوز بالمحتوى.\n• قد يحتوي الصندوق على مفاجآت!")
-                .addField("المزايد الحالي", "لا يوجد", true)
-                .addField("أعلى سعر", "0 opex", true)
-                .setFooter("ينتهي المزاد عند توقف المزايدات لمدة 30 ثانية.");
+                .setTitle("🕵️ لعبة المافيا — Mafia Game")
+                .setColor(Color.DARK_GRAY)
+                .setDescription("تم فتح باب الانضمام للعبة المافيا!\n\n**القوانين:**\n• الحد الأدنى للاعبين: 5.\n• الأدوار: مافيا، طبيب، محقق، مواطن.\n• النهار للمناقشة، والليل لتنفيذ الأدوار.")
+                .addField("اللاعبين المنضمين", "1 (المنظم)", true)
+                .setFooter("اضغط على الزر أدناه للانضمام!");
 
         event.replyEmbeds(embed.build())
                 .setComponents(ActionRow.of(
-                        Button.primary("bid_10", "+10"),
-                        Button.primary("bid_50", "+50"),
-                        Button.primary("bid_100", "+100"),
-                        Button.success("bid_custom", "سعر مخصص ✏️")
+                        Button.primary("mafia_join", "انضمام ✋"),
+                        Button.danger("mafia_start", "بدء اللعبة (المنظم فقط) 🚀")
                 )).useComponentsV2(true).queue();
     }
 }

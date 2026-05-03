@@ -1,7 +1,10 @@
 package com.integrafty.opexy.command.event;
 
 import com.integrafty.opexy.command.base.MultiSlashCommand;
+import com.integrafty.opexy.service.event.PipePuzzleManager;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -17,6 +20,7 @@ import java.util.Random;
 @Component
 public class PipePuzzleCommand implements MultiSlashCommand {
 
+    private final PipePuzzleManager pipePuzzleManager;
     private final Random random = new Random();
 
     @Value("${opexy.roles.hype-manager}")
@@ -25,7 +29,8 @@ public class PipePuzzleCommand implements MultiSlashCommand {
     @Value("${opexy.roles.hype-events}")
     private String hypeEventsId;
 
-    public PipePuzzleCommand() {
+    public PipePuzzleCommand(PipePuzzleManager pipePuzzleManager) {
+        this.pipePuzzleManager = pipePuzzleManager;
     }
 
     @Override
@@ -41,45 +46,25 @@ public class PipePuzzleCommand implements MultiSlashCommand {
     public void execute(SlashCommandInteractionEvent event) {
         if (!event.getName().equals("pipes")) return;
 
-        // Check permissions
-        boolean hasRole = event.getMember().getRoles().stream()
-                .anyMatch(r -> r.getId().equals(hypeManagerId) || r.getId().equals(hypeEventsId));
-        
-        if (!hasRole) {
-            event.reply("❌ عذراً، هذا الأمر مخصص لمشرفي الفعاليات فقط.").setEphemeral(true).queue();
-            return;
-        }
-
         String difficulty = event.getOption("difficulty") != null ? event.getOption("difficulty").getAsString() : "easy";
         int size = difficulty.equals("easy") ? 3 : difficulty.equals("medium") ? 4 : 5;
         
-        String[][] grid = new String[size][size];
-        String[] pieces = {"═", "║", "╔", "╗", "╚", "╝"};
-        
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                grid[i][j] = pieces[random.nextInt(pieces.length)];
-            }
-        }
+        String renderedGrid = pipePuzzleManager.startNewGame(event.getUser().getIdLong(), size);
 
         EmbedBuilder embed = new EmbedBuilder()
                 .setTitle("🔧 لغز الأنابيب — صعوبة: " + difficulty)
                 .setColor(Color.CYAN)
-                .setDescription("قم بتوصيل الأنابيب للوصول إلى المخرج!\n\n" + renderGrid(grid))
-                .setFooter("اضغط على الأزرار لتدوير القطع (قريباً)");
+                .setDescription("قم بتوصيل الأنابيب للوصول إلى المخرج!\n\n" + renderedGrid)
+                .setFooter("اضغط على الأزرار لتدوير القطع الوسطى (مثال)");
 
-        event.replyEmbeds(embed.build()).queue();
+        // Add some rotation buttons for the middle pieces to demonstrate
+        event.replyEmbeds(embed.build())
+                .setComponents(ActionRow.of(
+                        Button.secondary("pipe_rot_1_1", "تدوير (1,1) 🔄"),
+                        Button.secondary("pipe_rot_1_2", "تدوير (1,2) 🔄"),
+                        Button.success("pipe_submit", "تحقق من الحل ✅")
+                ))
+                .useComponentsV2(true).queue();
     }
 
-    private String renderGrid(String[][] grid) {
-        StringBuilder sb = new StringBuilder("```\n");
-        for (String[] row : grid) {
-            for (String cell : row) {
-                sb.append(cell).append(" ");
-            }
-            sb.append("\n");
-        }
-        sb.append("```");
-        return sb.toString();
-    }
 }

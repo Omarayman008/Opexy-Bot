@@ -102,11 +102,17 @@ public class GeneralCommands implements MultiSlashCommand {
                 ### 🛡️ Moderation
                 `/ban`, `/kick`, `/mute-text`, `/timeout`, `/clear`, `/role`, `/warn-add`, `/lock`, `/hide`
                 
-                ### 📡 Info
-                `/user`, `/server`, `/avatar`, `/roles`, `/banner`, `/profile`
+                ### 📡 Info & Stats
+                `/user`, `/server`, `/avatar`, `/roles`, `/profile`, **`/achive`**
                 
                 ### ⚙️ General
                 `/ping`, `/roll`, `/colors`, `/translate`, `/get-emojis`
+                
+                ### 🎮 Minigames (For Everyone)
+                `/pipes`, `/speed`
+                
+                ### 🏆 Management Events (Staff Only)
+                `/mafia`, `/auction`
                 
                 ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
                 """;
