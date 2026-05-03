@@ -156,30 +156,7 @@ public class ModerationCommands implements MultiSlashCommand {
         list.add(Commands.slash("add-emoji", "إضـــافـــة إيـــمـــوجـــي جـــديـــد لـــلـــســـيـــرفـــر")
                 .addOption(OptionType.STRING, "name", "إســـم الإيـــمـــوجـــي", true)
                 .addOption(OptionType.ATTACHMENT, "image", "صـــورة الإيـــمـــوجـــي", true)
-                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MANAGE_GUILD_EXPRESSIONS)));ـنـــة")
-                .addOption(OptionType.ROLE, "role", "الـــرتـــبـــة الـــمـــســـتـــهـــدفـــة", true));
-
-        list.add(Commands.slash("warn-add", "إعـــطـــاء تـــحـــذيـــر لـــعـــضـــو مـــع رتـــبـــة")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
-                .addOption(OptionType.STRING, "reason", "ســـبـــب الـــتـــحـــذيـــر", false));
-
-        list.add(Commands.slash("warn-remove", "إلـــغـــاء الـــتـــحـــذيـــرات عـــن عـــضـــو")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true));
-
-        list.add(Commands.slash("warnings", "عـــرض تـــحـــذيـــرات عـــضـــو مـــعـــيـــن")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true));
-
-        list.add(Commands.slash("lock", "قـــفـــل الـــقـــنـــاة الـــحـــالـــيـــة لـــلـــجـــمـــيـــع"));
-        list.add(Commands.slash("unlock", "فـــتـــح الـــقـــنـــاة الـــحـــالـــيـــة لـــلـــجـــمـــيـــع"));
-        list.add(Commands.slash("hide", "إخـــفـــاء الـــقـــنـــاة الـــحـــالـــيـــة عـــن الـــجـــمـــيـــع"));
-        list.add(Commands.slash("show", "إظـــهـــار الـــقـــنـــاة الـــحـــالـــيـــة لـــلـــجـــمـــيـــع"));
-
-        list.add(Commands.slash("slowmode", "تـــفـــعـــيـــل وضـــع الـــتـــبـــاطـــؤ فـــي الـــقـــنـــاة")
-                .addOption(OptionType.INTEGER, "seconds", "عـــدد الـــثـــوانـــي", true));
-
-        list.add(Commands.slash("add-emoji", "إضـــافـــة إيـــمـــوجـــي جـــديـــد لـــلـــســـيـــرفـــر")
-                .addOption(OptionType.STRING, "name", "إســـم الإيـــمـــوجـــي", true)
-                .addOption(OptionType.ATTACHMENT, "image", "صـــورة الإيـــمـــوجـــي", true));
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MANAGE_GUILD_EXPRESSIONS)));
 
         return list;
     }
