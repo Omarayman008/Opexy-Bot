@@ -90,16 +90,26 @@ public class AuctionManager extends ListenerAdapter {
 
     private void processBid(net.dv8tion.jda.api.interactions.callbacks.IReplyCallback event, long userId, long bidAmount) {
         long newTotal = currentHighestBid + bidAmount;
+        String currentGuildId = event.getGuild().getId();
         
         // 1. Check Money
-        long balance = economyService.getBalance(String.valueOf(userId), event.getGuild().getId());
+        long balance = economyService.getBalance(String.valueOf(userId), currentGuildId);
         if (balance < newTotal) {
             event.reply("❌ عذراً، رصيدك غير كافٍ للمزايدة! (رصيدك: " + balance + " opex)").setEphemeral(true).queue();
             return;
         }
 
+        // 2. Refund Previous Bidder (if exists)
+        if (highestBidderId != 0 && currentHighestBid > 0) {
+            economyService.addBalance(String.valueOf(highestBidderId), currentGuildId, currentHighestBid);
+        }
+
+        // 3. Deduct New Bidder
+        economyService.subtractBalance(String.valueOf(userId), currentGuildId, newTotal);
+
         currentHighestBid = newTotal;
         highestBidderId = userId;
+        this.guildId = currentGuildId;
 
         // Update stats
         achievementService.updateStats(userId, event.getGuild(), stats -> {
@@ -162,8 +172,6 @@ public class AuctionManager extends ListenerAdapter {
         eventManager.endGroupEvent();
         
         if (highestBidderId != 0 && guildId != null) {
-            economyService.subtractBalance(String.valueOf(highestBidderId), guildId, currentHighestBid);
-            
             if (channel instanceof net.dv8tion.jda.api.entities.channel.middleman.GuildChannel gc) {
                 // Update stats
                 achievementService.updateStats(highestBidderId, gc.getGuild(), stats -> {
@@ -213,9 +221,16 @@ public class AuctionManager extends ListenerAdapter {
 
     public void stopAuction() {
         if (endTask != null) endTask.cancel(true);
+        
+        // REFUND CURRENT BIDDER
+        if (highestBidderId != 0 && guildId != null && currentHighestBid > 0) {
+            economyService.addBalance(String.valueOf(highestBidderId), guildId, currentHighestBid);
+        }
+
         eventManager.endGroupEvent();
         this.currentHighestBid = 0;
         this.highestBidderId = 0;
         this.activeMessageId = null;
+        this.guildId = null;
     }
 }
