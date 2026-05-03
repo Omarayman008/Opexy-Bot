@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
+import net.dv8tion.jda.api.utils.ChunkingFilter;
 
 import lombok.extern.slf4j.Slf4j;
 import java.net.URI;
@@ -77,6 +78,7 @@ public class OpexyApplication {
                     GatewayIntent.GUILD_VOICE_STATES
                 )
                 .setMemberCachePolicy(MemberCachePolicy.ALL)
+                .setChunkingFilter(ChunkingFilter.ALL)
                 .enableCache(CacheFlag.VOICE_STATE)
                 .build();
         } catch (Exception e) {
