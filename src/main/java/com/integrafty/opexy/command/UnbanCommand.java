@@ -10,10 +10,15 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.components.container.Container;
+import com.integrafty.opexy.service.LogManager;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class UnbanCommand implements SlashCommand {
+
+    private final LogManager logManager;
 
     @Override
     public String getName() {
@@ -48,6 +53,12 @@ public class UnbanCommand implements SlashCommand {
                 builder.useComponentsV2(true);
 
                 event.getHook().sendMessage(builder.build()).queue();
+
+                // LOGGING
+                String logDetails = String.format("### ✅ Action: Blacklist Revoked (Unban)\n▫️ **Target ID:** `%s`\n▫️ **Moderator:** %s\n▫️ **Channel:** %s",
+                        userId, event.getMember().getAsMention(), event.getChannel().getAsMention());
+                logManager.logEmbed(event.getGuild(), LogManager.LOG_MODS_CMD, 
+                        EmbedUtil.createOldLogEmbed("unban", logDetails, event.getMember(), User.fromId(userId), null, EmbedUtil.SUCCESS));
             },
             error -> event.getHook().sendMessage("❌ لم يتم العثور على حظر لهذا الـ ID أو أن الرقم غير صحيح.").setEphemeral(true).queue()
         );

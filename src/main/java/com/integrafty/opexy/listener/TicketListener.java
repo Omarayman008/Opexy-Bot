@@ -39,6 +39,7 @@ public class TicketListener extends ListenerAdapter {
     private final JDA jda;
     private final TicketRepository ticketRepository;
     private final WhitelistSyncService whitelistSyncService;
+    private final LogManager logManager;
 
     private static final String TICKET_CATEGORY_ID = "1487143174567628840";
     private static final String TRANSCRIPT_CHANNEL_ID = "1487147026427940955";
@@ -335,6 +336,14 @@ public class TicketListener extends ListenerAdapter {
                     .useComponentsV2(true)
                     .queue();
 
+                // LOGGING
+                String logDetails = "### 🎫 Ticket Created\n" +
+                        "▫️ **User:** " + member.getAsMention() + " (`" + member.getId() + "`)\n" +
+                        "▫️ **Category:** `" + finalCategoryName + "`\n" +
+                        "▫️ **Channel:** " + channel.getAsMention();
+                logManager.logEmbed(guild, LogManager.LOG_TICKETS, 
+                        EmbedUtil.createOldLogEmbed("ticket-create", logDetails, member, null, null, EmbedUtil.SUCCESS));
+
                 if (isWhitelist) {
                     whitelistSyncService.syncToSupabase(
                         event.getValue("discord_info").getAsString(),
@@ -442,6 +451,14 @@ public class TicketListener extends ListenerAdapter {
                             e -> log.error("Failed to send archive panel", e)
                         );
                     
+                    // LOGGING
+                    String logDetails = "### 🔒 Ticket Closed\n" +
+                            "▫️ **Operator:** " + member.getAsMention() + "\n" +
+                            "▫️ **Channel:** `" + channel.getName() + "`\n" +
+                            "▫️ **Status:** `ARCHIVED`";
+                    logManager.logEmbed(event.getGuild(), LogManager.LOG_TICKETS, 
+                            EmbedUtil.createOldLogEmbed("ticket-close", logDetails, member, null, null, EmbedUtil.DANGER));
+
                     hook.sendMessage("✅ تـم إغـلاق الـتـذكـرة بـنـجـاح.").setEphemeral(true).queue();
                 }, () -> {
                     log.warn("No ticket found in DB for channelId: {}", channelId);
@@ -522,6 +539,13 @@ public class TicketListener extends ListenerAdapter {
                 EnumSet.of(Permission.VIEW_CHANNEL, Permission.MESSAGE_SEND), 
                 null).queue();
 
+            // LOGGING
+            String logDetails = "### 📌 Ticket Claimed\n" +
+                    "▫️ **Operator:** " + event.getMember().getAsMention() + "\n" +
+                    "▫️ **Channel:** " + channel.getAsMention();
+            logManager.logEmbed(event.getGuild(), LogManager.LOG_TICKETS, 
+                    EmbedUtil.createOldLogEmbed("ticket-claim", logDetails, event.getMember(), null, null, EmbedUtil.WARNING));
+
             channel.sendMessage(new MessageCreateBuilder().setComponents(notice).useComponentsV2(true).build()).useComponentsV2(true).queue();
         }
     }
@@ -578,6 +602,13 @@ public class TicketListener extends ListenerAdapter {
             channel.sendMessage(new MessageCreateBuilder().setComponents(notice).useComponentsV2(true).build())
                 .useComponentsV2(true).queue();
 
+            // LOGGING
+            String logDetails = "### 🔓 Ticket Unclaimed\n" +
+                    "▫️ **Operator:** " + event.getMember().getAsMention() + "\n" +
+                    "▫️ **Channel:** " + channel.getAsMention();
+            logManager.logEmbed(event.getGuild(), LogManager.LOG_TICKETS, 
+                    EmbedUtil.createOldLogEmbed("ticket-unclaim", logDetails, event.getMember(), null, null, EmbedUtil.INFO));
+
             // Restore permissions: Staff role can write again.
             net.dv8tion.jda.api.entities.Role staffRole = event.getGuild().getRoleById(STAFF_ROLE);
             if (staffRole != null) {
@@ -612,6 +643,13 @@ public class TicketListener extends ListenerAdapter {
         if (currentName.endsWith("-c")) {
             channel.getManager().setName(currentName.substring(0, currentName.length() - 2)).queue();
         }
+
+        // LOGGING
+        String logDetails = "### 🔓 Ticket Reopened\n" +
+                "▫️ **Operator:** " + event.getMember().getAsMention() + "\n" +
+                "▫️ **Channel:** " + channel.getAsMention();
+        logManager.logEmbed(event.getGuild(), LogManager.LOG_TICKETS, 
+                EmbedUtil.createOldLogEmbed("ticket-reopen", logDetails, event.getMember(), null, null, EmbedUtil.SUCCESS));
 
         event.getHook().sendMessage("✅ تـم إعـادة فـتـح الـتـذكـرة وإعـادة الـصـلاحـيـات.").queue();
     }

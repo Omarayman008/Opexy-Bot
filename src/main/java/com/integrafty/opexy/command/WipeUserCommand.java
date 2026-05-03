@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.components.container.Container;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import com.integrafty.opexy.service.LogManager;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -25,6 +26,8 @@ public class WipeUserCommand implements SlashCommand {
 
     @Value("${opexy.roles.op-staff}")
     private String opStaffRoleId;
+
+    private final LogManager logManager;
 
     @Override
     public String getName() { return "wipe-user"; }
@@ -73,6 +76,12 @@ public class WipeUserCommand implements SlashCommand {
             MessageCreateBuilder builder = new MessageCreateBuilder().setComponents(container).useComponentsV2(true);
             event.getHook().sendMessage(builder.build()).useComponentsV2(true).queue();
             log.info("[wipe-user] Deleted {} messages from user {} by {}", count, targetId, event.getUser().getId());
+
+            // LOGGING
+            String logDetails = String.format("### 🗑️ Action: User History Purge (Wipe)\n▫️ **Target ID:** `%s`\n▫️ **Messages Deleted:** %d\n▫️ **Moderator:** %s",
+                    targetId, count, event.getMember().getAsMention());
+            logManager.logEmbed(event.getGuild(), LogManager.LOG_MODS_CMD, 
+                    EmbedUtil.createOldLogEmbed("wipe-user", logDetails, event.getMember(), null, null, EmbedUtil.DANGER));
             return;
         }
 

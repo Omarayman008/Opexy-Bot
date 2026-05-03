@@ -10,12 +10,17 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.components.container.Container;
+import com.integrafty.opexy.service.LogManager;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
 
 @Component
+@RequiredArgsConstructor
 public class MuteCommand implements SlashCommand {
+
+    private final LogManager logManager;
 
     @Override
     public String getName() {
@@ -72,6 +77,12 @@ public class MuteCommand implements SlashCommand {
                 builder.useComponentsV2(true);
 
                 event.reply(builder.build()).useComponentsV2(true).queue();
+
+                // LOGGING
+                String logDetails = String.format("### 🔇 Action: Text Isolation (Mute)\n▫️ **Target:** %s (`%s`)\n▫️ **Moderator:** %s\n▫️ **Duration:** %s\n▫️ **Reason:** %s\n▫️ **Channel:** %s",
+                        target.getAsMention(), target.getId(), event.getMember().getAsMention(), timeStr, reason, event.getChannel().getAsMention());
+                logManager.logEmbed(event.getGuild(), LogManager.LOG_MODS_CMD, 
+                        EmbedUtil.createOldLogEmbed("mute-text", logDetails, event.getMember(), target.getUser(), target, EmbedUtil.WARNING));
             },
             error -> event.reply("❌ حدث خطأ أثناء تطبيق الكتم. تأكد من صلاحيات البوت.").setEphemeral(true).queue()
         );

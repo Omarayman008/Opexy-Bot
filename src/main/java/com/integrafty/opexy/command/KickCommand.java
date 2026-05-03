@@ -10,10 +10,15 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.components.container.Container;
+import com.integrafty.opexy.service.LogManager;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class KickCommand implements SlashCommand {
+
+    private final LogManager logManager;
 
     @Override
     public String getName() {
@@ -54,6 +59,12 @@ public class KickCommand implements SlashCommand {
                 builder.useComponentsV2(true);
 
                 event.reply(builder.build()).useComponentsV2(true).queue();
+
+                // LOGGING
+                String logDetails = String.format("### 👞 Action: Manual Disconnect (Kick)\n▫️ **Target:** %s (`%s`)\n▫️ **Moderator:** %s\n▫️ **Reason:** %s\n▫️ **Channel:** %s",
+                        target.getAsMention(), target.getId(), event.getMember().getAsMention(), reason, event.getChannel().getAsMention());
+                logManager.logEmbed(event.getGuild(), LogManager.LOG_MODS_CMD, 
+                        EmbedUtil.createOldLogEmbed("kick", logDetails, event.getMember(), target.getUser(), target, EmbedUtil.WARNING));
             },
             error -> event.reply("❌ حدث خطأ. تأكد من أن رتبتي أعلى من رتبة العضو.").setEphemeral(true).queue()
         );

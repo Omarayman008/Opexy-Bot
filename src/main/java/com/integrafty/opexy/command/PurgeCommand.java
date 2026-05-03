@@ -10,11 +10,16 @@ import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.components.container.Container;
 import org.springframework.stereotype.Component;
+import com.integrafty.opexy.service.LogManager;
+import lombok.RequiredArgsConstructor;
 
 import java.util.concurrent.TimeUnit;
 
 @Component
+@RequiredArgsConstructor
 public class PurgeCommand implements SlashCommand {
+
+    private final LogManager logManager;
 
     @Override
     public String getName() {
@@ -55,6 +60,12 @@ public class PurgeCommand implements SlashCommand {
             event.reply(builder.build()).useComponentsV2(true).queue(m -> {
                 m.deleteOriginal().queueAfter(3, TimeUnit.SECONDS);
             });
+
+            // LOGGING
+            String logDetails = String.format("### 🧹 Action: Intelligence Wipe (Purge)\n▫️ **Amount:** %d messages\n▫️ **Moderator:** %s\n▫️ **Channel:** %s",
+                    messages.size(), event.getMember().getAsMention(), event.getChannel().getAsMention());
+            logManager.logEmbed(event.getGuild(), LogManager.LOG_MODS_CMD, 
+                    EmbedUtil.createOldLogEmbed("clear", logDetails, event.getMember(), null, null, EmbedUtil.DANGER));
         });
     }
 }

@@ -37,6 +37,7 @@ public class AutoReplyCommand extends ListenerAdapter implements SlashCommand {
     private final JDA jda;
     private final AutoReplyService autoReplyService;
     private final AutoReplyRepository autoReplyRepository;
+    private final LogManager logManager;
 
     @Value("${opexy.roles.op-staff}")
     private String opStaffRoleId;
@@ -92,16 +93,25 @@ public class AutoReplyCommand extends ListenerAdapter implements SlashCommand {
     public void onModalInteraction(ModalInteractionEvent event) {
         String id = event.getModalId();
 
-        if (id.equals("modal_ar_add")) {
-            String trigger = event.getValue("trigger").getAsString();
-            String reply   = event.getValue("reply").getAsString();
             autoReplyService.addResponse(trigger, reply, event.getUser().getName());
             sendPanel(event, true);
+
+            // LOGGING
+            String logDetails = String.format("### ➕ Auto-Reply Added\n▫️ **Trigger:** `%s`\n▫️ **Response:** `%s`\n▫️ **Moderator:** %s",
+                    trigger, reply, event.getMember().getAsMention());
+            logManager.logEmbed(event.getGuild(), LogManager.LOG_MODS_CMD, 
+                    EmbedUtil.createOldLogEmbed("auto-reply-add", logDetails, event.getMember(), null, null, EmbedUtil.SUCCESS));
 
         } else if (id.equals("modal_ar_remove")) {
             String trigger = event.getValue("trigger").getAsString();
             autoReplyService.removeResponse(trigger);
             sendPanel(event, true);
+
+            // LOGGING
+            String logDetails = String.format("### ➖ Auto-Reply Removed\n▫️ **Trigger:** `%s`\n▫️ **Moderator:** %s",
+                    trigger, event.getMember().getAsMention());
+            logManager.logEmbed(event.getGuild(), LogManager.LOG_MODS_CMD, 
+                    EmbedUtil.createOldLogEmbed("auto-reply-remove", logDetails, event.getMember(), null, null, EmbedUtil.DANGER));
         }
     }
 

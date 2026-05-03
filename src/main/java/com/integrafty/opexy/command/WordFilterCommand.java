@@ -37,6 +37,7 @@ public class WordFilterCommand extends ListenerAdapter implements SlashCommand {
     private final JDA jda;
     private final WordFilterService wordFilterService;
     private final WordFilterRepository wordFilterRepository;
+    private final LogManager logManager;
 
     @Value("${opexy.roles.op-staff}")
     private String opStaffRoleId;
@@ -88,15 +89,26 @@ public class WordFilterCommand extends ListenerAdapter implements SlashCommand {
     public void onModalInteraction(ModalInteractionEvent event) {
         String id = event.getModalId();
 
-        if (id.equals("modal_bw_add")) {
             String word = event.getValue("word").getAsString();
             wordFilterService.addWord(word);
             sendPanel(event, true);
+
+            // LOGGING
+            String logDetails = String.format("### ➕ Banned Word Added\n▫️ **Term:** `%s`\n▫️ **Moderator:** %s",
+                    word, event.getMember().getAsMention());
+            logManager.logEmbed(event.getGuild(), LogManager.LOG_MODS_CMD, 
+                    EmbedUtil.createOldLogEmbed("banned-word-add", logDetails, event.getMember(), null, null, EmbedUtil.SUCCESS));
 
         } else if (id.equals("modal_bw_remove")) {
             String word = event.getValue("word").getAsString();
             wordFilterService.removeWord(word);
             sendPanel(event, true);
+
+            // LOGGING
+            String logDetails = String.format("### ➖ Banned Word Removed\n▫️ **Term:** `%s`\n▫️ **Moderator:** %s",
+                    word, event.getMember().getAsMention());
+            logManager.logEmbed(event.getGuild(), LogManager.LOG_MODS_CMD, 
+                    EmbedUtil.createOldLogEmbed("banned-word-remove", logDetails, event.getMember(), null, null, EmbedUtil.DANGER));
         }
     }
 

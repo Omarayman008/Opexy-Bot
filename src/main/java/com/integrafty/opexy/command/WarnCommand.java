@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.components.container.Container;
+import com.integrafty.opexy.service.LogManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Component;
 public class WarnCommand implements SlashCommand {
 
     private final UserRepository userRepository;
+    private final LogManager logManager;
 
     private static final String ROLE_WARN_1 = "1487196789399490711";
     private static final String ROLE_WARN_2 = "1487196790892794067";
@@ -100,5 +102,11 @@ public class WarnCommand implements SlashCommand {
         target.getUser().openPrivateChannel().queue(pc -> {
             pc.sendMessage("تم تحذيرك في سيرفر " + event.getGuild().getName() + " (تحذير رقم " + count + ") بسبب: " + reason).queue(null, e -> {});
         });
+
+        // LOGGING
+        String logDetails = String.format("### ⚠️ Action: Warn Issued\n▫️ **Target:** %s (`%s`)\n▫️ **Moderator:** %s\n▫️ **Reason:** %s\n▫️ **Warn Count:** %d\n▫️ **Channel:** %s",
+                target.getAsMention(), target.getId(), event.getMember().getAsMention(), reason, count, event.getChannel().getAsMention());
+        logManager.logEmbed(event.getGuild(), LogManager.LOG_MODS_CMD, 
+                EmbedUtil.createOldLogEmbed("warn", logDetails, event.getMember(), target.getUser(), target, EmbedUtil.WARNING));
     }
 }

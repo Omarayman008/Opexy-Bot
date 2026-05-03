@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import com.integrafty.opexy.service.LogManager;
 
 @Component
 @RequiredArgsConstructor
@@ -26,8 +27,7 @@ public class MessageListener extends ListenerAdapter {
     @Value("${opexy.roles.op-staff}")
     private String staffRoleId;
 
-    @Value("${opexy.channels.mod-log:}")
-    private String modLogChannelId;
+    private final LogManager logManager;
 
     @PostConstruct
     public void init() {
@@ -58,27 +58,16 @@ public class MessageListener extends ListenerAdapter {
                     .flatMap(net.dv8tion.jda.api.entities.Message::delete)
                     .queue(null, err -> {});
 
-            // 3. Log to mod-log channel
-            if (modLogChannelId != null && !modLogChannelId.isEmpty()) {
-                TextChannel logChannel = event.getGuild().getTextChannelById(modLogChannelId);
-                if (logChannel != null) {
-                    java.time.format.DateTimeFormatter dtf =
-                            java.time.format.DateTimeFormatter.ofPattern("MMMM dd, yyyy - HH:mm");
-                    String now = java.time.LocalDateTime.now().format(dtf);
+            // 3. Log to centralized mod-log channel
+            String logBody = "### 🛡️ RESTRICTED WORD DETECTED\n" +
+                    "▫️ **User:** " + event.getAuthor().getAsMention() + " (`" + event.getAuthor().getId() + "`)\n" +
+                    "▫️ **Channel:** " + event.getChannel().getAsMention() + "\n" +
+                    "▫️ **Forbidden term:** `" + forbidden + "`\n" +
+                    "▫️ **Original content:** ```" + content + "```";
 
-                    String logBody = "### 🛡️ RESTRICTED WORD DETECTED\n" +
-                            "**User:** <@" + event.getAuthor().getId() + ">\n" +
-                            "**Channel:** " + event.getChannel().getAsMention() + "\n" +
-                            "**Timestamp:** `" + now + "`\n" +
-                            "**Forbidden term:** `" + forbidden + "`\n" +
-                            "**Original content:**\n> " + content;
-
-                    MessageCreateBuilder builder = new MessageCreateBuilder();
-                    builder.setComponents(EmbedUtil.activityLog("WORD FILTER", logBody, EmbedUtil.DANGER));
-                    builder.useComponentsV2(true);
-                    logChannel.sendMessage(builder.build()).useComponentsV2(true).queue();
-                }
-            }
+            logManager.logEmbed(event.getGuild(), LogManager.LOG_MODS_CMD, 
+                    EmbedUtil.createOldLogEmbed("word-filter", logBody, event.getMember(), event.getAuthor(), event.getMember(), EmbedUtil.DANGER));
+            return;
             return;
         }
 

@@ -10,12 +10,17 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.components.container.Container;
+import com.integrafty.opexy.service.LogManager;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
 
 @Component
+@RequiredArgsConstructor
 public class BanCommand implements SlashCommand {
+
+    private final LogManager logManager;
 
     @Override
     public String getName() {
@@ -69,9 +74,13 @@ public class BanCommand implements SlashCommand {
                 
                 MessageCreateBuilder builder = new MessageCreateBuilder();
                 builder.setComponents(container);
-                builder.useComponentsV2(true);
-
                 event.getHook().sendMessage(builder.build()).queue();
+
+                // LOGGING
+                String logDetails = String.format("### 🔨 Action: Global Blacklist\n▫️ **Target:** %s (`%s`)\n▫️ **Moderator:** %s\n▫️ **Reason:** %s\n▫️ **Channel:** %s",
+                        targetUser.getAsMention(), targetUser.getId(), event.getMember().getAsMention(), reason, event.getChannel().getAsMention());
+                logManager.logEmbed(event.getGuild(), LogManager.LOG_MODS_CMD, 
+                        EmbedUtil.createOldLogEmbed("ban", logDetails, event.getMember(), targetUser, null, java.awt.Color.BLACK));
             },
             error -> event.getHook().sendMessage("❌ لم أتمكن من حظر العضو. قد تكون لديه رتبة أعلى مني أو لا أملك الصلاحيات الكافية.").setEphemeral(true).queue()
         );
