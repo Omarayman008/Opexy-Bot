@@ -174,11 +174,23 @@ public class AuctionManager extends ListenerAdapter {
                 if (targetRoleId != null) {
                     net.dv8tion.jda.api.entities.Role role = gc.getGuild().getRoleById(targetRoleId);
                     if (role != null) {
-                        gc.getGuild().addRoleToMember(net.dv8tion.jda.api.entities.User.fromId(highestBidderId), role).queue(
-                            success -> {},
-                            error -> {}
-                        );
+                        gc.getGuild().addRoleToMember(net.dv8tion.jda.api.entities.User.fromId(highestBidderId), role).queue();
                     }
+                }
+
+                // GIVE CURRENCY IF PRIZE IS OPEX
+                try {
+                    String cleanPrize = currentPrize.toLowerCase().replace(",", "");
+                    if (cleanPrize.contains("opex")) {
+                        java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d+)(\\s*k)?").matcher(cleanPrize);
+                        if (m.find()) {
+                            long amount = Long.parseLong(m.group(1));
+                            if (m.group(2) != null) amount *= 1000;
+                            economyService.addBalance(String.valueOf(highestBidderId), guildId, amount);
+                        }
+                    }
+                } catch (Exception e) {
+                    // Silently fail if prize string doesn't follow expected currency format
                 }
             }
         }
