@@ -64,7 +64,7 @@ public class CommandHandler extends ListenerAdapter {
             // Channel Restriction Check for regular members
             if (!isStaff(event.getMember()) && !event.getChannel().getId().equals(ALLOWED_CHANNEL_ID)) {
                 // If the command is a public command (no default permissions set or enabled for all)
-                if (data != null && (data.getDefaultPermissions() == null || data.getDefaultPermissions().isEnabledAtDefault())) {
+                if (data != null && (data.getDefaultPermissions() == null || data.getDefaultPermissions().equals(net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.ENABLED))) {
                     event.reply("❌ عـــذراً، هـــذا الأمـــر مـــتـــاح فـــقـــط فـــي الـــروم الـــمـــخـــصـــص: <#" + ALLOWED_CHANNEL_ID + ">")
                             .setEphemeral(true)
                             .queue();
