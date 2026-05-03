@@ -191,8 +191,22 @@ public class ModerationCommands implements MultiSlashCommand {
         Member m = event.getGuild().getMember(u);
         if (m != null && !canInteract(event, m)) return;
 
+        // Notify User in DM
+        u.openPrivateChannel().queue(pc -> {
+            String body = String.format("""
+                    ### 🚫 إشـــعـــار حـــظـــر | BAN NOTIFICATION
+                    
+                    تـــم حـــظـــرك مـــن ســـيـــرفـــر: **%s**
+                    بـــســـبـــب: `%s`
+                    
+                    *إذا كـــنـــت تـــعـــتـــقـــد أن هـــذا الـــحـــظـــر خـــطـــأ، يـــرجـــى الـــتـــواصـــل مـــع الإدارة.*
+                    """, event.getGuild().getName(), reason);
+            Container dmEmbed = EmbedUtil.containerBranded("SECURITY", "Ban Protocol", body, EmbedUtil.BANNER_MAIN);
+            pc.sendMessage(new MessageCreateBuilder().setComponents(dmEmbed).useComponentsV2(true).build()).useComponentsV2(true).queue(null, e -> {});
+        });
+
         event.getGuild().ban(u, 7, TimeUnit.DAYS).reason(reason).queue(v -> {
-            reply(event, EmbedUtil.success("Ban Enforcement", u.getName() + " blacklisted.\nReason: " + reason));
+            reply(event, EmbedUtil.success("Ban Enforcement", "تـــم حـــظـــر الـــمـــســـتـــخـــدم **" + u.getName() + "** بـــنـــجـــاح.\nالـــســـبـــب: `" + reason + "`"));
             logModAction(event, "ban", "Global Blacklist. Reason: " + reason, m != null ? m : null, EmbedUtil.DANGER);
         });
     }
@@ -221,8 +235,22 @@ public class ModerationCommands implements MultiSlashCommand {
         String reason = getReason(event);
         if (m == null || !canInteract(event, m)) return;
 
+        // Notify User in DM
+        m.getUser().openPrivateChannel().queue(pc -> {
+            String body = String.format("""
+                    ### 👢 إشـــعـــار طـــرد | KICK NOTIFICATION
+                    
+                    تـــم طـــردك مـــن ســـيـــرفـــر: **%s**
+                    بـــســـبـــب: `%s`
+                    
+                    *يـــمـــكـــنـــك الـــعـــودة لـــلـــســـيـــرفـــر مـــرة أخـــرى.*
+                    """, event.getGuild().getName(), reason);
+            Container dmEmbed = EmbedUtil.containerBranded("SECURITY", "Kick Protocol", body, EmbedUtil.BANNER_MAIN);
+            pc.sendMessage(new MessageCreateBuilder().setComponents(dmEmbed).useComponentsV2(true).build()).useComponentsV2(true).queue(null, e -> {});
+        });
+
         m.kick().reason(reason).queue(v -> {
-            reply(event, EmbedUtil.success("Kick System", m.getUser().getName() + " disconnected.\nReason: " + reason));
+            reply(event, EmbedUtil.success("Kick System", "تـــم طـــرد الـــعـــضـــو **" + m.getUser().getName() + "** مـــن الـــســـيـــرفـــر.\nالـــســـبـــب: `" + reason + "`"));
             logModAction(event, "kick", "Manual Disconnect. Reason: " + reason, m, EmbedUtil.WARNING);
         });
     }
@@ -401,7 +429,23 @@ public class ModerationCommands implements MultiSlashCommand {
             if (r != null) event.getGuild().addRoleToMember(target, r).queue();
         }
 
-        reply(event, EmbedUtil.success("Warning Protocol", target.getUser().getName() + " warned (#" + count + ")."));
+        // Notify User in DM
+        target.getUser().openPrivateChannel().queue(pc -> {
+            String body = String.format("""
+                    ### ⚠️ إشـــعـــار تـــحـــذيـــر | WARN NOTIFICATION
+                    
+                    تـــم تـــحـــذيـــرك فـــي ســـيـــرفـــر: **%s**
+                    بـــســـبـــب: `%s`
+                    
+                    ▫️ **رقـــم الـــتـــحـــذيـــر:** `%d`
+                    
+                    *يـــرجـــى الالـــتـــزام بـــالـــقـــوانـــيـــن لـــتـــجـــنـــب الـــحـــظـــر.*
+                    """, event.getGuild().getName(), reason, count);
+            Container dmEmbed = EmbedUtil.containerBranded("MODERATION", "Warn Protocol", body, EmbedUtil.BANNER_MAIN);
+            pc.sendMessage(new MessageCreateBuilder().setComponents(dmEmbed).useComponentsV2(true).build()).useComponentsV2(true).queue(null, e -> {});
+        });
+
+        reply(event, EmbedUtil.success("Warning Protocol", "تـــم تـــحـــذيـــر الـــعـــضـــو " + target.getAsMention() + " بـــنـــجـــاح.\nالـــتـــحـــذيـــر رقـــم: **" + count + "**"));
         logModAction(event, "warn-add", "Warn Issued #" + count + ". Reason: " + reason, target, EmbedUtil.WARNING);
     }
 
