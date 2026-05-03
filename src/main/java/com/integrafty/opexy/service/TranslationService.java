@@ -34,6 +34,8 @@ public class TranslationService {
                     .queryParam("sl", "auto")
                     .queryParam("tl", langCode)
                     .queryParam("dt", "t")
+                    .queryParam("ie", "UTF-8")
+                    .queryParam("oe", "UTF-8")
                     .queryParam("q", text)
                     .build()
                     .toUri();
