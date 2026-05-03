@@ -30,25 +30,25 @@ public class InfoCommands implements MultiSlashCommand {
     public List<SlashCommandData> getCommandDataList() {
         List<SlashCommandData> list = new ArrayList<>();
 
-        list.add(Commands.slash("profile", "View customizable personal global profile card")
-                .addOption(OptionType.USER, "user", "User to view", false));
+        list.add(Commands.slash("profile", "عـــرض مـــلـــفـــك الـــشـــخـــصـــي أو مـــلـــف عـــضـــو آخـــر")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو", false));
         
-        list.add(Commands.slash("user", "Shows detailed information about a user")
-                .addOption(OptionType.USER, "user", "User to view", false));
+        list.add(Commands.slash("user", "عـــرض مـــعـــلـــومـــات تـــفـــصـــيـــلـــيـــة عـــن عـــضـــو")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو", false));
         
-        list.add(Commands.slash("avatar", "Get a user's avatar")
-                .addOption(OptionType.USER, "user", "User to view", false));
+        list.add(Commands.slash("avatar", "الـــحـــصـــول عـــلـــى صـــورة حـــســـاب عـــضـــو")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو", false));
         
-        list.add(Commands.slash("banner", "Get a user's banner")
-                .addOption(OptionType.USER, "user", "User to view", false));
+        list.add(Commands.slash("banner", "الـــحـــصـــول عـــلـــى بـــانـــر حـــســـاب عـــضـــو")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو", false));
 
-        list.add(Commands.slash("server", "Shows information about the server"));
+        list.add(Commands.slash("server", "عـــرض مـــعـــلـــومـــات تـــفـــصـــيـــلـــيـــة عـــن الـــســـيـــرفـــر"));
         
-        list.add(Commands.slash("roles", "Get a list of server roles and counts"));
+        list.add(Commands.slash("roles", "عـــرض جـــمـــيـــع رتـــب الـــســـيـــرفـــر مـــع عـــدد الأعـــضـــاء"));
         
-        list.add(Commands.slash("server-avatar", "Display the server's icon"));
+        list.add(Commands.slash("server-avatar", "عـــرض صـــورة (أواتـــار) الـــســـيـــرفـــر"));
         
-        list.add(Commands.slash("server-banner", "Display the server's banner"));
+        list.add(Commands.slash("server-banner", "عـــرض بـــانـــر الـــســـيـــرفـــر"));
 
         return list;
     }

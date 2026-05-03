@@ -34,8 +34,8 @@ public class WipeUserCommand implements SlashCommand {
 
     @Override
     public SlashCommandData getCommandData() {
-        return Commands.slash("wipe-user", "Delete all messages from a specific user across the server")
-                .addOption(OptionType.STRING, "user_id", "The Discord user ID", true);
+        return Commands.slash("wipe-user", "حـــذف جـــمـــيـــع رســـائـــل عـــضـــو مـــن الـــســـيـــرفـــر")
+                .addOption(OptionType.STRING, "user_id", "أي دي الـــعـــضـــو", true);
     }
 
     @Override

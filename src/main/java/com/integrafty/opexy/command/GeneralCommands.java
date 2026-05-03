@@ -28,20 +28,20 @@ public class GeneralCommands implements MultiSlashCommand {
     public List<SlashCommandData> getCommandDataList() {
         List<SlashCommandData> list = new ArrayList<>();
 
-        list.add(Commands.slash("help", "OpexyBot help menu"));
-        list.add(Commands.slash("ping", "Bot's latency status"));
-        list.add(Commands.slash("roll", "Roll a 6-sided dice"));
+        list.add(Commands.slash("help", "قـــائـــمـــة الـــمـــســـاعـــدة لـــلـــبـــوت"));
+        list.add(Commands.slash("ping", "عـــرض ســـرعـــة اتـــصـــال الـــبـــوت"));
+        list.add(Commands.slash("roll", "رمـــي حـــجـــر الـــنـــرد"));
         
-        list.add(Commands.slash("colors", "View available color roles"));
-        list.add(Commands.slash("color-set", "Set your color role by number")
-                .addOption(OptionType.INTEGER, "number", "Color number from /colors", true));
+        list.add(Commands.slash("colors", "عـــرض رتـــب الألـــوان الـــمـــتـــاحـــة"));
+        list.add(Commands.slash("color-set", "تـــحـــديـــد لـــون رتـــبـــتـــك")
+                .addOption(OptionType.INTEGER, "number", "رقم اللون", true));
 
-        list.add(Commands.slash("translate", "Translate text to a specified language")
-                .addOption(OptionType.STRING, "text", "Text to translate", true)
-                .addOption(OptionType.STRING, "language", "Target language (e.g., English, Arabic)", true));
+        list.add(Commands.slash("translate", "تـــرجـــمـــة الـــنـــص إلـــى لـــغـــة مـــعـــيـــنـــة")
+                .addOption(OptionType.STRING, "text", "النص", true)
+                .addOption(OptionType.STRING, "language", "اللغة", true));
 
-        list.add(Commands.slash("get-emojis", "Retrieve emoji details")
-                .addOption(OptionType.STRING, "emoji", "Emoji to inspect", true));
+        list.add(Commands.slash("get-emojis", "الـــحـــصـــول عـــلـــى تـــفـــاصـــيـــل الإيـــمـــوجـــي")
+                .addOption(OptionType.STRING, "emoji", "الإيموجي", true));
 
         return list;
     }

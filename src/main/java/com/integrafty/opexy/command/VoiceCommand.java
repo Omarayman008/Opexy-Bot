@@ -24,7 +24,7 @@ public class VoiceCommand implements SlashCommand {
 
     @Override
     public SlashCommandData getCommandData() {
-        return Commands.slash("voice-setup", "Setup the voice room control dashboard");
+        return Commands.slash("voice-setup", "إنـــشـــاء بـــنـــل الـــتـــحـــكـــم فـــي الـــرومـــات الـــصـــوتـــيـــة");
     }
 
     @Override

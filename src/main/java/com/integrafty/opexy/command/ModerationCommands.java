@@ -42,91 +42,91 @@ public class ModerationCommands implements MultiSlashCommand {
     public List<SlashCommandData> getCommandDataList() {
         List<SlashCommandData> list = new ArrayList<>();
 
-        list.add(Commands.slash("setnick", "Changes the nickname of a member")
-                .addOption(OptionType.USER, "user", "Member to change nickname", true)
-                .addOption(OptionType.STRING, "nick", "New nickname (leave empty to reset)", false));
+        list.add(Commands.slash("setnick", "تـــغـــيـــيـــر لـــقـــب عـــضـــو مـــعـــيـــن")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true)
+                .addOption(OptionType.STRING, "nick", "الـــلـــقـــب الـــجـــديـــد", false));
 
-        list.add(Commands.slash("ban", "Bans a member")
-                .addOption(OptionType.USER, "user", "Member to ban", true)
-                .addOption(OptionType.STRING, "reason", "Reason for ban", false));
+        list.add(Commands.slash("ban", "حـــظـــر عـــضـــو مـــن الـــســـيـــرفـــر")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true)
+                .addOption(OptionType.STRING, "reason", "الـــســـبـــب", false));
 
-        list.add(Commands.slash("unban", "Unbans a member")
-                .addOption(OptionType.STRING, "user_id", "ID of the user to unban", true));
+        list.add(Commands.slash("unban", "إلـــغـــاء حـــظـــر عـــضـــو")
+                .addOption(OptionType.STRING, "user_id", "أي دي الـــعـــضـــو", true));
 
-        list.add(Commands.slash("unban-all", "Unbans all members"));
+        list.add(Commands.slash("unban-all", "إلـــغـــاء حـــظـــر الـــجـــمـــيـــع مـــن الـــســـيـــرفـــر"));
 
-        list.add(Commands.slash("kick", "Kicks a member")
-                .addOption(OptionType.USER, "user", "Member to kick", true)
-                .addOption(OptionType.STRING, "reason", "Reason for kick", false));
+        list.add(Commands.slash("kick", "طـــرد عـــضـــو مـــن الـــســـيـــرفـــر")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true)
+                .addOption(OptionType.STRING, "reason", "الـــســـبـــب", false));
 
-        list.add(Commands.slash("vkick", "Kicks a member from a voice channel")
-                .addOption(OptionType.USER, "user", "Member to kick from voice", true));
+        list.add(Commands.slash("vkick", "طـــرد عـــضـــو مـــن الـــروم الـــصـــوتـــي")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true));
 
-        list.add(Commands.slash("mute-text", "Mute a member from typing")
-                .addOption(OptionType.USER, "user", "Member to mute", true));
+        list.add(Commands.slash("mute-text", "إســـكـــات عـــضـــو مـــن الـــشـــات الـــكـــتـــابـــي")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true));
 
-        list.add(Commands.slash("unmute-text", "Unmutes a member from typing")
-                .addOption(OptionType.USER, "user", "Member to unmute", true));
+        list.add(Commands.slash("unmute-text", "إلـــغـــاء إســـكـــات عـــضـــو مـــن الـــشـــات")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true));
 
-        list.add(Commands.slash("mute-check", "Check the mute status of a user")
-                .addOption(OptionType.USER, "user", "Member to check", true));
+        list.add(Commands.slash("mute-check", "الـــتـــحـــقـــق مـــن حـــالـــة الـــكـــتـــم لـــعـــضـــو")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true));
 
-        list.add(Commands.slash("mute-voice", "Mute a member in voice channels")
-                .addOption(OptionType.USER, "user", "Member to mute in voice", true));
+        list.add(Commands.slash("mute-voice", "إســـكـــات عـــضـــو مـــن الـــروم الـــصـــوتـــي")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true));
 
-        list.add(Commands.slash("unmute-voice", "Unmutes a member from voice channels")
-                .addOption(OptionType.USER, "user", "Member to unmute in voice", true));
+        list.add(Commands.slash("unmute-voice", "إلـــغـــاء إســـكـــات عـــضـــو مـــن الـــصـــوت")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true));
 
-        list.add(Commands.slash("timeout", "Timeouts a member")
-                .addOption(OptionType.USER, "user", "Member to timeout", true)
-                .addOption(OptionType.INTEGER, "duration", "Duration in minutes", true));
+        list.add(Commands.slash("timeout", "إعـــطـــاء تـــايـــم أوت لـــعـــضـــو مـــعـــيـــن")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true)
+                .addOption(OptionType.INTEGER, "duration", "الـــمـــدة بـــالـــدقـــائـــق", true));
 
-        list.add(Commands.slash("untimeout", "Removes a timeout from a member")
-                .addOption(OptionType.USER, "user", "Member to untimeout", true));
+        list.add(Commands.slash("untimeout", "إلـــغـــاء الـــتـــايـــم أوت عـــن عـــضـــو")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true));
 
-        list.add(Commands.slash("clear", "Cleans up channel messages")
-                .addOption(OptionType.INTEGER, "amount", "Number of messages to delete (1-100)", true));
+        list.add(Commands.slash("clear", "تـــنـــظـــيـــف الـــرســـائـــل مـــن الـــقـــنـــاة")
+                .addOption(OptionType.INTEGER, "amount", "عـــدد الـــرســـائـــل (1-100)", true));
 
-        list.add(Commands.slash("move", "Moves a member to another voice channel")
-                .addOption(OptionType.USER, "user", "Member to move", true)
-                .addOption(OptionType.CHANNEL, "channel", "Target voice channel", true));
+        list.add(Commands.slash("move", "نـــقـــل عـــضـــو إلـــى روم صـــوتـــي آخـــر")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true)
+                .addOption(OptionType.CHANNEL, "channel", "الـــروم الـــمـــســـتـــهـــدف", true));
 
-        list.add(Commands.slash("role", "Add or remove a role from a member")
-                .addOption(OptionType.USER, "user", "Member to manage", true)
-                .addOption(OptionType.ROLE, "role", "Role to add/remove", true));
+        list.add(Commands.slash("role", "إعـــطـــاء أو ســـحـــب رتـــبـــة مـــن عـــضـــو")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true)
+                .addOption(OptionType.ROLE, "role", "الـــرتـــبـــة", true));
 
-        list.add(Commands.slash("temprole", "Assign a temporary role")
-                .addOption(OptionType.USER, "user", "Member to manage", true)
-                .addOption(OptionType.ROLE, "role", "Role to assign", true)
-                .addOption(OptionType.INTEGER, "duration", "Duration in hours", true));
+        list.add(Commands.slash("temprole", "إعـــطـــاء رتـــبـــة مـــؤقـــتـــة لـــعـــضـــو")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true)
+                .addOption(OptionType.ROLE, "role", "الـــرتـــبـــة", true)
+                .addOption(OptionType.INTEGER, "duration", "الـــمـــدة بـــالـــســـاعـــات", true));
 
-        list.add(Commands.slash("rar", "Remove all roles from a member")
-                .addOption(OptionType.USER, "user", "Member to strip", true));
+        list.add(Commands.slash("rar", "ســـحـــب جـــمـــيـــع الـــرتـــب مـــن الـــعـــضـــو")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true));
 
-        list.add(Commands.slash("inrole", "List all members with a specific role")
-                .addOption(OptionType.ROLE, "role", "Role to check", true));
+        list.add(Commands.slash("inrole", "عـــرض جـــمـــيـــع الأعـــضـــاء فـــي رتـــبـــة مـــعـــيـــنـــة")
+                .addOption(OptionType.ROLE, "role", "الـــرتـــبـــة", true));
 
-        list.add(Commands.slash("warn-add", "Warns a member")
-                .addOption(OptionType.USER, "user", "Member to warn", true)
-                .addOption(OptionType.STRING, "reason", "Reason for warning", false));
+        list.add(Commands.slash("warn-add", "إعـــطـــاء تـــحـــذيـــر لـــعـــضـــو (WARN1, WARN2, WARN3)")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true)
+                .addOption(OptionType.STRING, "reason", "الـــســـبـــب", false));
 
-        list.add(Commands.slash("warn-remove", "Remove warnings for a user")
-                .addOption(OptionType.USER, "user", "Member to clear", true));
+        list.add(Commands.slash("warn-remove", "إلـــغـــاء الـــتـــحـــذيـــرات عـــن عـــضـــو")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true));
 
-        list.add(Commands.slash("warnings", "Get the list of warnings for a user")
-                .addOption(OptionType.USER, "user", "Member to check", true));
+        list.add(Commands.slash("warnings", "عـــرض تـــحـــذيـــرات عـــضـــو مـــعـــيـــن")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو", true));
 
-        list.add(Commands.slash("lock", "Lock current channel"));
-        list.add(Commands.slash("unlock", "Unlock current channel"));
-        list.add(Commands.slash("hide", "Hide current channel"));
-        list.add(Commands.slash("show", "Show current channel"));
+        list.add(Commands.slash("lock", "قـــفـــل الـــقـــنـــاة الـــحـــالـــيـــة"));
+        list.add(Commands.slash("unlock", "فـــتـــح الـــقـــنـــاة الـــحـــالـــيـــة"));
+        list.add(Commands.slash("hide", "إخـــفـــاء الـــقـــنـــاة الـــحـــالـــيـــة عـــن الـــجـــمـــيـــع"));
+        list.add(Commands.slash("show", "إظـــهـــار الـــقـــنـــاة الـــحـــالـــيـــة لـــلـــجـــمـــيـــع"));
 
-        list.add(Commands.slash("slowmode", "Set slowmode for a channel")
-                .addOption(OptionType.INTEGER, "seconds", "Slowmode delay (0 to disable)", true));
+        list.add(Commands.slash("slowmode", "تـــفـــعـــيـــل وضـــع الـــتـــبـــاطـــؤ فـــي الـــقـــنـــاة")
+                .addOption(OptionType.INTEGER, "seconds", "الـــثـــوانـــي (0 لـــلإلـــغـــاء)", true));
 
-        list.add(Commands.slash("add-emoji", "Upload a new custom emoji")
-                .addOption(OptionType.STRING, "name", "Emoji name", true)
-                .addOption(OptionType.ATTACHMENT, "image", "Emoji image", true));
+        list.add(Commands.slash("add-emoji", "إضـــافـــة إيـــمـــوجـــي جـــديـــد لـــلـــســـيـــرفـــر")
+                .addOption(OptionType.STRING, "name", "إســـم الإيـــمـــوجـــي", true)
+                .addOption(OptionType.ATTACHMENT, "image", "صـــورة الإيـــمـــوجـــي", true));
 
         return list;
     }

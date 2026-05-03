@@ -53,7 +53,7 @@ public class WordFilterCommand extends ListenerAdapter implements SlashCommand {
 
     @Override
     public SlashCommandData getCommandData() {
-        return Commands.slash("banned-words", "Manage the banned words list");
+        return Commands.slash("banned-words", "إدارة قـــائـــمـــة الـــكـــلـــمـــات الـــمـــحـــظـــورة");
     }
 
     @Override

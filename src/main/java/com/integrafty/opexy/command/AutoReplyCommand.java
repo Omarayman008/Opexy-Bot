@@ -53,7 +53,7 @@ public class AutoReplyCommand extends ListenerAdapter implements SlashCommand {
 
     @Override
     public SlashCommandData getCommandData() {
-        return Commands.slash("replay", "Manage auto-reply triggers");
+        return Commands.slash("replay", "إدارة الـــردود الـــتـــلـــقـــائـــيـــة لـــلـــســـيـــرفـــر");
     }
 
     @Override
