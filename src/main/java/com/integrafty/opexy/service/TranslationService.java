@@ -3,23 +3,20 @@ package com.integrafty.opexy.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class TranslationService {
-
-    private final RestTemplate restTemplate;
 
     public String translate(String text, String targetLang) {
         try {
@@ -42,15 +39,21 @@ public class TranslationService {
             
             log.info("Translating to {}: {}", langCode, uri);
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-
-            ResponseEntity<byte[]> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, byte[].class);
-            byte[] body = responseEntity.getBody();
+            URL url = uri.toURL();
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
             
-            if (body == null) return "Error: No response from translation engine.";
-            String response = new String(body, StandardCharsets.UTF_8);
+            StringBuilder responseBuilder = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    responseBuilder.append(line);
+                }
+            }
+            
+            String response = responseBuilder.toString();
+            if (response.isEmpty()) return "Error: No response from translation engine.";
 
             JSONArray jsonArray = new JSONArray(response);
             if (jsonArray.isNull(0)) return "Error: Unexpected response structure.";
