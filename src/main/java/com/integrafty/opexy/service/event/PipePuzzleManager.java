@@ -38,10 +38,10 @@ public class PipePuzzleManager extends ListenerAdapter {
 
         if (id.startsWith("pipe_move_")) {
             String dir = id.replace("pipe_move_", "");
-            if (dir.equals("up") && cursor[0] > 1) cursor[0]--;
-            else if (dir.equals("down") && cursor[0] < grid.length - 2) cursor[0]++;
-            else if (dir.equals("left") && cursor[1] > 1) cursor[1]--;
-            else if (dir.equals("right") && cursor[1] < grid[0].length - 2) cursor[1]++;
+            if (dir.equals("up") && cursor[0] > 0) cursor[0]--;
+            else if (dir.equals("down") && cursor[0] < grid.length - 1) cursor[0]++;
+            else if (dir.equals("left") && cursor[1] > 0) cursor[1]--;
+            else if (dir.equals("right") && cursor[1] < grid[0].length - 1) cursor[1]++;
             updateGame(event, grid, cursor);
         } else if (id.equals("pipe_rotate")) {
             grid[cursor[0]][cursor[1]] = rotatePiece(grid[cursor[0]][cursor[1]]);
