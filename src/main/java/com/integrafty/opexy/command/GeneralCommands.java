@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 public class GeneralCommands implements MultiSlashCommand {
 
     private final TranslationService translationService;
+    private final com.integrafty.opexy.service.EconomyService economyService;
 
     @Override
     public List<SlashCommandData> getCommandDataList() {
@@ -40,6 +41,8 @@ public class GeneralCommands implements MultiSlashCommand {
         list.add(Commands.slash("help", "قـــائـــمـــة الـــمـــســـاعـــدة الـــخـــاصـــة بـــالـــبـــوت"));
         list.add(Commands.slash("ping", "عـــرض ســـرعـــة اتـــصـــال الـــبـــوت الـــحـــالـــيـــة"));
         list.add(Commands.slash("roll", "رمـــي حـــجـــر الـــنـــرد الـــعـــشـــوائـــي"));
+        list.add(Commands.slash("balance", "عـــرض رصـــيـــدك الـــحـــالـــي مـــن الـ opex")
+                .addOption(OptionType.USER, "user", "الـــمـــســـتـــخـــدم الـــذي تـــود رؤيـــة رصـــيـــده", false));
         
         list.add(Commands.slash("colors", "عـــرض رتـــب الألـــوان الـــمـــتـــاحـــة فـــي الـــســـيـــرفـــر"));
         list.add(Commands.slash("color-set", "تـــحـــديـــد لـــون رتـــبـــتـــك الـــخـــاصـــة")
@@ -63,11 +66,29 @@ public class GeneralCommands implements MultiSlashCommand {
             case "help" -> handleHelp(event);
             case "ping" -> handlePing(event);
             case "roll" -> handleRoll(event);
+            case "balance" -> handleBalance(event);
             case "colors" -> handleColors(event);
             case "color-set" -> handleColorSet(event);
             case "translate" -> handleTranslate(event);
             case "get-emojis" -> handleGetEmojis(event);
         }
+    }
+
+    private void handleBalance(SlashCommandInteractionEvent event) {
+        net.dv8tion.jda.api.entities.User target = event.getOption("user") != null ? event.getOption("user").getAsUser() : event.getUser();
+        long balance = economyService.getBalance(target.getId(), event.getGuild().getId());
+
+        String body = String.format("""
+                ### 💰 رصـــيـــد الـــمـــحـــفـــظـــة | WALLET BALANCE
+                ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+                
+                ▫️ **الـــمـــســـتـــخـــدم:** <@%s>
+                ▫️ **الـــرصـــيـــد الـــحـــالـــي:** `%d opex`
+                
+                ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+                """, target.getId(), balance);
+
+        reply(event, EmbedUtil.containerBranded("ECONOMY", "Financial Status", body, EmbedUtil.BANNER_MAIN));
     }
 
     @Override

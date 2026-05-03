@@ -41,9 +41,11 @@ public class AuctionCommand implements MultiSlashCommand {
                         .addChoice("100k opex", "100k opex")
                         .addChoice("200k opex", "200k opex")
                         .addChoice("500k opex", "500k opex")
-                        .addChoice("رتبة مميزة (Elite Role)", "رتبة مميزة")
-                        .addChoice("صندوق عشوائي (Mystery Box)", "صندوق عشوائي")
-                        .addChoice("بطاقة خصم 50% (50% Voucher)", "بطاقة خصم 50%")));
+                        .addChoice("رتبة مميزة (Elite Role)", "ROLE_PRIZE")
+                        .addChoice("صندوق عشوائي (Mystery Box)", "صندوق عشوائي"))
+                .addOptions(new OptionData(OptionType.ROLE, "target_role", "الرتبة المعروضة (إذا كانت الجائزة رتبة)", false))
+                .addOptions(new OptionData(OptionType.INTEGER, "duration", "مدة المزاد بالثواني (افتراضي 30 ثانية)", false))
+                .addOptions(new OptionData(OptionType.INTEGER, "target_price", "السعر المستهدف لإنهاء المزاد فوراً", false)));
     }
 
     @Override
@@ -51,6 +53,18 @@ public class AuctionCommand implements MultiSlashCommand {
         if (!event.getName().equals("auction")) return;
 
         String prize = event.getOption("prize").getAsString();
+        net.dv8tion.jda.api.entities.Role targetRole = event.getOption("target_role") != null ? event.getOption("target_role").getAsRole() : null;
+        int duration = event.getOption("duration") != null ? event.getOption("duration").getAsInt() : 30;
+        long targetPrice = event.getOption("target_price") != null ? event.getOption("target_price").getAsLong() : 0;
+
+        // Validation for role prize
+        if (prize.equals("ROLE_PRIZE")) {
+            if (targetRole == null) {
+                event.reply("⚠️ يجب عليك اختيار الرتبة المعروضة عند اختيار جائزة 'رتبة مميزة'!").setEphemeral(true).queue();
+                return;
+            }
+            prize = "رتبة مميزة: " + targetRole.getName();
+        }
 
         // Check permissions
         boolean hasRole = event.getMember().getRoles().stream()
@@ -66,7 +80,7 @@ public class AuctionCommand implements MultiSlashCommand {
             return;
         }
 
-        auctionManager.startAuction(prize);
+        auctionManager.startAuction(prize, duration, targetPrice);
 
         String body = "تم بدء مزاد على **جائزة غامضة**! 📦\n\n**القوانين:**\n• المزايدة تبدأ بـ 10 opex.\n• المزايدة الأعلى تفوز بالمحتوى.\n• المحتوى سيبقى مجهولاً حتى نهاية المزاد!";
 

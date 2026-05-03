@@ -3,6 +3,7 @@ package com.integrafty.opexy.command.event;
 import com.integrafty.opexy.command.base.MultiSlashCommand;
 import com.integrafty.opexy.service.event.AchievementService;
 import com.integrafty.opexy.service.event.EventManager;
+import com.integrafty.opexy.service.event.ScavengerHuntManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -17,9 +18,13 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class ScavengerHuntCommand implements MultiSlashCommand {
 
+    private final ScavengerHuntManager huntManager;
     private final EventManager eventManager;
     private final AchievementService achievementService;
     private final Random random = new Random();
@@ -30,14 +35,10 @@ public class ScavengerHuntCommand implements MultiSlashCommand {
     @Value("${opexy.roles.hype-events}")
     private String hypeEventsId;
 
-    public ScavengerHuntCommand(EventManager eventManager, AchievementService achievementService) {
-        this.eventManager = eventManager;
-        this.achievementService = achievementService;
-    }
-
     @Override
     public List<SlashCommandData> getCommandDataList() {
-        return List.of(Commands.slash("hunt", "بدء فعالية الصيد (Scavenger Hunt)"));
+        return List.of(Commands.slash("hunt", "بدء فعالية الصيد (Scavenger Hunt)")
+                .addOption(net.dv8tion.jda.api.interactions.commands.OptionType.INTEGER, "reward", "مبلغ الجائزة (افتراضي 5000)", false));
     }
 
     @Override
@@ -53,29 +54,37 @@ public class ScavengerHuntCommand implements MultiSlashCommand {
             return;
         }
 
+        if (!eventManager.startGroupEvent("فعالية الصيد")) {
+            event.reply("⚠️ هناك فعالية جماعية قائمة بالفعل.").setEphemeral(true).queue();
+            return;
+        }
+
+        long reward = event.getOption("reward") != null ? event.getOption("reward").getAsLong() : 5000;
+        String code = huntManager.startHunt(reward);
+
         List<TextChannel> channels = event.getGuild().getTextChannels().stream()
                 .filter(ch -> ch.canTalk())
                 .collect(Collectors.toList());
 
-        if (channels.isEmpty()) {
-            event.reply("❌ لم يتم العثور على قنوات متاحة لإخفاء الكود.").setEphemeral(true).queue();
-            return;
-        }
-
         TextChannel targetChannel = channels.get(random.nextInt(channels.size()));
-        String code = "OPEXY-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         
-        EmbedBuilder embed = new EmbedBuilder()
-                .setTitle("🔎 فعالية الصيد بدأت!")
-                .setColor(Color.ORANGE)
-                .setDescription("تم إخفاء كود سري في إحدى قنوات السيرفر!\n\n**المهمة:** ابحث عن الكود واكتبه هنا في الشات لتفوز بجوائز opex!")
-                .addField("الصعوبة", "عشوائي", true)
-                .setFooter("أول شخص يكتب الكود يفوز!");
+        // Hide code in target channel
+        targetChannel.sendMessage(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
+                .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("DISCOVERY", "🔍 لقد وجدت شيئاً!", 
+                        "لقد عثرت على الكود السري! الكود هو: **" + code + "**\nأسرع واكتبه في قناة الفعاليات لتفوز!", 
+                        com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN))
+                .useComponentsV2(true).build())
+                .useComponentsV2(true).queue();
 
-        event.replyEmbeds(embed.build()).queue();
-        
+        String body = "🔎 **فعالية الصيد بدأت!**\n\nتم إخفاء كود سري في إحدى قنوات السيرفر!\n\n**المهمة:** ابحث عن الكود واكتبه هنا في الشات لتفوز بـ **" + reward + " opex**!\n\n*ملاحظة: الكود يبدأ بـ OP- ويتبعه 6 أحرف.*";
+
+        event.reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
+                .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("EVENT", "فعالية الصيد — Scavenger Hunt", body, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN))
+                .useComponentsV2(true).build())
+                .useComponentsV2(true).queue();
+
         // Notify the supervisor (Ephemeral)
-        event.getHook().sendMessage("🤫 الكود السري هو: **" + code + "**\nتم إخفاؤه في قناة: " + targetChannel.getAsMention())
+        event.getHook().sendMessage("🤫 تم إخفاء الكود **" + code + "** في قناة: " + targetChannel.getAsMention())
                 .setEphemeral(true).queue();
     }
 }

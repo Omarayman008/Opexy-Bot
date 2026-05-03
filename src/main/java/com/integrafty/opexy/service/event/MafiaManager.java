@@ -60,6 +60,12 @@ public class MafiaManager extends ListenerAdapter {
                 return;
             }
             startGame(event);
+        } else if (id.equals("mafia_stop")) {
+            eventManager.endGroupEvent();
+            event.editMessage("🛑 تم إغلاق الفعالية من قبل الإدارة.")
+                    .setComponents(Collections.emptyList())
+                    .queue();
+            return;
         } else if (id.startsWith("mafia_action_")) {
             handleAction(event);
         } else if (id.startsWith("mafia_vote_")) {
@@ -68,13 +74,20 @@ public class MafiaManager extends ListenerAdapter {
     }
 
     private void updateLobby(ButtonInteractionEvent event) {
-        String body = "اللاعبين المنضمين: **" + currentGame.getPlayers().size() + "**\n\n**القوانين:**\n• الحد الأدنى للاعبين: 5.\n• الأدوار: مافيا، طبيب، محقق، مواطن.\n• النهار للمناقشة، والليل لتنفيذ الأدوار.";
+        StringBuilder players = new StringBuilder();
+        for (long pid : currentGame.getPlayers().keySet()) {
+            players.append("• <@").append(pid).append(">\n");
+        }
+
+        String body = "اللاعبين المنضمين: **" + currentGame.getPlayers().size() + "**\n\n" + players.toString() +
+                      "\n**القوانين:**\n• الحد الأدنى للاعبين: 5.\n• النهار للمناقشة، والليل لتنفيذ الأدوار.";
 
         event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
                 .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("GAME", "🕵️ لعبة المافيا — Mafia Game", body, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN,
                         net.dv8tion.jda.api.components.actionrow.ActionRow.of(
                                 net.dv8tion.jda.api.components.buttons.Button.primary("mafia_join", "انضمام ✋"),
-                                net.dv8tion.jda.api.components.buttons.Button.danger("mafia_start", "بدء اللعبة (المنظم فقط) 🚀")
+                                net.dv8tion.jda.api.components.buttons.Button.danger("mafia_start", "بدء اللعبة (المنظم فقط) 🚀"),
+                                net.dv8tion.jda.api.components.buttons.Button.secondary("mafia_stop", "إغلاق الفعالية 🛑")
                         )))
                 .useComponentsV2(true).build())
                 .useComponentsV2(true).queue();

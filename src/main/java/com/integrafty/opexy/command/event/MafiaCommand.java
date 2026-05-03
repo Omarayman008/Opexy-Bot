@@ -63,7 +63,8 @@ public class MafiaCommand implements MultiSlashCommand {
                 .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("GAME", "🕵️ لعبة المافيا — Mafia Game", body, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN,
                         net.dv8tion.jda.api.components.actionrow.ActionRow.of(
                                 net.dv8tion.jda.api.components.buttons.Button.primary("mafia_join", "انضمام ✋"),
-                                net.dv8tion.jda.api.components.buttons.Button.danger("mafia_start", "بدء اللعبة (المنظم فقط) 🚀")
+                                net.dv8tion.jda.api.components.buttons.Button.danger("mafia_start", "بدء اللعبة (المنظم فقط) 🚀"),
+                                net.dv8tion.jda.api.components.buttons.Button.secondary("mafia_stop", "إغلاق الفعالية 🛑")
                         )))
                 .useComponentsV2(true).build())
                 .useComponentsV2(true).queue();
