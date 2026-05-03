@@ -1,6 +1,5 @@
 package com.integrafty.opexy.service.event;
 
-import lombok.Getter;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -8,8 +7,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Service
 public class EventManager {
     
-    @Getter
     private final AtomicBoolean groupEventActive = new AtomicBoolean(false);
+    
+    public AtomicBoolean getGroupEventActive() {
+        return groupEventActive;
+    }
     
     private String activeEventName = null;
 

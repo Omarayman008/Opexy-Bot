@@ -77,5 +77,4 @@ public class AchievementCommand implements MultiSlashCommand {
         return sb.toString();
     }
 
-    }
 }

@@ -1,15 +1,12 @@
 package com.integrafty.opexy.command.event;
 
 import com.integrafty.opexy.command.base.MultiSlashCommand;
-import com.integrafty.opexy.service.event.AchievementService;
-import com.integrafty.opexy.service.event.EventManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -20,8 +17,6 @@ import java.util.Random;
 @Component
 public class PipePuzzleCommand implements MultiSlashCommand {
 
-    private final AchievementService achievementService;
-    private final EventManager eventManager;
     private final Random random = new Random();
 
     @Value("${opexy.roles.hype-manager}")
@@ -30,9 +25,7 @@ public class PipePuzzleCommand implements MultiSlashCommand {
     @Value("${opexy.roles.hype-events}")
     private String hypeEventsId;
 
-    public PipePuzzleCommand(AchievementService achievementService, EventManager eventManager) {
-        this.achievementService = achievementService;
-        this.eventManager = eventManager;
+    public PipePuzzleCommand() {
     }
 
     @Override

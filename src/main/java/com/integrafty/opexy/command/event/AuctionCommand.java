@@ -1,7 +1,6 @@
 package com.integrafty.opexy.command.event;
 
 import com.integrafty.opexy.command.base.MultiSlashCommand;
-import com.integrafty.opexy.service.event.AchievementService;
 import com.integrafty.opexy.service.event.EventManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -9,20 +8,18 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.awt.Color;
 import java.util.List;
-import java.util.Random;
 
 @Component
 public class AuctionCommand implements MultiSlashCommand {
 
     private final EventManager eventManager;
-    private final AchievementService achievementService;
-    private final Random random = new Random();
 
     @Value("${opexy.roles.hype-manager}")
     private String hypeManagerId;
@@ -30,9 +27,8 @@ public class AuctionCommand implements MultiSlashCommand {
     @Value("${opexy.roles.hype-events}")
     private String hypeEventsId;
 
-    public AuctionCommand(EventManager eventManager, AchievementService achievementService) {
+    public AuctionCommand(EventManager eventManager) {
         this.eventManager = eventManager;
-        this.achievementService = achievementService;
     }
 
     @Override
@@ -71,11 +67,11 @@ public class AuctionCommand implements MultiSlashCommand {
                 .setFooter("ينتهي المزاد عند توقف المزايدات لمدة 30 ثانية.");
 
         event.replyEmbeds(embed.build())
-                .addActionRow(
+                .setComponents(ActionRow.of(
                         Button.primary("bid_10", "+10"),
                         Button.primary("bid_50", "+50"),
                         Button.primary("bid_100", "+100"),
                         Button.success("bid_custom", "سعر مخصص ✏️")
-                ).queue();
+                )).queue();
     }
 }

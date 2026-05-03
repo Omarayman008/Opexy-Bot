@@ -5,11 +5,6 @@ import lombok.*;
 
 @Entity
 @Table(name = "user_stats")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class UserStats {
 
     public UserStats() {}

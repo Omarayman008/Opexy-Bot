@@ -2,7 +2,6 @@ package com.integrafty.opexy.service.event;
 
 import com.integrafty.opexy.entity.UserStats;
 import com.integrafty.opexy.repository.UserStatsRepository;
-import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -13,10 +12,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.function.Consumer;
 
 @Service
-@RequiredArgsConstructor
 public class AchievementService {
 
     private final UserStatsRepository statsRepository;
+
+    public AchievementService(UserStatsRepository statsRepository) {
+        this.statsRepository = statsRepository;
+    }
 
     @Value("${opexy.roles.achievements.jinxed-bidder}")
     private String jinxedBidderId;
