@@ -52,10 +52,15 @@ public class PipePuzzleCommand implements MultiSlashCommand {
         String renderedGrid = pipePuzzleManager.startNewGame(event.getUser().getIdLong(), size);
 
         event.reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
-                .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("ENGINEERING", "لغز الأنابيب — صعوبة: " + difficulty, "قم بتوصيل الأنابيب للوصول إلى المخرج!\n\n" + renderedGrid, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN,
+                .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("ENGINEERING", "لغز الأنابيب — صعوبة: " + difficulty, "استخدم الأسهم للتحرك والزر الدائري لتدوير الأنبوب!\n\n" + renderedGrid, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN,
                         net.dv8tion.jda.api.components.actionrow.ActionRow.of(
-                                net.dv8tion.jda.api.components.buttons.Button.secondary("pipe_rot_1_1", "تدوير (1,1) 🔄"),
-                                net.dv8tion.jda.api.components.buttons.Button.secondary("pipe_rot_1_2", "تدوير (1,2) 🔄"),
+                                net.dv8tion.jda.api.components.buttons.Button.secondary("pipe_move_up", "🔼"),
+                                net.dv8tion.jda.api.components.buttons.Button.secondary("pipe_move_down", "🔽"),
+                                net.dv8tion.jda.api.components.buttons.Button.secondary("pipe_move_left", "◀️"),
+                                net.dv8tion.jda.api.components.buttons.Button.secondary("pipe_move_right", "▶️"),
+                                net.dv8tion.jda.api.components.buttons.Button.primary("pipe_rotate", "🔄")
+                        ),
+                        net.dv8tion.jda.api.components.actionrow.ActionRow.of(
                                 net.dv8tion.jda.api.components.buttons.Button.success("pipe_submit", "تحقق من الحل ✅")
                         )))
                 .useComponentsV2(true).build())
