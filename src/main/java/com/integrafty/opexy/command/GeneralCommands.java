@@ -218,11 +218,11 @@ public class GeneralCommands implements MultiSlashCommand {
                 ### ⚙️ General
                 `/ping`, `/roll`, `/colors`, `/translate`, `/get-emojis`
                 
+                ### 💰 Economy & Shop
+                `/balance`, `/transfer`, `/shop`
+                
                 ### 🎮 Minigames (For Everyone)
                 `/pipes`, `/speed`
-                
-                ### 🏆 Management Events (Staff Only)
-                `/mafia`, `/auction`
                 
                 ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
                 """;
