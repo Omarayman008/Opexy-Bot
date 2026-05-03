@@ -193,12 +193,12 @@ public class PipePuzzleManager extends ListenerAdapter {
     private boolean canConnect(char piece, int port) {
         // Ports: 0:Top, 1:Right, 2:Bottom, 3:Left
         return switch (piece) {
-            case '─' -> port == 1 || port == 3;
-            case '│' -> port == 0 || port == 2;
-            case '┌' -> port == 1 || port == 2;
-            case '┐' -> port == 2 || port == 3;
-            case '┘' -> port == 0 || port == 3;
-            case '└' -> port == 0 || port == 1;
+            case '═' -> port == 1 || port == 3;
+            case '║' -> port == 0 || port == 2;
+            case '╔' -> port == 1 || port == 2;
+            case '╗' -> port == 2 || port == 3;
+            case '╝' -> port == 0 || port == 3;
+            case '╚' -> port == 0 || port == 1;
             default -> false;
         };
     }
