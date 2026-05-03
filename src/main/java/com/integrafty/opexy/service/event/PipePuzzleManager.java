@@ -121,13 +121,47 @@ public class PipePuzzleManager extends ListenerAdapter {
             }
             sb.append("\n");
         }
-        sb.append("```");
+        sb.append("```\n🏁 **البداية**: أعلى اليسار | 🚩 **المخرج**: أسفل اليمين");
         return sb.toString();
     }
 
     private boolean isSolved(char[][] grid) {
-        // Logic for solving would be complex (pathfinding from start to end)
-        // For now, let's say it's solved if it's 20% likely (for testing) or just return false
-        return random.nextInt(100) < 5; 
+        int rows = grid.length;
+        int cols = grid[0].length;
+        boolean[][] visited = new boolean[rows][cols];
+        return hasPath(grid, 0, 0, rows - 1, cols - 1, visited);
+    }
+
+    private boolean hasPath(char[][] grid, int r, int c, int targetR, int targetC, boolean[][] visited) {
+        if (r == targetR && c == targetC) return true;
+        visited[r][c] = true;
+
+        int[][] dirs = {{-1, 0, 0, 2}, {0, 1, 1, 3}, {1, 0, 2, 0}, {0, -1, 3, 1}}; // Row, Col, OutPort, InPort
+        // Ports: 0:Top, 1:Right, 2:Bottom, 3:Left
+
+        for (int[] d : dirs) {
+            int nr = r + d[0];
+            int nc = c + d[1];
+
+            if (nr >= 0 && nr < grid.length && nc >= 0 && nc < grid[0].length && !visited[nr][nc]) {
+                if (canConnect(grid[r][c], d[2]) && canConnect(grid[nr][nc], d[3])) {
+                    if (hasPath(grid, nr, nc, targetR, targetC, visited)) return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean canConnect(char piece, int port) {
+        // Ports: 0:Top, 1:Right, 2:Bottom, 3:Left
+        return switch (piece) {
+            case '║' -> port == 0 || port == 2;
+            case '═' -> port == 1 || port == 3;
+            case '╔' -> port == 1 || port == 2;
+            case '╗' -> port == 3 || port == 2;
+            case '╝' -> port == 3 || port == 0;
+            case '╚' -> port == 1 || port == 0;
+            default -> false;
+        };
     }
 }
