@@ -28,20 +28,26 @@ public class PipePuzzleManager extends ListenerAdapter {
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
         String id = event.getComponentId();
-        if (id == null || !id.startsWith("pipe_")) return;
+        if (id == null || !id.startsWith("pipe_"))
+            return;
 
         long userId = event.getUser().getIdLong();
-        if (!games.containsKey(userId)) return;
+        if (!games.containsKey(userId))
+            return;
 
         char[][] grid = games.get(userId);
         int[] cursor = cursors.get(userId);
 
         if (id.startsWith("pipe_move_")) {
             String dir = id.replace("pipe_move_", "");
-            if (dir.equals("up") && cursor[0] > 0) cursor[0]--;
-            else if (dir.equals("down") && cursor[0] < grid.length - 1) cursor[0]++;
-            else if (dir.equals("left") && cursor[1] > 0) cursor[1]--;
-            else if (dir.equals("right") && cursor[1] < grid[0].length - 1) cursor[1]++;
+            if (dir.equals("up") && cursor[0] > 0)
+                cursor[0]--;
+            else if (dir.equals("down") && cursor[0] < grid.length - 1)
+                cursor[0]++;
+            else if (dir.equals("left") && cursor[1] > 0)
+                cursor[1]--;
+            else if (dir.equals("right") && cursor[1] < grid[0].length - 1)
+                cursor[1]++;
             updateGame(event, grid, cursor);
         } else if (id.equals("pipe_rotate")) {
             grid[cursor[0]][cursor[1]] = rotatePiece(grid[cursor[0]][cursor[1]]);
@@ -63,7 +69,7 @@ public class PipePuzzleManager extends ListenerAdapter {
     public String startNewGame(long userId, int size) {
         char[][] grid = generateGrid(size);
         games.put(userId, grid);
-        cursors.put(userId, new int[]{1, 1});
+        cursors.put(userId, new int[] { 1, 1 });
         return renderGrid(grid, 1, 1);
     }
 
@@ -71,39 +77,32 @@ public class PipePuzzleManager extends ListenerAdapter {
         String renderedGrid = renderGrid(grid, cursor[0], cursor[1]);
 
         event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
-                .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("ENGINEERING", "لغز الأنابيب — قيد الحل", "استخدم الأسهم للتحرك والزر الدائري لتدوير الأنبوب!\n\n" + renderedGrid, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN,
+                .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("ENGINEERING",
+                        "لغز الأنابيب — قيد الحل",
+                        "استخدم الأسهم للتحرك والزر الدائري لتدوير الأنبوب!\n\n" + renderedGrid,
+                        com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN,
                         net.dv8tion.jda.api.components.actionrow.ActionRow.of(
                                 net.dv8tion.jda.api.components.buttons.Button.secondary("pipe_move_up", "🔼"),
                                 net.dv8tion.jda.api.components.buttons.Button.secondary("pipe_move_down", "🔽"),
                                 net.dv8tion.jda.api.components.buttons.Button.secondary("pipe_move_left", "◀️"),
                                 net.dv8tion.jda.api.components.buttons.Button.secondary("pipe_move_right", "▶️"),
-                                net.dv8tion.jda.api.components.buttons.Button.primary("pipe_rotate", "🔄")
-                        ),
+                                net.dv8tion.jda.api.components.buttons.Button.primary("pipe_rotate", "🔄")),
                         net.dv8tion.jda.api.components.actionrow.ActionRow.of(
-                                net.dv8tion.jda.api.components.buttons.Button.success("pipe_submit", "تحقق من الحل ✅")
-                        )))
+                                net.dv8tion.jda.api.components.buttons.Button.success("pipe_submit",
+                                        "تحقق من الحل ✅"))))
                 .useComponentsV2(true).build())
                 .useComponentsV2(true).queue();
     }
 
-    public String renderGrid(char[][] grid, int cursorR, int cursorC) {
-        StringBuilder sb = new StringBuilder("```ansi\n");
-        sb.append("🏁\n");
-        for (int i = 0; i < grid.length; i++) {
-            for (int j = 0; j < grid[i].length; j++) {
-                if (i == cursorR && j == cursorC) {
-                    // Highlight cursor piece in Cyan Bold
-                    sb.append("\u001B[1;36m").append(grid[i][j]).append("\u001B[0m");
-                } else {
-                    sb.append(grid[i][j]);
-                }
+    private char[][] generateGrid(int size) {
+        char[] pieces = { '═', '║', '╔', '╗', '╚', '╝' };
+        char[][] grid = new char[size][size];
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                grid[i][j] = pieces[random.nextInt(pieces.length)];
             }
-            sb.append("\n");
         }
-        for (int j = 0; j < grid[0].length - 1; j++) sb.append(" ");
-        sb.append("🚩\n");
-        sb.append("```");
-        return sb.toString();
+        return grid;
     }
 
     private char rotatePiece(char piece) {
@@ -118,28 +117,25 @@ public class PipePuzzleManager extends ListenerAdapter {
         };
     }
 
-    private char[][] generateGrid(int size) {
-        char[][] grid = new char[size][size];
-        char[] allPieces = {'═', '║', '╔', '╗', '╚', '╝'};
-        
-        // 1. Initialize with random pieces
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                grid[i][j] = allPieces[random.nextInt(allPieces.length)];
+    public String renderGrid(char[][] grid, int cursorR, int cursorC) {
+        StringBuilder sb = new StringBuilder("```\n");
+        sb.append("🏁\n"); // Start Indicator
+        for (int i = 0; i < grid.length; i++) {
+            for (int j = 0; j < grid[i].length; j++) {
+                if (i == cursorR && j == cursorC) {
+                    sb.append(">").append(grid[i][j]).append("<");
+                } else {
+                    sb.append(" ").append(grid[i][j]).append(" ");
+                }
             }
+            sb.append("\n");
         }
-
-        // 2. Force a path from (0,0) to (size-1, size-1)
-        // Simple L-shape path for guaranteed solvability
-        for (int j = 0; j < size; j++) grid[0][j] = '═';
-        for (int i = 0; i < size; i++) grid[i][size-1] = '║';
-        
-        // Fix corners
-        grid[0][size-1] = '╗';
-        grid[0][0] = '═'; // Start
-        grid[size-1][size-1] = '║'; // End
-
-        return grid;
+        // End Indicator at the bottom right
+        for (int j = 0; j < grid[0].length - 1; j++)
+            sb.append("   ");
+        sb.append(" 🚩\n");
+        sb.append("```");
+        return sb.toString();
     }
 
     private boolean isSolved(char[][] grid) {
@@ -150,10 +146,12 @@ public class PipePuzzleManager extends ListenerAdapter {
     }
 
     private boolean hasPath(char[][] grid, int r, int c, int targetR, int targetC, boolean[][] visited) {
-        if (r == targetR && c == targetC) return true;
+        if (r == targetR && c == targetC)
+            return true;
         visited[r][c] = true;
 
-        int[][] dirs = {{-1, 0, 0, 2}, {0, 1, 1, 3}, {1, 0, 2, 0}, {0, -1, 3, 1}}; // Row, Col, OutPort, InPort
+        int[][] dirs = { { -1, 0, 0, 2 }, { 0, 1, 1, 3 }, { 1, 0, 2, 0 }, { 0, -1, 3, 1 } }; // Row, Col, OutPort,
+                                                                                             // InPort
         // Ports: 0:Top, 1:Right, 2:Bottom, 3:Left
 
         for (int[] d : dirs) {
@@ -162,7 +160,8 @@ public class PipePuzzleManager extends ListenerAdapter {
 
             if (nr >= 0 && nr < grid.length && nc >= 0 && nc < grid[0].length && !visited[nr][nc]) {
                 if (canConnect(grid[r][c], d[2]) && canConnect(grid[nr][nc], d[3])) {
-                    if (hasPath(grid, nr, nc, targetR, targetC, visited)) return true;
+                    if (hasPath(grid, nr, nc, targetR, targetC, visited))
+                        return true;
                 }
             }
         }

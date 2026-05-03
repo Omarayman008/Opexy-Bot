@@ -26,6 +26,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class InfoCommands implements MultiSlashCommand {
 
+    private final com.integrafty.opexy.service.event.AchievementService achievementService;
+    private final com.integrafty.opexy.service.EconomyService economyService;
+
     @Override
     public List<SlashCommandData> getCommandDataList() {
         List<SlashCommandData> list = new ArrayList<>();
@@ -72,6 +75,9 @@ public class InfoCommands implements MultiSlashCommand {
         Member m = event.getOption("user") != null ? event.getOption("user").getAsMember() : event.getMember();
         if (m == null) return;
 
+        com.integrafty.opexy.entity.UserStats stats = achievementService.getStats(m.getIdLong());
+        long balance = economyService.getBalance(m.getId(), event.getGuild().getId());
+
         long created = m.getUser().getTimeCreated().toEpochSecond();
         long joined = m.getTimeJoined().toEpochSecond();
 
@@ -81,11 +87,20 @@ public class InfoCommands implements MultiSlashCommand {
                 .collect(Collectors.joining(" "));
         if (roles.isEmpty()) roles = "None";
 
+        String inventory = String.format("""
+                ▫️ **Opex Balance:** `%d` 🪙
+                ▫️ **Mafia Shield:** `%d` 🛡️
+                ▫️ **Double Reward:** `%s` 💰
+                """, balance, stats.getShieldCount(), stats.isDoubleRewardActive() ? "Active" : "None");
+
         String desc = String.format("""
                 ### 👤 Operative Identity
                 ▫️ **Profile:** %s
                 ▫️ **Identifier:** `%s`
                 ▫️ **Status:** `%s`
+                
+                ### 📦 Shop Assets
+                %s
                 
                 ### 📅 History
                 ▫️ **Registered:** <t:%d:R>
@@ -93,7 +108,7 @@ public class InfoCommands implements MultiSlashCommand {
                 
                 ### 🛡️ Authority
                 %s
-                """, m.getUser().getAsMention(), m.getUser().getId(), m.getOnlineStatus().name(), created, joined, roles);
+                """, m.getUser().getAsMention(), m.getUser().getId(), m.getOnlineStatus().name(), inventory, created, joined, roles);
 
         reply(event, EmbedUtil.containerBranded("IDENTITY", "User Metrics", desc, m.getUser().getEffectiveAvatarUrl()));
     }
