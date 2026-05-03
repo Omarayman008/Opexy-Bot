@@ -198,4 +198,12 @@ public class AuctionManager extends ListenerAdapter {
         guildId = null;
         if (endTask != null) endTask.cancel(false);
     }
+
+    public void stopAuction() {
+        if (endTask != null) endTask.cancel(true);
+        eventManager.endGroupEvent();
+        this.currentHighestBid = 0;
+        this.highestBidderId = 0;
+        this.activeMessageId = null;
+    }
 }

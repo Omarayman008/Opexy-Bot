@@ -60,12 +60,6 @@ public class MafiaManager extends ListenerAdapter {
                 return;
             }
             startGame(event);
-        } else if (id.equals("mafia_stop")) {
-            eventManager.endGroupEvent();
-            event.editMessage("🛑 تم إغلاق الفعالية من قبل الإدارة.")
-                    .setComponents(Collections.emptyList())
-                    .queue();
-            return;
         } else if (id.startsWith("mafia_action_")) {
             handleAction(event);
         } else if (id.startsWith("mafia_vote_")) {
@@ -86,8 +80,7 @@ public class MafiaManager extends ListenerAdapter {
                 .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("GAME", "🕵️ لعبة المافيا — Mafia Game", body, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN,
                         net.dv8tion.jda.api.components.actionrow.ActionRow.of(
                                 net.dv8tion.jda.api.components.buttons.Button.primary("mafia_join", "انضمام ✋"),
-                                net.dv8tion.jda.api.components.buttons.Button.danger("mafia_start", "بدء اللعبة (المنظم فقط) 🚀"),
-                                net.dv8tion.jda.api.components.buttons.Button.secondary("mafia_stop", "إغلاق الفعالية 🛑")
+                                net.dv8tion.jda.api.components.buttons.Button.danger("mafia_start", "بدء اللعبة (المنظم فقط) 🚀")
                         )))
                 .useComponentsV2(true).build())
                 .useComponentsV2(true).queue();
@@ -292,7 +285,11 @@ public class MafiaManager extends ListenerAdapter {
                 if (role == MafiaGame.Role.CITIZEN) s.setCitizenCount(s.getCitizenCount() + 1);
             });
         }
-        
         currentGame = null;
+    }
+
+    public void stopGame() {
+        eventManager.endGroupEvent();
+        this.currentGame = null;
     }
 }

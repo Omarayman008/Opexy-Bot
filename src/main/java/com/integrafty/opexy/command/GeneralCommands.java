@@ -34,37 +34,42 @@ public class GeneralCommands implements MultiSlashCommand {
     private final TranslationService translationService;
     private final com.integrafty.opexy.service.EconomyService economyService;
     private final com.integrafty.opexy.service.event.EventManager eventManager;
+    private final com.integrafty.opexy.service.event.AuctionManager auctionManager;
+    private final com.integrafty.opexy.service.event.MafiaManager mafiaManager;
 
     @Override
     public List<SlashCommandData> getCommandDataList() {
         List<SlashCommandData> list = new ArrayList<>();
 
-        list.add(Commands.slash("help", "قـــائـــمـــة الـــمـــســـاعـــدة الـــخـــاصـــة بـــالـــبـــوت"));
-        list.add(Commands.slash("ping", "عـــرض ســـرعـــة اتـــصـــال الـــبـــوت الـــحـــالـــيـــة"));
-        list.add(Commands.slash("roll", "رمـــي حـــجـــر الـــنـــرد الـــعـــشـــوائـــي"));
-        list.add(Commands.slash("balance", "عـــرض رصـــيـــدك الـــحـــالـــي مـــن الـ opex")
-                .addOption(OptionType.USER, "user", "الـــمـــســـتـــخـــدم الـــذي تـــود رؤيـــة رصـــيـــده", false));
+        list.add(Commands.slash("help", "عـــرض قـــائـــمـــة الأوامـــر"));
+        list.add(Commands.slash("ping", "عـــرض ســـرعـــة اتـــصـــال الـــبـــوت"));
+        list.add(Commands.slash("roll", "رمـــي حـــجـــر الـــنـــرد (1-100)"));
+        list.add(Commands.slash("balance", "عـــرض رصـــيـــدك الـــحـــالـــي")
+                .addOption(OptionType.USER, "user", "الـــمـــســـتـــخـــدم الـــمـــراد عـــرض رصـــيـــده", false));
         
-        list.add(Commands.slash("colors", "عـــرض رتـــب الألـــوان الـــمـــتـــاحـــة فـــي الـــســـيـــرفـــر"));
-        list.add(Commands.slash("color-set", "تـــحـــديـــد لـــون رتـــبـــتـــك الـــخـــاصـــة")
-                .addOption(OptionType.STRING, "role", "اخـــتـــر رتـــبـــة الـــلـــون", true, true));
+        list.add(Commands.slash("colors", "عـــرض جـــمـــيـــع الألـــوان الـــمـــتـــاحـــة"));
+        list.add(Commands.slash("color-set", "تـــغـــيـــيـــر لـــون اســـمـــك")
+                .addOption(OptionType.STRING, "color_id", "أي دي الـــلـــون", true));
 
-        list.add(Commands.slash("translate", "تـــرجـــمـــة الـــنـــص إلـــى لـــغـــة مـــعـــيـــنـــة")
-                .addOption(OptionType.STRING, "text", "الـــنـــص", true)
-                .addOption(OptionType.STRING, "language", "الـــلـــغـــة", true));
+        list.add(Commands.slash("translate", "تـــرجـــمـــة نـــص إلـــى الـــعـــربـــيـــة")
+                .addOption(OptionType.STRING, "text", "الـــنـــص الـــمـــراد تـــرجـــمـــتـــه", true));
 
-        list.add(Commands.slash("get-emojis", "الـــحـــصـــول عـــلـــى تـــفـــاصـــيـــل الإيـــمـــوجـــي الـــمـــســـتـــخـــدم")
-                .addOption(OptionType.STRING, "emoji", "الإيـــمـــوجـــي", true));
+        list.add(Commands.slash("get-emojis", "ســـحـــب جـــمـــيـــع إيـــمـــوجـــيـــات الـــســـيـــرفـــر")
+                .addOption(OptionType.STRING, "guild_id", "أي دي الـــســـيـــرفـــر", true));
 
-        list.add(Commands.slash("give", "إعـــطـــاء رصـــيـــد لـــمـــســـتـــخـــدم (خـــاص بـــالادارة)")
-                .addOption(OptionType.USER, "user", "الـــمـــســـتـــخـــدم", true)
+        list.add(Commands.slash("give", "شـــحـــن رصـــيـــد لـــعـــضـــو (خاص بالإدارة)")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
                 .addOption(OptionType.INTEGER, "amount", "الـــمـــبـــلـــغ", true));
 
         list.add(Commands.slash("transfer", "تـــحـــويـــل رصـــيـــد لـــمـــســـتـــخـــدم آخـــر")
                 .addOption(OptionType.USER, "user", "الـــمـــســـتـــخـــدم الـــمـــرســـل إلـــيـــه", true)
                 .addOption(OptionType.INTEGER, "amount", "الـــمـــبـــلـــغ الـــمـــراد تـــحـــويـــلـــه", true));
 
-        list.add(Commands.slash("kill", "إيقاف أي فعالية جماعية قائمة حالياً (خاص بالإدارة)"));
+        list.add(Commands.slash("kill", "إيقاف فعالية جماعية قائمة حالياً (خاص بالإدارة)")
+                .addOptions(new net.dv8tion.jda.api.interactions.commands.build.OptionData(OptionType.STRING, "type", "نوع الفعالية المراد إيقافها", false)
+                        .addChoice("المزاد (Auction)", "auction")
+                        .addChoice("المافيا (Mafia)", "mafia")
+                        .addChoice("الكل (All)", "all")));
 
         return list;
     }
@@ -97,15 +102,20 @@ public class GeneralCommands implements MultiSlashCommand {
             return;
         }
 
-        if (!eventManager.getGroupEventActive().get()) {
-            replyEphemeral(event, EmbedUtil.error("NO ACTIVE EVENT", "لا توجد فعالية جماعية قائمة حالياً ليتم إيقافها."));
-            return;
+        String type = event.getOption("type") != null ? event.getOption("type").getAsString() : "all";
+
+        if (type.equals("auction") || type.equals("all")) {
+            auctionManager.stopAuction();
+        }
+        if (type.equals("mafia") || type.equals("all")) {
+            mafiaManager.stopGame();
+        }
+        
+        if (type.equals("all")) {
+            eventManager.endGroupEvent();
         }
 
-        String eventName = eventManager.getActiveEventName();
-        eventManager.endGroupEvent();
-        
-        reply(event, EmbedUtil.success("TERMINATION", "تم إيقاف فعالية **" + (eventName != null ? eventName : "غير معروفة") + "** قسرياً بنجاح."));
+        reply(event, EmbedUtil.success("TERMINATION", "تم إيقاف الفعاليات المحددة (" + type + ") قسرياً بنجاح."));
     }
 
     private void handleGive(SlashCommandInteractionEvent event) {
