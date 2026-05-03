@@ -1,6 +1,7 @@
 package com.integrafty.opexy.command;
 
 import com.integrafty.opexy.command.base.SlashCommand;
+import com.integrafty.opexy.command.base.MultiSlashCommand;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -20,24 +21,38 @@ public class CommandHandler extends ListenerAdapter {
 
     private final JDA jda;
     private final List<SlashCommand> commands;
-    private Map<String, SlashCommand> commandMap;
+    private final List<MultiSlashCommand> multiCommands;
+    private Map<String, Object> commandMap;
 
     @PostConstruct
     public void init() {
         jda.addEventListener(this);
-        // Map commands by name for fast lookup
-        commandMap = commands.stream().collect(Collectors.toMap(SlashCommand::getName, c -> c));
-        log.info("Initialized CommandHandler with {} modular commands.", commands.size());
+        commandMap = new java.util.HashMap<>();
+        
+        // Register single commands
+        for (SlashCommand cmd : commands) {
+            commandMap.put(cmd.getName(), cmd);
+        }
+        
+        // Register multi commands
+        for (MultiSlashCommand mcmd : multiCommands) {
+            for (var data : mcmd.getCommandDataList()) {
+                commandMap.put(data.getName(), mcmd);
+            }
+        }
+        
+        log.info("Initialized CommandHandler with {} single and {} multi-command modules.", commands.size(), multiCommands.size());
     }
 
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         String commandName = event.getName();
         
-        SlashCommand command = commandMap.get(commandName);
+        Object command = commandMap.get(commandName);
         if (command != null) {
-            log.info("Executing modular command: {} for user {}", commandName, event.getUser().getAsTag());
-            command.execute(event);
+            log.info("Executing command: {} for user {}", commandName, event.getUser().getAsTag());
+            if (command instanceof SlashCommand sc) sc.execute(event);
+            else if (command instanceof MultiSlashCommand msc) msc.execute(event);
         } else {
             // Default response for unimplemented commands
             event.reply("❌ عذراً، هذا الأمر (" + commandName + ") غير مدعوم حالياً.").setEphemeral(true).queue();

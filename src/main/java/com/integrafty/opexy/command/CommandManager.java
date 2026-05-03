@@ -1,6 +1,7 @@
 package com.integrafty.opexy.command;
 
 import com.integrafty.opexy.command.base.SlashCommand;
+import com.integrafty.opexy.command.base.MultiSlashCommand;
 import com.integrafty.opexy.listener.DiscordEventListener;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class CommandManager extends ListenerAdapter {
     private final JDA jda;
     private final DiscordEventListener discordEventListener;
     private final List<SlashCommand> commands;
+    private final List<MultiSlashCommand> multiCommands;
 
     @PostConstruct
     public void init() {
@@ -38,11 +40,21 @@ public class CommandManager extends ListenerAdapter {
     }
 
     private void registerCommands() {
-        log.info("Registering {} modular slash commands...", commands.size());
+        log.info("Registering modular slash commands...");
         
-        var commandDataList = commands.stream()
-                .map(SlashCommand::getCommandData)
-                .collect(Collectors.toList());
+        var commandDataList = new java.util.ArrayList<net.dv8tion.jda.api.interactions.commands.build.SlashCommandData>();
+        
+        // Add single commands
+        for (SlashCommand cmd : commands) {
+            commandDataList.add(cmd.getCommandData());
+        }
+        
+        // Add multi commands
+        for (MultiSlashCommand mcmd : multiCommands) {
+            commandDataList.addAll(mcmd.getCommandDataList());
+        }
+        
+        log.info("Total commands to register: {}", commandDataList.size());
 
         // Fetch Guild ID from config (or environment)
         String guildId = System.getenv("DISCORD_GUILD_ID");
