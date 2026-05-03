@@ -111,17 +111,21 @@ public class PipePuzzleManager extends ListenerAdapter {
 
     public String renderGrid(char[][] grid, int cursorR, int cursorC) {
         StringBuilder sb = new StringBuilder("```\n");
+        sb.append("🏁\n"); // Start Indicator
         for (int i = 0; i < grid.length; i++) {
             for (int j = 0; j < grid[i].length; j++) {
                 if (i == cursorR && j == cursorC) {
-                    sb.append("[").append(grid[i][j]).append("]");
+                    sb.append(">").append(grid[i][j]).append("<");
                 } else {
                     sb.append(" ").append(grid[i][j]).append(" ");
                 }
             }
             sb.append("\n");
         }
-        sb.append("```\n🏁 **البداية**: أعلى اليسار | 🚩 **المخرج**: أسفل اليمين");
+        // End Indicator at the bottom right
+        for (int j = 0; j < grid[0].length - 1; j++) sb.append("   ");
+        sb.append(" 🚩\n");
+        sb.append("```");
         return sb.toString();
     }
 
