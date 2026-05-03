@@ -100,7 +100,7 @@ public class PipePuzzleManager extends ListenerAdapter {
 
     private char[][] generateGrid(int size) {
         char[][] grid = new char[size][size];
-        char[] allPieces = {'─', '│', '┌', '┐', '┘', '└'};
+        char[] allPieces = {'═', '║', '╔', '╗', '╝', '╚'};
         
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
@@ -108,15 +108,16 @@ public class PipePuzzleManager extends ListenerAdapter {
             }
         }
 
-        // Guaranteed path (L-shape)
-        for (int j = 0; j < size; j++) grid[0][j] = '─';
-        for (int i = 0; i < size; i++) grid[i][size-1] = '│';
-        grid[0][size-1] = '┐';
+        // Guaranteed path (Top-Left to Bottom-Right)
+        for (int i = 0; i < size; i++) grid[i][0] = '║'; 
+        grid[size-1][0] = '╚';
+        for (int j = 1; j < size - 1; j++) grid[size-1][j] = '═';
+        grid[size-1][size-1] = '╝'; 
         
-        // Scramble the grid (Rotate every piece randomly)
+        // Scramble the grid
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
-                int rotations = random.nextInt(3) + 1;
+                int rotations = random.nextInt(4);
                 for (int k = 0; k < rotations; k++) {
                     grid[i][j] = rotatePiece(grid[i][j]);
                 }
@@ -128,12 +129,12 @@ public class PipePuzzleManager extends ListenerAdapter {
 
     private char rotatePiece(char piece) {
         return switch (piece) {
-            case '─' -> '│';
-            case '│' -> '─';
-            case '┌' -> '┐';
-            case '┐' -> '┘';
-            case '┘' -> '└';
-            case '└' -> '┌';
+            case '═' -> '║';
+            case '║' -> '═';
+            case '╔' -> '╗';
+            case '╗' -> '╝';
+            case '╝' -> '╚';
+            case '╚' -> '╔';
             default -> piece;
         };
     }
@@ -160,6 +161,12 @@ public class PipePuzzleManager extends ListenerAdapter {
     private boolean isSolved(char[][] grid) {
         int rows = grid.length;
         int cols = grid[0].length;
+        
+        // Start piece must connect to TOP (Port 0)
+        if (!canConnect(grid[0][0], 0)) return false;
+        // End piece must connect to BOTTOM (Port 2)
+        if (!canConnect(grid[rows-1][cols-1], 2)) return false;
+
         boolean[][] visited = new boolean[rows][cols];
         return hasPath(grid, 0, 0, rows - 1, cols - 1, visited);
     }
