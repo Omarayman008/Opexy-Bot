@@ -68,7 +68,7 @@ public class AuctionCommand implements MultiSlashCommand {
 
         auctionManager.startAuction(prize);
 
-        String body = "تم بدء مزاد على **" + prize + "**! 📦\n\n**القوانين:**\n• المزايدة تبدأ بـ 10 opex.\n• المزايدة الأعلى تفوز بالمحتوى.\n• قد يحتوي الصندوق على مفاجآت!";
+        String body = "تم بدء مزاد على **جائزة غامضة**! 📦\n\n**القوانين:**\n• المزايدة تبدأ بـ 10 opex.\n• المزايدة الأعلى تفوز بالمحتوى.\n• المحتوى سيبقى مجهولاً حتى نهاية المزاد!";
 
         event.reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
                 .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("AUCTION", "🏆 المزاد الأعمى — Blind Auction", body, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN,

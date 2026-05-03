@@ -68,7 +68,7 @@ public class AuctionManager extends ListenerAdapter {
         resetTimer(event);
 
         // Update Message
-        String body = "تم بدء مزاد على **" + currentPrize + "**! 📦\n\n**القوانين:**\n• المزايدة تبدأ بـ 10 opex.\n• المزايدة الأعلى تفوز بالمحتوى.\n\n" +
+        String body = "تم بدء مزاد على **جائزة غامضة**! 📦\n\n**القوانين:**\n• المزايدة تبدأ بـ 10 opex.\n• المزايدة الأعلى تفوز بالمحتوى.\n\n" +
                       "👤 المزايد الحالي: <@" + userId + ">\n💰 أعلى سعر: **" + newTotal + " opex**";
 
         event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
