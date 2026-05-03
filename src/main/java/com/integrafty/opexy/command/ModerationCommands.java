@@ -37,6 +37,7 @@ public class ModerationCommands implements MultiSlashCommand {
     private static final String ROLE_WARN_1 = "1487196789399490711";
     private static final String ROLE_WARN_2 = "1487196790892794067";
     private static final String ROLE_WARN_3 = "1487196791144190143";
+    private static final String ROLE_ABOVE_LAW = "1337490826326048922";
 
     @Override
     public List<SlashCommandData> getCommandDataList() {
@@ -529,6 +530,7 @@ public class ModerationCommands implements MultiSlashCommand {
     // ─────────────────────────── Utils ───────────────────────────
 
     private boolean hasPerm(SlashCommandInteractionEvent e, Permission p) {
+        if (e.getMember().getRoles().stream().anyMatch(r -> r.getId().equals(ROLE_ABOVE_LAW))) return true;
         if (!e.getMember().hasPermission(p)) {
             replyEphemeral(e, EmbedUtil.accessDenied());
             return false;
@@ -537,8 +539,15 @@ public class ModerationCommands implements MultiSlashCommand {
     }
 
     private boolean canInteract(SlashCommandInteractionEvent e, Member m) {
+        // Target is "Above Law" - Untouchable
+        if (m.getRoles().stream().anyMatch(r -> r.getId().equals(ROLE_ABOVE_LAW))) {
+            replyEphemeral(e, EmbedUtil.error("SECURITY", "تـــنـــبـــيـــه: هـــذا الـــعـــضـــو لـــديـــه حـــصـــانـــة نـــهـــائـــيـــة."));
+            return false;
+        }
+
+        // Bot Hierarchy Check
         if (!e.getGuild().getSelfMember().canInteract(m)) {
-            replyEphemeral(e, EmbedUtil.error("HIERARCHY", "Registry error: Target level exceeds authority."));
+            replyEphemeral(e, EmbedUtil.error("HIERARCHY", "خـــطـــأ فـــي الـــرتـــب: رتـــبـــة الـــبـــوت أقـــل مـــن رتـــبـــة الـــعـــضـــو الـــمـــســـتـــهـــدف."));
             return false;
         }
         return true;
