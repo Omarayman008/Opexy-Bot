@@ -8,7 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.emoji.CustomEmoji;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -40,7 +42,7 @@ public class GeneralCommands implements MultiSlashCommand {
         
         list.add(Commands.slash("colors", "عـــرض رتـــب الألـــوان الـــمـــتـــاحـــة فـــي الـــســـيـــرفـــر"));
         list.add(Commands.slash("color-set", "تـــحـــديـــد لـــون رتـــبـــتـــك الـــخـــاصـــة")
-                .addOption(OptionType.ROLE, "role", "اخـــتـــر رتـــبـــة الـــلـــون", true));
+                .addOption(OptionType.STRING, "role", "اخـــتـــر رتـــبـــة الـــلـــون", true, true));
 
         list.add(Commands.slash("translate", "تـــرجـــمـــة الـــنـــص إلـــى لـــغـــة مـــعـــيـــنـــة")
                 .addOption(OptionType.STRING, "text", "الـــنـــص", true)
@@ -67,6 +69,33 @@ public class GeneralCommands implements MultiSlashCommand {
         }
     }
 
+    @Override
+    public void onAutoComplete(CommandAutoCompleteInteractionEvent event) {
+        if (event.getName().equals("color-set") && event.getFocusedOption().getName().equals("role")) {
+            List<Role> colorRoles = event.getGuild().getRoles().stream()
+                    .filter(this::isColorRole)
+                    .limit(25)
+                    .collect(Collectors.toList());
+
+            List<Command.Choice> choices = colorRoles.stream()
+                    .filter(role -> role.getName().toLowerCase().contains(event.getFocusedOption().getValue().toLowerCase()))
+                    .map(role -> new Command.Choice(role.getName(), role.getId()))
+                    .limit(25)
+                    .collect(Collectors.toList());
+
+            event.replyChoices(choices).queue();
+        }
+    }
+
+    private boolean isColorRole(Role role) {
+        // A color role usually has no permissions and is not a separator (no ---)
+        // Also exclude @everyone
+        return !role.isPublicRole() && 
+               !role.getName().contains("---") && 
+               !role.getName().contains("Roles") &&
+               role.getPermissions().isEmpty();
+    }
+
     private void handleHelp(SlashCommandInteractionEvent event) {
         String body = """
                 ### 🛡️ Moderation
@@ -78,25 +107,52 @@ public class GeneralCommands implements MultiSlashCommand {
                 ### ⚙️ General
                 `/ping`, `/roll`, `/colors`, `/translate`, `/get-emojis`
                 
-                *Use `/` to see all available commands and their descriptions.*
+                ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
                 """;
-        reply(event, EmbedUtil.containerBranded("Opexy Hub", "System Directory", body, EmbedUtil.BANNER_MAIN));
+
+        Container container = EmbedUtil.containerBranded("SYSTEM", "Bot Assistance", body, EmbedUtil.BANNER_MAIN);
+        reply(event, container);
     }
 
     private void handlePing(SlashCommandInteractionEvent event) {
         long gatewayPing = event.getJDA().getGatewayPing();
-        reply(event, EmbedUtil.containerBranded("SYSTEM", "Latency Protocol", "### 📡 Status\nGateway Ping: `" + gatewayPing + "ms`", EmbedUtil.BANNER_MAIN));
+        String body = String.format("""
+                ### 📶 ســـرعـــة الاتـــصـــال | BOT LATENCY
+                ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+                
+                ▫️ **Gateway Latency:** `%dms`
+                ▫️ **API Latency:** `Calculating...`
+                
+                ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+                """, gatewayPing);
+
+        long startTime = System.currentTimeMillis();
+        event.reply(new MessageCreateBuilder().setComponents(EmbedUtil.containerBranded("NETWORK", "Ping Check", body, EmbedUtil.BANNER_MAIN)).useComponentsV2(true).build())
+             .useComponentsV2(true)
+             .queue(msg -> {
+                 long apiPing = System.currentTimeMillis() - startTime;
+                 String updatedBody = String.format("""
+                         ### 📶 ســـرعـــة الاتـــصـــال | BOT LATENCY
+                         ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+                         
+                         ▫️ **Gateway Latency:** `%dms`
+                         ▫️ **API Latency:** `%dms`
+                         
+                         ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+                         """, gatewayPing, apiPing);
+                 msg.editOriginal(new MessageEditBuilder().setComponents(EmbedUtil.containerBranded("NETWORK", "Ping Check", updatedBody, EmbedUtil.BANNER_MAIN)).useComponentsV2(true).build()).useComponentsV2(true).queue();
+             });
     }
 
     private void handleRoll(SlashCommandInteractionEvent event) {
-        int res = new Random().nextInt(6) + 1;
-        reply(event, EmbedUtil.containerBranded("GAME", "Dice Roll", "### 🎲 Result\nYou rolled a **" + res + "**", EmbedUtil.BANNER_MAIN));
+        int result = new Random().nextInt(100) + 1;
+        reply(event, EmbedUtil.success("Random Luck", "Your dice roll result is: **" + result + "**"));
     }
 
     private static final Map<String, String> COLOR_ROLES = Map.of(
-        "color_red", "1499885720209195059",
-        "color_turquoise", "1499885336703275029",
-        "color_orange", "1499885645563166914",
+        "color_red", "1499884576397316106",
+        "color_turquoise", "1499884694936735744",
+        "color_orange", "1499884764042072115",
         "color_gray", "1499885533277589656",
         "color_navy", "1499885778413813810",
         "color_blurple", "1499884810338832394",
@@ -131,23 +187,21 @@ public class GeneralCommands implements MultiSlashCommand {
     }
 
     private void handleColorSet(SlashCommandInteractionEvent event) {
-        Role targetRole = event.getOption("role").getAsRole();
+        String roleId = event.getOption("role").getAsString();
+        Role targetRole = event.getGuild().getRoleById(roleId);
 
         if (targetRole == null) {
-            replyEphemeral(event, EmbedUtil.error("INVALID SELECTION", "الـــرتـــبـــة الـــمـــخـــتـــارة غـــيـــر صـــحـــيـــحـــة."));
+            replyEphemeral(event, EmbedUtil.error("INVALID SELECTION", "الـــرتـــبـــة الـــمـــخـــتـــارة غـــيـــر صـــحـــيـــحـــة. يـــرجـــى الاخـــتـــيـــار مـــن الـــقـــائـــمـــة."));
             return;
         }
 
-        // Optional: Check if the role is a "Color" role (e.g. has no permissions or specific name)
-        // For now, we trust the user's selection but we remove other roles that are numeric-named
-        // as per the previous logic's pattern.
-
-        // Remove old color roles (assuming roles named with numbers are color roles)
-        List<Role> oldColors = event.getMember().getRoles().stream()
-                .filter(r -> r.getName().matches("\\d+"))
+        // Identify all "Color Roles" currently on the member to remove them
+        List<Role> currentMemberRoles = event.getMember().getRoles();
+        List<Role> colorRolesToRemove = currentMemberRoles.stream()
+                .filter(this::isColorRole)
                 .collect(Collectors.toList());
         
-        for (Role r : oldColors) {
+        for (Role r : colorRolesToRemove) {
             if (!r.equals(targetRole)) {
                 event.getGuild().removeRoleFromMember(event.getMember(), r).queue();
             }

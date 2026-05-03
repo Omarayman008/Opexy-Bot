@@ -58,4 +58,14 @@ public class CommandHandler extends ListenerAdapter {
             event.reply("❌ عذراً، هذا الأمر (" + commandName + ") غير مدعوم حالياً.").setEphemeral(true).queue();
         }
     }
+
+    @Override
+    public void onCommandAutoCompleteInteraction(net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent event) {
+        String commandName = event.getName();
+        Object command = commandMap.get(commandName);
+        
+        if (command instanceof MultiSlashCommand msc) {
+            msc.onAutoComplete(event);
+        }
+    }
 }
