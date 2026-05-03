@@ -78,9 +78,12 @@ public class PipePuzzleManager extends ListenerAdapter {
         if (hasPath(grid, 0, 0, rows - 1, cols - 1, visited)) {
             games.remove(userId);
             cursors.remove(userId);
-            event.editMessage("🎉 مبروك! لقد قمت بحل اللغز بنجاح!")
-                    .setComponents(Collections.emptyList())
-                    .queue();
+            
+            event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+                    .setComponents(com.integrafty.opexy.utils.EmbedUtil.success("تم الحل", "🎉 مبروك! لقد قمت بحل اللغز بنجاح!"))
+                    .useComponentsV2(true).build())
+                    .useComponentsV2(true).queue();
+            
             achievementService.updateStats(userId, event.getGuild(), s -> s.setPipeWins(s.getPipeWins() + 1));
         } else {
             event.reply("❌ المسار غير مكتمل! تأكد من أن جميع الأنابيب متصلة ببعضها البعض.").setEphemeral(true).queue();
