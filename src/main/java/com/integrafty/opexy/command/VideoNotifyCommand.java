@@ -7,6 +7,7 @@ import com.integrafty.opexy.utils.EmbedUtil;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.components.buttons.Button;
@@ -31,7 +32,8 @@ public class VideoNotifyCommand implements SlashCommand {
 
     @Override
     public SlashCommandData getCommandData() {
-        return Commands.slash("video-notify", "إدارة تـــنـــبـــيـــهـــات الـــفـــيـــديـــوهـــات (YouTube)");
+        return Commands.slash("video-notify", "إدارة تـــنـــبـــيـــهـــات الـــفـــيـــديـــوهـــات (YouTube)")
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
     }
 
     @Override

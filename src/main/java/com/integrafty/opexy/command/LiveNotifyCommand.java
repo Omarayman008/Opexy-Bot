@@ -7,6 +7,7 @@ import com.integrafty.opexy.utils.EmbedUtil;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.components.buttons.Button;
@@ -31,7 +32,8 @@ public class LiveNotifyCommand implements SlashCommand {
 
     @Override
     public SlashCommandData getCommandData() {
-        return Commands.slash("live-notify", "إدارة تـــنـــبـــيـــهـــات الـــبـــث الـــمـــبـــاشـــر (Kick/Twitch)");
+        return Commands.slash("live-notify", "إدارة تـــنـــبـــيـــهـــات الـــبـــث الـــمـــبـــاشـــر (Kick/Twitch)")
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
     }
 
     @Override

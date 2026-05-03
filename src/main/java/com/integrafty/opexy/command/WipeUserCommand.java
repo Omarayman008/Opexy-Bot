@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
@@ -35,7 +37,8 @@ public class WipeUserCommand implements SlashCommand {
     @Override
     public SlashCommandData getCommandData() {
         return Commands.slash("wipe-user", "حـــذف جـــمـــيـــع رســـائـــل عـــضـــو مـــن الـــســـيـــرفـــر")
-                .addOption(OptionType.STRING, "user_id", "أي دي الـــعـــضـــو", true);
+                .addOption(OptionType.STRING, "user_id", "أي دي الـــعـــضـــو", true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MANAGE_SERVER));
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.integrafty.opexy.command;
 
 import com.integrafty.opexy.command.base.SlashCommand;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
@@ -27,7 +28,8 @@ public class TicketCommand implements SlashCommand {
     @Override
     public SlashCommandData getCommandData() {
         return Commands.slash("tickets", "إرســـال لـــوحـــة الـــتـــذاكـــر لـــلـــســـيـــرفـــر")
-                .addOption(OptionType.CHANNEL, "channel", "الـــقـــنـــاة الـــمـــســـتـــهـــدفـــة", false);
+                .addOption(OptionType.CHANNEL, "channel", "الـــقـــنـــاة الـــمـــســـتـــهـــدفـــة", false)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
     }
 
     @Override

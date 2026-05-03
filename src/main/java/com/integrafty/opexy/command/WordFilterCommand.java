@@ -19,6 +19,7 @@ import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.modals.Modal;
@@ -53,7 +54,8 @@ public class WordFilterCommand extends ListenerAdapter implements SlashCommand {
 
     @Override
     public SlashCommandData getCommandData() {
-        return Commands.slash("banned-words", "إدارة قـــائـــمـــة الـــكـــلـــمـــات الـــمـــحـــظـــورة");
+        return Commands.slash("banned-words", "إدارة قـــائـــمـــة الـــكـــلـــمـــات الـــمـــحـــظـــورة")
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MANAGE_SERVER));
     }
 
     @Override

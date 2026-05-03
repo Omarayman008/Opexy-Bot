@@ -4,6 +4,7 @@ import com.integrafty.opexy.command.base.SlashCommand;
 import com.integrafty.opexy.utils.EmbedUtil;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
@@ -22,7 +23,8 @@ public class StartupCommand implements SlashCommand {
 
     @Override
     public SlashCommandData getCommandData() {
-        return Commands.slash("startup", "إرســـال لـــوحـــة الـــتـــحـــكـــم الـــرئـــيـــســـيـــة لـــلأعـــضـــاء");
+        return Commands.slash("startup", "إرســـال لـــوحـــة الـــتـــحـــكـــم الـــرئـــيـــســـيـــة لـــلأعـــضـــاء")
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
     }
 
     @Override

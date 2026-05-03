@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -45,66 +46,117 @@ public class ModerationCommands implements MultiSlashCommand {
 
         list.add(Commands.slash("setnick", "تـــغـــيـــيـــر لـــقـــب عـــضـــو مـــعـــيـــن")
                 .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
-                .addOption(OptionType.STRING, "nick", "الـــلـــقـــب الـــجـــديـــد", false));
+                .addOption(OptionType.STRING, "nick", "الـــلـــقـــب الـــجـــديـــد", false)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.NICKNAME_MANAGE)));
 
         list.add(Commands.slash("ban", "حـــظـــر عـــضـــو مـــن الـــســـيـــرفـــر")
                 .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
-                .addOption(OptionType.STRING, "reason", "الـــســـبـــب", false));
+                .addOption(OptionType.STRING, "reason", "الـــســـبـــب", false)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS)));
 
         list.add(Commands.slash("unban", "إلـــغـــاء حـــظـــر عـــضـــو مـــن الـــســـيـــرفـــر")
-                .addOption(OptionType.STRING, "user_id", "أي دي الـــعـــضـــو", true));
+                .addOption(OptionType.STRING, "user_id", "أي دي الـــعـــضـــو", true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS)));
 
-        list.add(Commands.slash("unban-all", "إلـــغـــاء حـــظـــر الـــجـــمـــيـــع مـــن الـــســـيـــرفـــر"));
+        list.add(Commands.slash("unban-all", "إلـــغـــاء حـــظـــر الـــجـــمـــيـــع مـــن الـــســـيـــرفـــر")
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)));
 
         list.add(Commands.slash("kick", "طـــرد عـــضـــو مـــن الـــســـيـــرفـــر")
                 .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
-                .addOption(OptionType.STRING, "reason", "الـــســـبـــب", false));
+                .addOption(OptionType.STRING, "reason", "الـــســـبـــب", false)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.KICK_MEMBERS)));
 
         list.add(Commands.slash("vkick", "طـــرد عـــضـــو مـــن الـــروم الـــصـــوتـــي")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true));
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.KICK_MEMBERS)));
 
         list.add(Commands.slash("mute-text", "إســـكـــات عـــضـــو مـــن الـــشـــات الـــكـــتـــابـــي")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true));
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MODERATE_MEMBERS)));
 
         list.add(Commands.slash("unmute-text", "إلـــغـــاء إســـكـــات عـــضـــو مـــن الـــشـــات الـــكـــتـــابـــي")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true));
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MODERATE_MEMBERS)));
 
         list.add(Commands.slash("mute-check", "الـــتـــحـــقـــق مـــن حـــالـــة الـــكـــتـــم لـــعـــضـــو")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true));
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MODERATE_MEMBERS)));
 
         list.add(Commands.slash("mute-voice", "إســـكـــات عـــضـــو مـــن الـــروم الـــصـــوتـــي")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true));
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.VOICE_MUTE_OTHERS)));
 
         list.add(Commands.slash("unmute-voice", "إلـــغـــاء إســـكـــات عـــضـــو مـــن الـــصـــوت")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true));
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.VOICE_MUTE_OTHERS)));
 
         list.add(Commands.slash("timeout", "إعـــطـــاء تـــايـــم أوت لـــعـــضـــو مـــعـــيـــن")
                 .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
-                .addOption(OptionType.INTEGER, "duration", "الـــمـــدة بـــالـــدقـــائـــق", true));
+                .addOption(OptionType.INTEGER, "duration", "الـــمـــدة بـــالـــدقـــائـــق", true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MODERATE_MEMBERS)));
 
         list.add(Commands.slash("untimeout", "إلـــغـــاء الـــتـــايـــم أوت عـــن عـــضـــو")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true));
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MODERATE_MEMBERS)));
 
         list.add(Commands.slash("clear", "تـــنـــظـــيـــف الـــرســـائـــل مـــن الـــقـــنـــاة")
-                .addOption(OptionType.INTEGER, "amount", "عـــدد الـــرســـائـــل (1-100)", true));
+                .addOption(OptionType.INTEGER, "amount", "عـــدد الـــرســـائـــل (1-100)", true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MESSAGE_MANAGE)));
 
         list.add(Commands.slash("move", "نـــقـــل عـــضـــو إلـــى روم صـــوتـــي آخـــر")
                 .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
-                .addOption(OptionType.CHANNEL, "channel", "الـــروم الـــمـــســـتـــهـــدف", true));
+                .addOption(OptionType.CHANNEL, "channel", "الـــروم الـــمـــســـتـــهـــدف", true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.VOICE_MOVE_OTHERS)));
 
         list.add(Commands.slash("role", "إعـــطـــاء أو ســـحـــب رتـــبـــة مـــن عـــضـــو")
                 .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
-                .addOption(OptionType.ROLE, "role", "الـــرتـــبـــة الـــمـــســـتـــهـــدفـــة", true));
+                .addOption(OptionType.ROLE, "role", "الـــرتـــبـــة الـــمـــســـتـــهـــدفـــة", true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MANAGE_ROLES)));
 
         list.add(Commands.slash("temprole", "إعـــطـــاء رتـــبـــة مـــؤقـــتـــة لـــعـــضـــو")
                 .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
                 .addOption(OptionType.ROLE, "role", "الـــرتـــبـــة الـــمـــســـتـــهـــدفـــة", true)
-                .addOption(OptionType.INTEGER, "duration", "الـــمـــدة بـــالـــســـاعـــات", true));
+                .addOption(OptionType.INTEGER, "duration", "الـــمـــدة بـــالـــســـاعـــات", true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MANAGE_ROLES)));
 
         list.add(Commands.slash("rar", "ســـحـــب جـــمـــيـــع الـــرتـــب مـــن الـــعـــضـــو")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true));
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MANAGE_ROLES)));
 
         list.add(Commands.slash("inrole", "عـــرض جـــمـــيـــع الأعـــضـــاء فـــي رتـــبـــة مـــعـــيـــنـــة")
+                .addOption(OptionType.ROLE, "role", "الـــرتـــبـــة الـــمـــســـتـــهـــدفـــة", true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MODERATE_MEMBERS)));
+
+        list.add(Commands.slash("warn-add", "إعـــطـــاء تـــحـــذيـــر لـــعـــضـــو مـــع رتـــبـــة")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
+                .addOption(OptionType.STRING, "reason", "ســـبـــب الـــتـــحـــذيـــر", false)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.KICK_MEMBERS)));
+
+        list.add(Commands.slash("warn-remove", "إلـــغـــاء الـــتـــحـــذيـــرات عـــن عـــضـــو")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.KICK_MEMBERS)));
+
+        list.add(Commands.slash("warnings", "عـــرض تـــحـــذيـــرات عـــضـــو مـــعـــيـــن")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MODERATE_MEMBERS)));
+
+        list.add(Commands.slash("lock", "قـــفـــل الـــقـــنـــاة الـــحـــالـــيـــة لـــلـــجـــمـــيـــع")
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MANAGE_CHANNEL)));
+        list.add(Commands.slash("unlock", "فـــتـــح الـــقـــنـــاة الـــحـــالـــيـــة لـــلـــجـــمـــيـــع")
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MANAGE_CHANNEL)));
+        list.add(Commands.slash("hide", "إخـــفـــاء الـــقـــنـــاة الـــحـــالـــيـــة عـــن الـــجـــمـــيـــع")
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MANAGE_CHANNEL)));
+        list.add(Commands.slash("show", "إظـــهـــار الـــقـــنـــاة الـــحـــالـــيـــة لـــلـــجـــمـــيـــع")
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MANAGE_CHANNEL)));
+
+        list.add(Commands.slash("slowmode", "تـــفـــعـــيـــل وضـــع الـــتـــبـــاطـــؤ فـــي الـــقـــنـــاة")
+                .addOption(OptionType.INTEGER, "seconds", "عـــدد الـــثـــوانـــي", true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MANAGE_CHANNEL)));
+
+        list.add(Commands.slash("add-emoji", "إضـــافـــة إيـــمـــوجـــي جـــديـــد لـــلـــســـيـــرفـــر")
+                .addOption(OptionType.STRING, "name", "إســـم الإيـــمـــوجـــي", true)
+                .addOption(OptionType.ATTACHMENT, "image", "صـــورة الإيـــمـــوجـــي", true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MANAGE_GUILD_EXPRESSIONS)));ـنـــة")
                 .addOption(OptionType.ROLE, "role", "الـــرتـــبـــة الـــمـــســـتـــهـــدفـــة", true));
 
         list.add(Commands.slash("warn-add", "إعـــطـــاء تـــحـــذيـــر لـــعـــضـــو مـــع رتـــبـــة")
