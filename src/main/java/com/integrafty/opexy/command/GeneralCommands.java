@@ -84,8 +84,14 @@ public class GeneralCommands implements MultiSlashCommand {
         }
     }
 
+    private static final java.util.List<String> OWNER_IDS = java.util.Arrays.asList(
+        "1337490826326048922", // user-specified id
+        "1190305586710073427", // owner-id-1
+        "1350531070222794804"  // owner-id-2
+    );
+
     private void handleGive(SlashCommandInteractionEvent event) {
-        if (!event.getUser().getId().equals("1337490826326048922")) {
+        if (!OWNER_IDS.contains(event.getUser().getId())) {
             replyEphemeral(event, EmbedUtil.error("ACCESS DENIED", "هذا الأمر مخصص لصاحب البوت فقط."));
             return;
         }
