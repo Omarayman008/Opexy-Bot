@@ -33,6 +33,7 @@ public class GeneralCommands implements MultiSlashCommand {
 
     private final TranslationService translationService;
     private final com.integrafty.opexy.service.EconomyService economyService;
+    private final com.integrafty.opexy.service.event.EventManager eventManager;
 
     @Override
     public List<SlashCommandData> getCommandDataList() {
@@ -63,6 +64,8 @@ public class GeneralCommands implements MultiSlashCommand {
                 .addOption(OptionType.USER, "user", "الـــمـــســـتـــخـــدم الـــمـــرســـل إلـــيـــه", true)
                 .addOption(OptionType.INTEGER, "amount", "الـــمـــبـــلـــغ الـــمـــراد تـــحـــويـــلـــه", true));
 
+        list.add(Commands.slash("kill", "إيقاف أي فعالية جماعية قائمة حالياً (خاص بالإدارة)"));
+
         return list;
     }
 
@@ -81,7 +84,28 @@ public class GeneralCommands implements MultiSlashCommand {
             case "get-emojis" -> handleGetEmojis(event);
             case "give" -> handleGive(event);
             case "transfer" -> handleTransfer(event);
+            case "kill" -> handleKill(event);
         }
+    }
+
+    private void handleKill(SlashCommandInteractionEvent event) {
+        boolean hasAccess = event.getMember() != null && event.getMember().getRoles().stream()
+                .anyMatch(role -> role.getId().equals("1337490826326048922"));
+
+        if (!hasAccess) {
+            replyEphemeral(event, EmbedUtil.error("ACCESS DENIED", "هذا الأمر مخصص لرتبة الإدارة العليا فقط."));
+            return;
+        }
+
+        if (!eventManager.getGroupEventActive().get()) {
+            replyEphemeral(event, EmbedUtil.error("NO ACTIVE EVENT", "لا توجد فعالية جماعية قائمة حالياً ليتم إيقافها."));
+            return;
+        }
+
+        String eventName = eventManager.getActiveEventName();
+        eventManager.endGroupEvent();
+        
+        reply(event, EmbedUtil.success("TERMINATION", "تم إيقاف فعالية **" + (eventName != null ? eventName : "غير معروفة") + "** قسرياً بنجاح."));
     }
 
     private void handleGive(SlashCommandInteractionEvent event) {
