@@ -64,6 +64,10 @@ public class ScavengerHuntCommand implements MultiSlashCommand {
 
         List<TextChannel> channels = event.getGuild().getTextChannels().stream()
                 .filter(ch -> ch.canTalk())
+                .filter(ch -> {
+                    String n = ch.getName().toLowerCase();
+                    return !n.contains("log") && !n.contains("staff") && !n.contains("admin") && !n.contains("mod") && !n.contains("hidden");
+                })
                 .collect(Collectors.toList());
 
         TextChannel targetChannel = channels.get(random.nextInt(channels.size()));

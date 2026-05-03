@@ -64,36 +64,49 @@ public class SpeedChallengeCommand implements MultiSlashCommand {
                 .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("SPEED", "⚡ تحدي الـ 7 ثواني!", body, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN))
                 .useComponentsV2(true).build())
                 .useComponentsV2(true).queue(hook -> {
-            event.getChannel().getIterableHistory().takeAsync(1).thenAccept(messages -> {
-                long startTime = System.currentTimeMillis();
-                
-                // Wait for responses for 7 seconds
-                event.getJDA().addEventListener(new net.dv8tion.jda.api.hooks.ListenerAdapter() {
-                    private boolean finished = false;
-
-                    @Override
-                    public void onMessageReceived(net.dv8tion.jda.api.events.message.MessageReceivedEvent msgEvent) {
-                        if (finished || msgEvent.getAuthor().isBot() || !msgEvent.getChannel().equals(event.getChannel())) return;
-                        
-                        String content = msgEvent.getMessage().getContentRaw().trim();
-                        if (content.equalsIgnoreCase(word) || content.replace("أ", "ا").replace("ة", "ه").equalsIgnoreCase(word.replace("أ", "ا").replace("ة", "ه"))) {
-                            long timeTaken = System.currentTimeMillis() - startTime;
-                            if (timeTaken <= 7000) {
-                                finished = true;
-                                msgEvent.getMessage().reply("✅ مبروك! لقد فزت بـ " + reward + " opex في " + (timeTaken / 1000.0) + " ثانية!").queue();
-                                achievementService.updateStats(msgEvent.getAuthor().getIdLong(), event.getGuild(), stats -> {
-                                    stats.setSpeedWins(stats.getSpeedWins() + 1);
-                                });
-                                event.getJDA().removeEventListener(this);
-                            }
+            
+            java.util.concurrent.atomic.AtomicBoolean finished = new java.util.concurrent.atomic.AtomicBoolean(false);
+            
+            net.dv8tion.jda.api.hooks.ListenerAdapter listener = new net.dv8tion.jda.api.hooks.ListenerAdapter() {
+                @Override
+                public void onMessageReceived(net.dv8tion.jda.api.events.message.MessageReceivedEvent msgEvent) {
+                    if (finished.get() || msgEvent.getAuthor().isBot() || !msgEvent.getChannel().equals(event.getChannel())) return;
+                    
+                    String content = msgEvent.getMessage().getContentRaw().trim();
+                    if (content.equalsIgnoreCase(word) || content.replace("أ", "ا").replace("ة", "ه").equalsIgnoreCase(word.replace("أ", "ا").replace("ة", "ه"))) {
+                        long timeTaken = System.currentTimeMillis() - startTime;
+                        if (timeTaken <= 7000) {
+                            finished.set(true);
+                            msgEvent.getMessage().reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
+                                    .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("SPEED", "🏆 فائز بالتحدي!", 
+                                            "مبروك <@" + msgEvent.getAuthor().getId() + ">! لقد كتبت الكلمة بسرعة خارقة وربحت **" + reward + " opex**!\n\n⏱️ الوقت: **" + (timeTaken / 1000.0) + " ثانية**", 
+                                            com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN))
+                                    .useComponentsV2(true).build())
+                                    .useComponentsV2(true).queue();
+                            
+                            achievementService.updateStats(msgEvent.getAuthor().getIdLong(), event.getGuild(), stats -> {
+                                stats.setSpeedWins(stats.getSpeedWins() + 1);
+                            });
+                            event.getJDA().removeEventListener(this);
                         }
                     }
-                });
+                }
+            };
 
-                // Timeout task
-                event.getChannel().sendMessage("⏳ بدأ العد التنازلي...").queueAfter(7, TimeUnit.SECONDS, msg -> {
-                    // Cleanup logic if needed
-                });
+            event.getJDA().addEventListener(listener);
+
+            // Timeout
+            event.getChannel().sendMessage("...").queueAfter(7, TimeUnit.SECONDS, msg -> {
+                event.getJDA().removeEventListener(listener);
+                msg.delete().queue();
+                if (!finished.get()) {
+                    event.getChannel().sendMessage(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
+                            .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("SPEED", "⌛ انتهى الوقت!", 
+                                    "للأسف، لم يتمكن أحد من كتابة الكلمة في الوقت المحدد. حظاً أوفر في المرة القادمة!", 
+                                    com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN))
+                            .useComponentsV2(true).build())
+                            .useComponentsV2(true).queue();
+                }
             });
         });
     }

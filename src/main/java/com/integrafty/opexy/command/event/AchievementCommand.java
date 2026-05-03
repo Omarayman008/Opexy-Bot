@@ -36,52 +36,52 @@ public class AchievementCommand implements MultiSlashCommand {
         body.append("✨ استعرض تقدمك وإحصائياتك في عالم أوبكس التفاعلي.\nكلما زاد نشاطك، اقتربت من الرتب النادرة!\n\n");
         
         // Mafia - Eagle Eye
-        body.append("**Eagle Eye**\n");
+        body.append("**🦅 Eagle Eye**\n");
         body.append("*Hit One Mafia In Event*\n");
         body.append(String.format("Progress %s %d%%\n\n", getProgressBar(stats.getDetectiveReveals(), 1), calculatePercent(stats.getDetectiveReveals(), 1)));
 
         // Mafia - Guardian Angel
-        body.append("**Guardian Angel**\n");
+        body.append("**🛡️ Guardian Angel**\n");
         body.append("*Save a citizen as Doctor*\n");
         body.append(String.format("Progress %s %d%%\n\n", getProgressBar(stats.getDoctorSaves(), 3), calculatePercent(stats.getDoctorSaves(), 3)));
 
-        // Mafia - Mafia Boss
-        body.append("**Mafia Boss**\n");
-        body.append("*Win a game as the Mafia*\n");
+        // Mafia - Contract Killer
+        body.append("**🔪 Contract Killer**\n");
+        body.append("*Win 6 games as the Mafia*\n");
         body.append(String.format("Progress %s %d%%\n\n", getProgressBar(stats.getMafiaWins(), 6), calculatePercent(stats.getMafiaWins(), 6)));
 
-        // Mafia - Law Abiding Citizen
-        body.append("**Law Abiding Citizen**\n");
-        body.append("*Survive multiple rounds as a citizen*\n");
+        // Mafia - Eternal Civilian
+        body.append("**🏘️ Eternal Civilian**\n");
+        body.append("*Survive 8 rounds as a citizen*\n");
         body.append(String.format("Progress %s %d%%\n\n", getProgressBar(stats.getCitizenCount(), 8), calculatePercent(stats.getCitizenCount(), 8)));
 
         // Mafia - Public Enemy
-        body.append("**Public Enemy**\n");
-        body.append("*Receive many votes from other players*\n");
+        body.append("**👺 Public Enemy**\n");
+        body.append("*Receive 15 votes from other players*\n");
         body.append(String.format("Progress %s %d%%\n\n", getProgressBar(stats.getVotesReceived(), 15), calculatePercent(stats.getVotesReceived(), 15)));
 
-        // Auction - Master
-        body.append("**Auction Master**\n");
-        body.append("*Win a high-stakes blind auction*\n");
+        // Auction - Golden Gavel
+        body.append("**🔨 Golden Gavel**\n");
+        body.append("*Win 5 blind auctions*\n");
         body.append(String.format("Progress %s %d%%\n\n", getProgressBar(stats.getSuccessBids(), 5), calculatePercent(stats.getSuccessBids(), 5)));
 
-        // Auction - Big Spender
-        body.append("**Big Spender**\n");
-        body.append("*Place a massive bid in the auction*\n");
-        body.append(String.format("Progress %s %d%%\n\n", getProgressBar((int)(stats.getMaxBid()/1000), 100), calculatePercent((int)(stats.getMaxBid()/1000), 100)));
+        // Auction - High Roller
+        body.append("**💎 High Roller**\n");
+        body.append("*Place a massive bid (100k+)*\n");
+        body.append(String.format("Progress %s %d%%\n\n", getProgressBar((int)(stats.getMaxBid()/20000), 5), calculatePercent((int)stats.getMaxBid(), 100000)));
 
-        // Auction - Determined Bidder
-        body.append("**Determined Bidder**\n");
-        body.append("*Participate and bid in multiple auctions*\n");
+        // Auction - Jinxed Bidder
+        body.append("**📉 Jinxed Bidder**\n");
+        body.append("*Lose 5 auctions you bid in*\n");
         body.append(String.format("Progress %s %d%%\n\n", getProgressBar(stats.getFailedBids(), 5), calculatePercent(stats.getFailedBids(), 5)));
 
         // Minigames - Master Plumber
-        body.append("**Master Plumber**\n");
-        body.append("*Solve the complex pipe puzzle*\n");
+        body.append("**🔧 Master Plumber**\n");
+        body.append("*Solve the pipe puzzle 4 times*\n");
         body.append(String.format("Progress %s %d%%\n\n", getProgressBar(stats.getPipeWins(), 4), calculatePercent(stats.getPipeWins(), 4)));
 
-        // Minigames - Lightning Fast
-        body.append("**Lightning Fast**\n");
+        // Minigames - Sonic Fingers
+        body.append("**⚡ Sonic Fingers**\n");
         body.append("*Win the 7-second speed challenge*\n");
         body.append(String.format("Progress %s %d%%\n", getProgressBar(stats.getSpeedWins(), 1), calculatePercent(stats.getSpeedWins(), 1)));
 
