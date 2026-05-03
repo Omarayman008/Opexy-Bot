@@ -57,16 +57,33 @@ public class PipePuzzleManager extends ListenerAdapter {
             grid[cursor[0]][cursor[1]] = rotatePiece(grid[cursor[0]][cursor[1]]);
             updateGame(event, grid, cursor);
         } else if (id.equals("pipe_submit")) {
-            if (isSolved(grid)) {
-                games.remove(userId);
-                cursors.remove(userId);
-                event.editMessage("🎉 مبروك! لقد قمت بحل اللغز بنجاح!")
-                        .setComponents(Collections.emptyList())
-                        .queue();
-                achievementService.updateStats(userId, event.getGuild(), s -> s.setPipeWins(s.getPipeWins() + 1));
-            } else {
-                event.reply("❌ اللغز لم يحل بعد، حاول مرة أخرى!").setEphemeral(true).queue();
-            }
+            handleSubmission(event, userId, grid);
+        }
+    }
+
+    private void handleSubmission(ButtonInteractionEvent event, long userId, char[][] grid) {
+        int rows = grid.length;
+        int cols = grid[0].length;
+
+        if (!canConnect(grid[0][0], 0)) {
+            event.reply("❌ البداية غير موصلة! تأكد من أن الأنبوب الأول متصل بـ 🏁").setEphemeral(true).queue();
+            return;
+        }
+        if (!canConnect(grid[rows - 1][cols - 1], 2)) {
+            event.reply("❌ النهاية غير موصلة! تأكد من أن الأنبوب الأخير متصل بـ 🚩").setEphemeral(true).queue();
+            return;
+        }
+
+        boolean[][] visited = new boolean[rows][cols];
+        if (hasPath(grid, 0, 0, rows - 1, cols - 1, visited)) {
+            games.remove(userId);
+            cursors.remove(userId);
+            event.editMessage("🎉 مبروك! لقد قمت بحل اللغز بنجاح!")
+                    .setComponents(Collections.emptyList())
+                    .queue();
+            achievementService.updateStats(userId, event.getGuild(), s -> s.setPipeWins(s.getPipeWins() + 1));
+        } else {
+            event.reply("❌ المسار غير مكتمل! تأكد من أن جميع الأنابيب متصلة ببعضها البعض.").setEphemeral(true).queue();
         }
     }
 
@@ -162,12 +179,8 @@ public class PipePuzzleManager extends ListenerAdapter {
     private boolean isSolved(char[][] grid) {
         int rows = grid.length;
         int cols = grid[0].length;
-        
-        // Start piece must connect to TOP (Port 0)
         if (!canConnect(grid[0][0], 0)) return false;
-        // End piece must connect to BOTTOM (Port 2)
         if (!canConnect(grid[rows-1][cols-1], 2)) return false;
-
         boolean[][] visited = new boolean[rows][cols];
         return hasPath(grid, 0, 0, rows - 1, cols - 1, visited);
     }
