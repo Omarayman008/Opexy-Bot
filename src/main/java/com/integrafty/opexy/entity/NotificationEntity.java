@@ -27,4 +27,19 @@ public class NotificationEntity {
     private String guildId;
 
     private boolean active = true;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getPlatform() { return platform; }
+    public void setPlatform(String platform) { this.platform = platform; }
+    public String getChannelId() { return channelId; }
+    public void setChannelId(String channelId) { this.channelId = channelId; }
+    public String getDisplayName() { return displayName; }
+    public void setDisplayName(String displayName) { this.displayName = displayName; }
+    public String getLastContentId() { return lastContentId; }
+    public void setLastContentId(String lastContentId) { this.lastContentId = lastContentId; }
+    public String getGuildId() { return guildId; }
+    public void setGuildId(String guildId) { this.guildId = guildId; }
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
 }

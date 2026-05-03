@@ -26,4 +26,13 @@ public class AutoReplyEntity {
 
     @Column(name = "added_by")
     private String addedBy;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getKeyword() { return keyword; }
+    public void setKeyword(String keyword) { this.keyword = keyword; }
+    public String getResponseText() { return responseText; }
+    public void setResponseText(String responseText) { this.responseText = responseText; }
+    public String getAddedBy() { return addedBy; }
+    public void setAddedBy(String addedBy) { this.addedBy = addedBy; }
 }

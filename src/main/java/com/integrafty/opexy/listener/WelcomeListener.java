@@ -5,7 +5,8 @@ import com.integrafty.opexy.service.WelcomeCardService;
 import com.integrafty.opexy.utils.EmbedUtil;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -23,8 +24,8 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-@Slf4j
 public class WelcomeListener extends ListenerAdapter {
+    private static final Logger log = LoggerFactory.getLogger(WelcomeListener.class);
 
     private final JDA jda;
     private final LogManager logManager;

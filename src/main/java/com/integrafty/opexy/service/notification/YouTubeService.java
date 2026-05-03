@@ -3,7 +3,8 @@ package com.integrafty.opexy.service.notification;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.ResponseEntity;
@@ -17,8 +18,8 @@ import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class YouTubeService {
+    private static final Logger log = LoggerFactory.getLogger(YouTubeService.class);
 
     private final RestTemplate restTemplate = new RestTemplate();
 

@@ -50,7 +50,7 @@ public class AchievementService {
 
     public UserStats getStats(long userId) {
         return statsRepository.findByUserId(userId)
-                .orElseGet(() -> statsRepository.save(UserStats.builder().userId(userId).build()));
+                .orElseGet(() -> statsRepository.save(new UserStats(userId)));
     }
 
     @Transactional

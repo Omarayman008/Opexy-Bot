@@ -4,7 +4,8 @@ import com.integrafty.opexy.entity.AutoReplyEntity;
 import com.integrafty.opexy.repository.AutoReplyRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,8 +16,8 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class AutoReplyService {
+    private static final Logger log = LoggerFactory.getLogger(AutoReplyService.class);
 
     private final AutoReplyRepository autoReplyRepository;
 

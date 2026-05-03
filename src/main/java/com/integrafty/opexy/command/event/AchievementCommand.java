@@ -9,20 +9,27 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.awt.Color;
 
 @Component
-public class AchievementCommand extends MultiSlashCommand {
+public class AchievementCommand implements MultiSlashCommand {
 
     private final AchievementService achievementService;
 
     public AchievementCommand(AchievementService achievementService) {
-        super("achive", "عرض إنجازاتك وتقدمك في الفعاليات");
         this.achievementService = achievementService;
     }
 
     @Override
+    public List<SlashCommandData> getCommandDataList() {
+        return List.of(Commands.slash("achive", "عرض إنجازاتك وتقدمك في الفعاليات"));
+    }
+
+    @Override
     public void execute(SlashCommandInteractionEvent event) {
+        if (!event.getName().equals("achive")) return;
+        
         UserStats stats = achievementService.getStats(event.getUser().getIdLong());
         
         EmbedBuilder embed = new EmbedBuilder()
@@ -70,8 +77,5 @@ public class AchievementCommand extends MultiSlashCommand {
         return sb.toString();
     }
 
-    @Override
-    public SlashCommandData getCommandData() {
-        return Commands.slash(getName(), getDescription());
     }
 }

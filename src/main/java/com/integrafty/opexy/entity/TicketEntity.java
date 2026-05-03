@@ -32,4 +32,21 @@ public class TicketEntity {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
+    public String getChannelId() { return channelId; }
+    public void setChannelId(String channelId) { this.channelId = channelId; }
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    public Integer getTicketNumber() { return ticketNumber; }
+    public void setTicketNumber(Integer ticketNumber) { this.ticketNumber = ticketNumber; }
+    public String getStaffId() { return staffId; }
+    public void setStaffId(String staffId) { this.staffId = staffId; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

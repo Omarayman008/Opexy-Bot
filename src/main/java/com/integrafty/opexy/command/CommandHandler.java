@@ -3,7 +3,8 @@ package com.integrafty.opexy.command;
 import com.integrafty.opexy.command.base.SlashCommand;
 import com.integrafty.opexy.command.base.MultiSlashCommand;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -19,8 +20,8 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-@Slf4j
 public class CommandHandler extends ListenerAdapter {
+    private static final Logger log = LoggerFactory.getLogger(CommandHandler.class);
 
     private final JDA jda;
     private final List<SlashCommand> commands;

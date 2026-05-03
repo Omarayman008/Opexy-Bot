@@ -27,12 +27,20 @@ public class CommandManager extends ListenerAdapter {
     private final DiscordEventListener discordEventListener;
     private final List<SlashCommand> commands;
     private final List<MultiSlashCommand> multiCommands;
+    private final List<ListenerAdapter> listeners;
 
     @Value("${discord.guild.id}")
     private String guildId;
 
     @PostConstruct
     public void init() {
+        // Register all modular listeners
+        for (ListenerAdapter listener : listeners) {
+            if (listener != this && listener != discordEventListener) {
+                jda.addEventListener(listener);
+            }
+        }
+        
         jda.addEventListener(discordEventListener);
         jda.addEventListener(this); // Register self to listen for ReadyEvent
     }

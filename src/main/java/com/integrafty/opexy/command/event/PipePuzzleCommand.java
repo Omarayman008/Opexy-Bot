@@ -5,20 +5,20 @@ import com.integrafty.opexy.service.event.AchievementService;
 import com.integrafty.opexy.service.event.EventManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.awt.Color;
+import java.util.List;
 import java.util.Random;
 
 @Component
-public class PipePuzzleCommand extends MultiSlashCommand {
+public class PipePuzzleCommand implements MultiSlashCommand {
 
     private final AchievementService achievementService;
     private final EventManager eventManager;
@@ -31,13 +31,23 @@ public class PipePuzzleCommand extends MultiSlashCommand {
     private String hypeEventsId;
 
     public PipePuzzleCommand(AchievementService achievementService, EventManager eventManager) {
-        super("pipes", "بدء لغز أنابيب التوصيل (Connect the Pipes)");
         this.achievementService = achievementService;
         this.eventManager = eventManager;
     }
 
     @Override
+    public List<SlashCommandData> getCommandDataList() {
+        return List.of(Commands.slash("pipes", "بدء لغز أنابيب التوصيل (Connect the Pipes)")
+                .addOptions(new OptionData(OptionType.STRING, "difficulty", "الصعوبة", true)
+                        .addChoice("سهل (3x3)", "easy")
+                        .addChoice("متوسط (4x4)", "medium")
+                        .addChoice("صعب (5x5)", "hard")));
+    }
+
+    @Override
     public void execute(SlashCommandInteractionEvent event) {
+        if (!event.getName().equals("pipes")) return;
+
         // Check permissions
         boolean hasRole = event.getMember().getRoles().stream()
                 .anyMatch(r -> r.getId().equals(hypeManagerId) || r.getId().equals(hypeEventsId));
@@ -49,9 +59,7 @@ public class PipePuzzleCommand extends MultiSlashCommand {
 
         String difficulty = event.getOption("difficulty") != null ? event.getOption("difficulty").getAsString() : "easy";
         int size = difficulty.equals("easy") ? 3 : difficulty.equals("medium") ? 4 : 5;
-        int reward = difficulty.equals("easy") ? 20 : difficulty.equals("medium") ? 50 : 80;
-
-        // Generate simple puzzle (placeholder logic for now, will enhance later)
+        
         String[][] grid = new String[size][size];
         String[] pieces = {"═", "║", "╔", "╗", "╚", "╝"};
         
@@ -80,15 +88,5 @@ public class PipePuzzleCommand extends MultiSlashCommand {
         }
         sb.append("```");
         return sb.toString();
-    }
-
-    @Override
-    public SlashCommandData getCommandData() {
-        return Commands.slash(getName(), getDescription())
-                .addOption(OptionType.STRING, "difficulty", "صعوبة اللغز", true)
-                .addOptions(new net.dv8tion.jda.api.interactions.commands.build.OptionData(OptionType.STRING, "difficulty", "الصعوبة")
-                        .addChoice("سهل (3x3)", "easy")
-                        .addChoice("متوسط (4x4)", "medium")
-                        .addChoice("صعب (5x5)", "hard"));
     }
 }

@@ -4,7 +4,8 @@ import com.integrafty.opexy.entity.NotificationEntity;
 import com.integrafty.opexy.repository.NotificationRepository;
 import com.integrafty.opexy.utils.EmbedUtil;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
@@ -25,8 +26,8 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-@Slf4j
 public class NotificationListener extends ListenerAdapter {
+    private static final Logger log = LoggerFactory.getLogger(NotificationListener.class);
 
     private final JDA jda;
     private final NotificationRepository notificationRepository;
