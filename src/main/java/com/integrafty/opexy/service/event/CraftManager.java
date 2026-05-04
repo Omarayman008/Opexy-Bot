@@ -146,7 +146,7 @@ public class CraftManager extends ListenerAdapter {
             new Recipe(new String[][]{{"I", "I", "I"}, {"I", "I", "I"}, {"I", "I", "I"}}, List.of("بلوك حديد", "iron block"), "بلوك حديد", Difficulty.MEDIUM),
             new Recipe(new String[][]{{"G", "G", "G"}, {"G", "G", "G"}, {"G", "G", "G"}}, List.of("بلوك ذهب", "gold block"), "بلوك ذهب", Difficulty.MEDIUM),
             new Recipe(new String[][]{{"D", "D", "D"}, {"D", "D", "D"}, {"D", "D", "D"}}, List.of("بلوك دايموند", "diamond block"), "بلوك دايموند", Difficulty.HARD),
-            new Recipe(new String[][]{{"M", "M", "M"}, {"M", "M", "M"}, {"M", "M", "M"}}, List.of("بلوك زمرد", "emerald block"), "بلوك زمرد", Difficulty.HARD)
+            new Recipe(new String[][]{{"M", "M", "M"}, {"M", "M", "M"}, {"M", "M", "M"}}, List.of("بلوك زمرد", "emerald block", "بلوك ايمرلد", "ايمرلد بلوك"), "بلوك زمرد", Difficulty.HARD)
     );
 
     public String startCraft(long userId, Difficulty difficulty, Guild guild, Member organizer) {
