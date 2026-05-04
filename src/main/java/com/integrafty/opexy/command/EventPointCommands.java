@@ -39,10 +39,8 @@ public class EventPointCommands implements MultiSlashCommand {
                 .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.KICK_MEMBERS)));
 
-        list.add(Commands.slash("points", "عـــرض نـــقـــاط الـــفـــعـــالـــيـــات لـــعـــضـــو مـــعـــيـــن")
+        list.add(Commands.slash("points", "عـــرض نـــقـــاط الـــفـــعـــالـــيـــات لـــك أو لـــلـــجـــمـــيـــع")
                 .addOption(OptionType.USER, "user", "الـــعـــضـــو (اخـــتـــيـــاري)", false));
-
-        list.add(Commands.slash("points-list", "عـــرض قـــائـــمـــة مـــتـــصـــدري نـــقـــاط الـــفـــعـــالـــيـــات"));
 
         return list;
     }
@@ -55,7 +53,6 @@ public class EventPointCommands implements MultiSlashCommand {
             case "add-point" -> handleAddPoint(event);
             case "remove-point" -> handleRemovePoint(event);
             case "points" -> handlePoints(event);
-            case "points-list" -> handlePointsList(event);
         }
     }
 
@@ -94,37 +91,45 @@ public class EventPointCommands implements MultiSlashCommand {
     }
 
     private void handlePoints(SlashCommandInteractionEvent event) {
-        Member target = event.getOption("user", OptionMapping::getAsMember);
-        if (target == null) target = event.getMember();
-
-        UserEntity user = getOrCreateUser(target.getId(), event.getGuild().getId());
-
-        String body = String.format("### 📊 نـــقـــاط الـــفـــعـــالـــيـــات\n▫️ **الـــعـــضـــو:** %s\n▫️ **الـــنـــقـــاط الـــحـــالـــيـــة:** `%d`",
-                target.getAsMention(), user.getEventPoints());
-
-        event.reply(new MessageCreateBuilder()
-                .setComponents(EmbedUtil.containerBranded("EVENTS", "Points Status", body, EmbedUtil.BANNER_MAIN))
-                .useComponentsV2(true).build()).queue();
-    }
-
-    private void handlePointsList(SlashCommandInteractionEvent event) {
-        List<UserEntity> top = userRepository.findTop10ByGuildIdOrderByEventPointsDesc(event.getGuild().getId());
+        OptionMapping userOpt = event.getOption("user");
         
-        StringBuilder sb = new StringBuilder();
-        sb.append("### 🏆 مـــتـــصـــدرو نـــقـــاط الـــفـــعـــالـــيـــات\n\n");
-        
-        if (top.isEmpty()) {
-            sb.append("*لا يـــوجـــد بـــيـــانـــات حـــالـــيـــاً.*");
-        } else {
+        if (userOpt == null) {
+            // Show Leaderboard (List everyone with > 0 points)
+            List<UserEntity> top = userRepository.findTop10ByGuildIdOrderByEventPointsDesc(event.getGuild().getId());
+            
+            StringBuilder sb = new StringBuilder();
+            sb.append("### 🏆 مـــتـــصـــدرو نـــقـــاط الـــفـــعـــالـــيـــات\n\n");
+            
+            boolean found = false;
             for (int i = 0; i < top.size(); i++) {
                 UserEntity u = top.get(i);
-                sb.append(String.format("`#%d` <@%s> — **%d** نـــقـــطـــة\n", i + 1, u.getUserId(), u.getEventPoints()));
+                if (u.getEventPoints() > 0) {
+                    sb.append(String.format("`#%d` <@%s> — **%d** نـــقـــطـــة\n", i + 1, u.getUserId(), u.getEventPoints()));
+                    found = true;
+                }
             }
-        }
 
-        event.reply(new MessageCreateBuilder()
-                .setComponents(EmbedUtil.containerBranded("EVENTS", "Leaderboard", sb.toString(), EmbedUtil.BANNER_MAIN))
-                .useComponentsV2(true).build()).queue();
+            if (!found) {
+                sb.append("*لا يـــوجـــد أعـــضـــاء لـــديـــهـــم نـــقـــاط حـــالـــيـــاً.*");
+            }
+
+            event.reply(new MessageCreateBuilder()
+                    .setComponents(EmbedUtil.containerBranded("EVENTS", "Leaderboard", sb.toString(), EmbedUtil.BANNER_MAIN))
+                    .useComponentsV2(true).build()).queue();
+        } else {
+            // Show specific user
+            Member target = userOpt.getAsMember();
+            if (target == null) return;
+
+            UserEntity user = getOrCreateUser(target.getId(), event.getGuild().getId());
+
+            String body = String.format("### 📊 نـــقـــاط الـــفـــعـــالـــيـــات\n▫️ **الـــعـــضـــو:** %s\n▫️ **الـــنـــقـــاط الـــحـــالـــيـــة:** `%d`",
+                    target.getAsMention(), user.getEventPoints());
+
+            event.reply(new MessageCreateBuilder()
+                    .setComponents(EmbedUtil.containerBranded("EVENTS", "Points Status", body, EmbedUtil.BANNER_MAIN))
+                    .useComponentsV2(true).build()).queue();
+        }
     }
 
     private UserEntity getOrCreateUser(String userId, String guildId) {
