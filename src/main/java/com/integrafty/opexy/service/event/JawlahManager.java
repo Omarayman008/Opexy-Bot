@@ -43,7 +43,8 @@ public class JawlahManager extends ListenerAdapter {
                 .addComponents(
                         Label.of("اســـم الـــلـــعـــبـــة", TextInput.create("game_name", TextInputStyle.SHORT).setRequired(true).setPlaceholder("مـــثـــال: تـــحـــدي الـــعـــمـــالـــقـــة").build()),
                         Label.of("اســـم الـــفـــريـــق الأول", TextInput.create("team_a_name", TextInputStyle.SHORT).setRequired(true).setPlaceholder("مـــثـــال: فـــريـــق الـــصـــقـــور").build()),
-                        Label.of("اســـم الـــفـــريـــق الـــثـــانـــي", TextInput.create("team_b_name", TextInputStyle.SHORT).setRequired(true).setPlaceholder("مـــثـــال: فـــريـــق الـــنـــســـور").build())
+                        Label.of("اســـم الـــفـــريـــق الـــثـــانـــي", TextInput.create("team_b_name", TextInputStyle.SHORT).setRequired(true).setPlaceholder("مـــثـــال: فـــريـــق الـــنـــســـور").build()),
+                        Label.of("عـدد الـلاعـبـيـن لـكـل فـريـق", TextInput.create("max_players", TextInputStyle.SHORT).setRequired(true).setPlaceholder("مـــثـــال: 3").build())
                 ).build();
         event.replyModal(modal).queue();
     }
@@ -55,11 +56,14 @@ public class JawlahManager extends ListenerAdapter {
         String gameName = event.getValue("game_name").getAsString();
         String teamA = event.getValue("team_a_name").getAsString();
         String teamB = event.getValue("team_b_name").getAsString();
+        int maxPlayers = 5;
+        try { maxPlayers = Integer.parseInt(event.getValue("max_players").getAsString()); } catch (Exception ignored) {}
 
         JawlahGame game = new JawlahGame(event.getChannel().getIdLong(), event.getUser().getIdLong());
         game.setGameName(gameName);
         game.setTeamAName(teamA);
         game.setTeamBName(teamB);
+        game.setMaxPlayersPerTeam(maxPlayers);
         activeGames.put(event.getChannel().getIdLong(), game);
 
         sendHelpingHandsSelection(event);
@@ -69,13 +73,30 @@ public class JawlahManager extends ListenerAdapter {
         JawlahGame game = activeGames.get(event.getChannel().getIdLong());
         
         String enabledStr = game.getEnabledHelpers().isEmpty() ? "*لا يوجد*" : String.join(" - ", game.getEnabledHelpers());
-        String body = "### 🛠️ وســـائـــل الـــمـــســـاعـــدة\n" +
-                "اخـــتـــر وســـائـــل الـــمـــســـاعـــدة الـــمـــتـــاحـــة لـــكـــل فـــريـــق فـــي هـــذه الـــجـــولـــة.\n\n" +
-                "**الـــمـــســـاعـــدات الـــمـــفـــعـــلـــه:**\n" +
-                enabledStr;
         
+        StringBuilder playersList = new StringBuilder();
+        playersList.append(String.format("🔵 **%s** (%d/%d):\n", game.teamAName, game.teamAPlayers.size(), game.maxPlayersPerTeam));
+        if (game.teamAPlayers.isEmpty()) playersList.append("*في انتظار اللاعبين...*\n");
+        else game.teamAPlayers.forEach(id -> playersList.append("<@").append(id).append("> "));
+        
+        playersList.append(String.format("\n\n🔴 **%s** (%d/%d):\n", game.teamBName, game.teamBPlayers.size(), game.maxPlayersPerTeam));
+        if (game.teamBPlayers.isEmpty()) playersList.append("*في انتظار اللاعبين...*\n");
+        else game.teamBPlayers.forEach(id -> playersList.append("<@").append(id).append("> "));
+
+        String body = "### 🛠️ إعـــدادات الـــلـــعـــبـــة\n" +
+                playersList.toString() + "\n\n" +
+                "**الـــمـــســـاعـــدات الـــمـــفـــعـــلـــه:**\n" +
+                enabledStr + "\n\n" +
+                "اخـــتـــر فـــريـــقـــك لـــلـــدخول، والـــمـــنـــظـــم يـــمـــكـــنـــه تـــفـــعـــيـــل الـــمـــســـاعـــدات وبـــدء الـــلـــعـــب.";
+        
+        Button joinA = Button.primary("jawlah_join_a", "انضمام لـ " + game.teamAName + " 🔵")
+                .withDisabled(game.teamAPlayers.size() >= game.maxPlayersPerTeam);
+        Button joinB = Button.danger("jawlah_join_b", "انضمام لـ " + game.teamBName + " 🔴")
+                .withDisabled(game.teamBPlayers.size() >= game.maxPlayersPerTeam);
+
         MessageEditBuilder edit = new MessageEditBuilder()
-                .setComponents(EmbedUtil.containerBranded("SETUP", "حـــدّد وســـائـــل الـــمـــســـاعـــدة", body, EmbedUtil.BANNER_MAIN,
+                .setComponents(EmbedUtil.containerBranded("SETUP", "تـــجـــهـــيـــز الـــفـــرق والـــمـــســـاعـــدات", body, EmbedUtil.BANNER_MAIN,
+                        ActionRow.of(joinA, joinB),
                         ActionRow.of(
                                 Button.secondary("jawlah_help_1", "جاوب جوابين ✌️"),
                                 Button.secondary("jawlah_help_3", "الحفرة ⛳"),
@@ -265,24 +286,68 @@ public class JawlahManager extends ListenerAdapter {
                 eventManager.endGroupEvent();
                 event.reply("🛑 تم إنهاء لعبة جولة.").queue();
             }
+            case "jawlah_join_a" -> {
+                long uid = event.getUser().getIdLong();
+                if (game.teamAPlayers.contains(uid)) {
+                    event.reply("⚠️ أنت بالفعل في الفريق الأول!").setEphemeral(true).queue();
+                    return;
+                }
+                game.teamBPlayers.remove(uid);
+                if (game.teamAPlayers.size() < game.maxPlayersPerTeam) {
+                    game.teamAPlayers.add(uid);
+                    sendHelpingHandsSelection(event);
+                } else {
+                    event.reply("❌ عذراً، الفريق الأول ممتلئ!").setEphemeral(true).queue();
+                }
+            }
+            case "jawlah_join_b" -> {
+                long uid = event.getUser().getIdLong();
+                if (game.teamBPlayers.contains(uid)) {
+                    event.reply("⚠️ أنت بالفعل في الفريق الثاني!").setEphemeral(true).queue();
+                    return;
+                }
+                game.teamAPlayers.remove(uid);
+                if (game.teamBPlayers.size() < game.maxPlayersPerTeam) {
+                    game.teamBPlayers.add(uid);
+                    sendHelpingHandsSelection(event);
+                } else {
+                    event.reply("❌ عذراً، الفريق الثاني ممتلئ!").setEphemeral(true).queue();
+                }
+            }
             case "jawlah_help_1" -> {
+                if (event.getUser().getIdLong() != game.organizerId) {
+                    event.reply("❌ عذراً، المنظم فقط يمكنه تفعيل المساعدات.").setEphemeral(true).queue();
+                    return;
+                }
                 game.getEnabledHelpers().add("جاوب جوابين ✌️");
                 if (game.selectedValue > 0) showQuestionPrompt(event, game);
                 else sendHelpingHandsSelection(event);
             }
             case "jawlah_help_3" -> {
+                if (event.getUser().getIdLong() != game.organizerId) {
+                    event.reply("❌ عذراً، المنظم فقط يمكنه تفعيل المساعدات.").setEphemeral(true).queue();
+                    return;
+                }
                 game.setPitActive(true);
                 game.getEnabledHelpers().add("الحفرة ⛳");
                 if (game.selectedValue > 0) showQuestionPrompt(event, game);
                 else sendHelpingHandsSelection(event);
             }
             case "jawlah_help_4" -> {
+                if (event.getUser().getIdLong() != game.organizerId) {
+                    event.reply("❌ عذراً، المنظم فقط يمكنه تفعيل المساعدات.").setEphemeral(true).queue();
+                    return;
+                }
                 game.setTurnA(!game.turnA);
                 game.getEnabledHelpers().add("اعكس الدور 🔄");
                 if (game.selectedValue > 0) showQuestionPrompt(event, game);
                 else sendHelpingHandsSelection(event);
             }
             case "jawlah_help_5" -> {
+                if (event.getUser().getIdLong() != game.organizerId) {
+                    event.reply("❌ عذراً، المنظم فقط يمكنه تفعيل المساعدات.").setEphemeral(true).queue();
+                    return;
+                }
                 game.setGoldenQuestion(true);
                 game.getEnabledHelpers().add("السؤال الذهبي 🏆");
                 if (game.selectedValue > 0) showQuestionPrompt(event, game);
@@ -359,6 +424,10 @@ public class JawlahManager extends ListenerAdapter {
 
         private boolean pitActive = false;
         private boolean goldenQuestion = false;
+        
+        private int maxPlayersPerTeam = 5;
+        private final Set<Long> teamAPlayers = new LinkedHashSet<>();
+        private final Set<Long> teamBPlayers = new LinkedHashSet<>();
         
         private final Set<String> usedQuestions = new HashSet<>();
         private final Set<String> enabledHelpers = new LinkedHashSet<>();
