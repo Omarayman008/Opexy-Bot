@@ -156,7 +156,7 @@ public class JawlahManager extends ListenerAdapter {
         sendHelpingHandsSelection(event);
     }
 
-    private void sendHelpingHandsSelection(net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent event) {
+    private void sendHelpingHandsSelection(net.dv8tion.jda.api.interactions.callbacks.IReplyCallback event) {
         JawlahGame game = activeGames.get(event.getChannel().getIdLong());
         
         String enabledStr = game.getEnabledHelpers().isEmpty() ? "*لا يوجد*" : String.join(" - ", game.getEnabledHelpers());
@@ -197,10 +197,10 @@ public class JawlahManager extends ListenerAdapter {
         if (event instanceof ButtonInteractionEvent bie) {
             bie.editMessage(edit.build()).queue();
         } else if (event instanceof ModalInteractionEvent mie) {
-            MessageCreateBuilder cb = new MessageCreateBuilder()
-                    .addContent(body)
-                    .setEmbeds(edit.getEmbeds())
-                    .setComponents(edit.getComponents());
+            MessageCreateBuilder cb = new MessageCreateBuilder();
+            cb.addContent(body);
+            cb.setEmbeds(edit.getEmbeds());
+            cb.setComponents(edit.getComponents());
             mie.reply(cb.build()).queue();
         }
     }
@@ -302,7 +302,7 @@ public class JawlahManager extends ListenerAdapter {
                 .build()).queue();
     }
 
-    private void showQuestionPrompt(net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent event, JawlahGame game) {
+    private void showQuestionPrompt(net.dv8tion.jda.api.interactions.callbacks.IReplyCallback event, JawlahGame game) {
         String key = game.selectedCategory + "_" + game.selectedSubCategory;
         List<JawlahQuestion> qs = questionBank.getOrDefault(key, questionBank.get("general_general_info"));
         JawlahQuestion q = qs.get(new Random().nextInt(qs.size()));
@@ -435,7 +435,7 @@ public class JawlahManager extends ListenerAdapter {
         }
     }
 
-    private void sendBoard(net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent event) {
+    private void sendBoard(net.dv8tion.jda.api.interactions.callbacks.IReplyCallback event) {
         JawlahGame game = activeGames.get(event.getChannel().getIdLong());
         game.setSelectedValue(0); 
         
