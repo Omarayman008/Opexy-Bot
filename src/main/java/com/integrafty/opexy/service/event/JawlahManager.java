@@ -11,12 +11,12 @@ import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
-import net.dv8tion.jda.api.interactions.components.textinput.TextInput;
-import net.dv8tion.jda.api.interactions.components.textinput.TextInputStyle;
-import net.dv8tion.jda.api.interactions.modals.Modal;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
+import net.dv8tion.jda.api.components.selections.StringSelectMenu;
+import net.dv8tion.jda.api.components.textinput.TextInput;
+import net.dv8tion.jda.api.components.textinput.TextInputStyle;
+import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
 import org.springframework.stereotype.Service;
@@ -97,20 +97,110 @@ public class JawlahManager extends ListenerAdapter {
 
         if (id.equals("jawlah_category")) {
             game.setSelectedCategory(event.getValues().get(0));
-            event.reply("تم اختيار الفئة: **" + game.getSelectedCategory() + "**. الآن اختر القيمة.").setEphemeral(true).queue();
+            sendSubCategoryMenu(event, game);
+        } else if (id.equals("jawlah_subcategory")) {
+            game.setSelectedSubCategory(event.getValues().get(0));
+            sendValueMenu(event, game);
         } else if (id.equals("jawlah_value")) {
             game.setSelectedValue(Integer.parseInt(event.getValues().get(0)));
             showQuestionPrompt(event, game);
         }
     }
 
+    private void sendSubCategoryMenu(StringSelectInteractionEvent event, JawlahGame game) {
+        String cat = game.getSelectedCategory();
+        StringSelectMenu.Builder menu = StringSelectMenu.create("jawlah_subcategory").setPlaceholder("اخـتـر الـفـئـة الـفـرعـيـة...");
+
+        switch (cat) {
+            case "songs" -> {
+                menu.addOption("أغاني عربية 🎤", "ar_songs");
+                menu.addOption("أغاني أجنبية 🎸", "en_songs");
+                menu.addOption("أغاني خليجية 🎻", "kh_songs");
+                menu.addOption("خليجيات مترجمة 📝", "kh_trans");
+            }
+            case "football" -> {
+                menu.addOption("عين اللاعب 👀", "player_eye");
+                menu.addOption("من اللاعب 👤", "who_player");
+                menu.addOption("لاعبين صغار 👶", "young_players");
+                menu.addOption("شعارات أندية 🛡️", "club_logos");
+                menu.addOption("اسم اللاعب 📛", "player_name");
+            }
+            case "guess" -> {
+                menu.addOption("خمن الأكل 🍔", "guess_food");
+                menu.addOption("خمن الاسم 👤", "guess_name");
+                menu.addOption("خمن الصورة 🖼️", "guess_img");
+                menu.addOption("خمن اللاعب ⚽", "guess_player");
+            }
+            case "world" -> {
+                menu.addOption("لغات 🗣️", "langs");
+                menu.addOption("أعلام 🚩", "flags");
+                menu.addOption("عملات ورقية 💵", "banknotes");
+                menu.addOption("رمز العملة 💱", "currency_sym");
+                menu.addOption("خرائط 🗺️", "maps");
+                menu.addOption("عواصم 🏛️", "capitals");
+                menu.addOption("لون العلم 🎨", "flag_colors");
+            }
+            case "general" -> {
+                menu.addOption("عالم الحيوان 🦁", "animals");
+                menu.addOption("جيل الطيبين 📺", "old_gen");
+                menu.addOption("مشاهير صغار 👶", "young_celebs");
+                menu.addOption("ولا كلمة 🙊", "no_word");
+                menu.addOption("معلومات عامة 💡", "general_info");
+                menu.addOption("أكمل المثل 📝", "complete_proverb");
+                menu.addOption("وش الأكلة 🥘", "what_food");
+                menu.addOption("الشعار الصحيح ✅", "correct_logo");
+                menu.addOption("بنات وبس 💄", "girls_only");
+                menu.addOption("كودنيمز 🧩", "codenames");
+                menu.addOption("صور ألغاز 🧩", "puzzle_imgs");
+                menu.addOption("شعارات 🏷️", "logos");
+                menu.addOption("حروف 🅰️", "letters");
+                menu.addOption("شعار السيارة 🚗", "car_logo");
+                menu.addOption("تغبيشة 🌫️", "blur");
+                menu.addOption("٣ صور 🖼️", "three_imgs");
+            }
+            case "islamic" -> {
+                menu.addOption("القرآن 📖", "quran");
+                menu.addOption("جزء تبارك 📑", "tabarak");
+                menu.addOption("إسلامي 🕌", "islamic_general");
+                menu.addOption("جزء عم 📜", "amma");
+                menu.addOption("قصص أنبياء ✨", "prophets");
+            }
+            case "art" -> {
+                menu.addOption("One Piece 👒", "one_piece");
+                menu.addOption("Game of Thrones ⚔️", "got");
+                menu.addOption("شخصيات كرتونية 🐭", "cartoons");
+                menu.addOption("Breaking Bad 🧪", "breaking_bad");
+            }
+        }
+
+        event.editMessage(new MessageEditBuilder()
+                .setComponents(ActionRow.of(menu.build()), ActionRow.of(Button.secondary("jawlah_back", "الـعـودة لـلـوحـة ⬅️")))
+                .build()).queue();
+    }
+
+    private void sendValueMenu(StringSelectInteractionEvent event, JawlahGame game) {
+        StringSelectMenu valueMenu = StringSelectMenu.create("jawlah_value")
+                .setPlaceholder("اخـتـر قـيـمـة الـنـقـاط...")
+                .addOption("100 نقطة", "100")
+                .addOption("200 نقطة", "200")
+                .addOption("300 نقطة", "300")
+                .addOption("400 نقطة", "400")
+                .addOption("500 نقطة", "500")
+                .addOption("600 نقطة", "600")
+                .build();
+
+        event.editMessage(new MessageEditBuilder()
+                .setComponents(ActionRow.of(valueMenu), ActionRow.of(Button.secondary("jawlah_back", "الـعـودة لـلـوحـة ⬅️")))
+                .build()).queue();
+    }
+
     private void showQuestionPrompt(StringSelectInteractionEvent event, JawlahGame game) {
         String body = String.format("### ❓ ســـؤال الـــتـــحـــدي\n\n" +
-                "**الـفـئـة:** `%s`\n" +
+                "**الـفـئـة:** `%s` -> `%s`\n" +
                 "**الـقـيـمـة:** `%d` نـقـطـة\n" +
                 "**الـدور لـفـريـق:** %s\n\n" +
                 "انـتـظـر الإجـابـة مـن الـفـريـق ثـم اضـغـط عـلـى الـتـقـيـيـم الـمـنـاسـب.",
-                game.selectedCategory, game.selectedValue, game.turnA ? game.teamAName : game.teamBName);
+                game.selectedCategory, game.selectedSubCategory, game.selectedValue, game.turnA ? game.teamAName : game.teamBName);
 
         event.editMessage(new MessageEditBuilder()
                 .setComponents(EmbedUtil.containerBranded("QUESTION", "🔍 جـــاري بـــحـــث الـــســـؤال...", body, EmbedUtil.BANNER_MAIN,
@@ -210,22 +300,12 @@ public class JawlahManager extends ListenerAdapter {
                 .addOption("عام 📚", "general")
                 .addOption("إسلاميات 🌙", "islamic")
                 .addOption("فن 🎨", "art")
-                .build();
-
-        StringSelectMenu valueMenu = StringSelectMenu.create("jawlah_value")
-                .setPlaceholder("اخـتـر قـيـمـة الـنـقـاط...")
-                .addOption("100 نقطة", "100")
-                .addOption("200 نقطة", "200")
-                .addOption("300 نقطة", "300")
-                .addOption("400 نقطة", "400")
-                .addOption("500 نقطة", "500")
-                .addOption("600 نقطة", "600")
+                .addOption("أغاني 🎵", "songs")
                 .build();
 
         event.editMessage(new MessageEditBuilder()
                 .setComponents(EmbedUtil.containerBranded("GAME", "🎮 لوحـة الـتـحـدي — Jawlah Board", body, EmbedUtil.BANNER_MAIN,
                         ActionRow.of(categoryMenu),
-                        ActionRow.of(valueMenu),
                         ActionRow.of(Button.danger("jawlah_stop", "إنـهـاء الـلـعـبـة 🛑"))
                 ))
                 .useComponentsV2(true).build()).queue();
@@ -243,7 +323,11 @@ public class JawlahManager extends ListenerAdapter {
         private boolean turnA = true;
         
         private String selectedCategory;
+        private String selectedSubCategory;
         private int selectedValue;
+
+        private boolean pitActive = false;
+        private boolean goldenQuestion = false;
         
         private final Set<String> usedQuestions = new HashSet<>();
 
