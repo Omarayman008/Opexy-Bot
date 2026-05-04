@@ -28,31 +28,24 @@ public class CraftCommand implements MultiSlashCommand {
 
     @Override
     public List<SlashCommandData> getCommandDataList() {
-        return List.of(Commands.slash("craft", "بدء فعالية التخمين من خلال الصناعة (Staff Only)")
-                .addOptions(new OptionData(OptionType.INTEGER, "reward", "قيمة الجائزة بالـ opex", true))
-                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)));
+        return List.of(Commands.slash("craft", "بدء لعبة التخمين من خلال الصناعة (فردية)")
+                .addOptions(new OptionData(OptionType.INTEGER, "reward", "قيمة الجائزة بالـ opex", true)));
     }
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         if (!event.getName().equals("craft")) return;
 
-        if (eventManager.isEventActive()) {
-            event.replyEmbeds(EmbedUtil.error("EVENT ACTIVE", "هناك فعالية جارية حالياً، يرجى انتظار انتهائها.").getEmbeds().get(0))
-                    .setEphemeral(true).queue();
-            return;
-        }
-
         int reward = event.getOption("reward").getAsInt();
-        eventManager.startGroupEvent("تخمين الصناعة");
+        long userId = event.getUser().getIdLong();
         
-        String grid = craftManager.startCraft(reward, event.getGuild(), event.getMember());
+        String grid = craftManager.startCraft(userId, reward, event.getGuild(), event.getMember());
 
-        String description = "أمامك طاولة كرافتنق تحتوي على أغراض... خمن ما هو الشيء الذي يتم صنعه؟\n\n" +
+        String description = String.format("أمامك طاولة كرافتنق خاصة بك يا %s... خمن ما هو الشيء الذي يتم صنعه؟\n\n", event.getUser().getAsMention()) +
                 grid + "\n" +
-                "💰 الجائزة: **%d opex**\n\n" +
+                "💰 الجائزة: **" + reward + " opex**\n\n" +
                 "💡 اكتب الإجابة مباشرة في الشات!";
 
-        event.replyEmbeds(EmbedUtil.containerBranded("CRAFTING", "🛠️ ماذا نصنع؟", String.format(description, reward), EmbedUtil.BANNER_MAIN).getEmbeds().get(0)).queue();
+        event.replyEmbeds(EmbedUtil.containerBranded("CRAFTING", "🛠️ ماذا نصنع؟", description, EmbedUtil.BANNER_MAIN).getEmbeds().get(0)).queue();
     }
 }

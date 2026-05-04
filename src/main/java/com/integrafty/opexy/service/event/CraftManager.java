@@ -21,8 +21,8 @@ public class CraftManager extends ListenerAdapter {
     private final EconomyService economyService;
     private final LogManager logManager;
 
-    private Recipe activeRecipe = null;
-    private long reward = 5000;
+    private final Map<Long, Recipe> userActiveRecipes = new HashMap<>();
+    private final Map<Long, Long> userRewards = new HashMap<>();
 
     private static final Map<String, String> ITEMS = Map.of(
             "W", "🪵", // Wood
@@ -39,7 +39,7 @@ public class CraftManager extends ListenerAdapter {
     @RequiredArgsConstructor
     private static class Recipe {
         final String[][] grid;
-        final List<String> possibleNames; // Multiple names for same item (sword, سيف)
+        final List<String> possibleNames;
         final String displayName;
     }
 
@@ -54,21 +54,22 @@ public class CraftManager extends ListenerAdapter {
             new Recipe(new String[][]{{"P", "P", "P"}, {"P", "E", "P"}, {"P", "P", "P"}}, List.of("خريطة", "map", "ماب"), "خريطة فارغة")
     );
 
-    public String startCraft(long rewardAmount, Guild guild, Member organizer) {
-        this.reward = rewardAmount;
-        this.activeRecipe = RECIPES.get(new Random().nextInt(RECIPES.size()));
+    public String startCraft(long userId, long rewardAmount, Guild guild, Member organizer) {
+        Recipe recipe = RECIPES.get(new Random().nextInt(RECIPES.size()));
+        userActiveRecipes.put(userId, recipe);
+        userRewards.put(userId, rewardAmount);
 
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                sb.append(ITEMS.get(activeRecipe.grid[i][j])).append(" ");
+                sb.append(ITEMS.get(recipe.grid[i][j])).append(" ");
             }
             sb.append("\n");
         }
 
         // LOGGING
-        String logDetails = String.format("### 🛠️ فعالية الصناعة: بدء الفعالية\n▫️ **المنظم:** %s\n▫️ **الجائزة:** %d opex\n▫️ **الشيء المطلوب:** %s", 
-                organizer.getAsMention(), rewardAmount, activeRecipe.displayName);
+        String logDetails = String.format("### 🛠️ فعالية الصناعة: بدء (فردية)\n▫️ **اللاعب:** %s\n▫️ **الجائزة:** %d opex\n▫️ **الشيء المطلوب:** %s", 
+                organizer.getAsMention(), rewardAmount, recipe.displayName);
         logManager.logEmbed(guild, LogManager.LOG_GAMES, 
                 EmbedUtil.createOldLogEmbed("craft", logDetails, organizer, null, null, EmbedUtil.INFO));
 
@@ -77,24 +78,27 @@ public class CraftManager extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.getAuthor().isBot() || activeRecipe == null) return;
+        long userId = event.getAuthor().getIdLong();
+        if (event.getAuthor().isBot() || !userActiveRecipes.containsKey(userId)) return;
+
+        Recipe activeRecipe = userActiveRecipes.get(userId);
+        long reward = userRewards.get(userId);
 
         String content = event.getMessage().getContentRaw().trim().toLowerCase();
         if (activeRecipe.possibleNames.contains(content)) {
-            String winnerId = event.getAuthor().getId();
             String itemName = activeRecipe.displayName;
-            activeRecipe = null;
-            eventManager.endGroupEvent();
+            userActiveRecipes.remove(userId);
+            userRewards.remove(userId);
 
-            economyService.addBalance(winnerId, event.getGuild().getId(), (int) reward);
-            achievementService.incrementGameWin(winnerId);
+            economyService.addBalance(event.getAuthor().getId(), event.getGuild().getId(), (int) reward);
+            achievementService.incrementGameWin(event.getAuthor().getId());
 
             event.getChannel().sendMessageEmbeds(EmbedUtil.success("CRAFTING MASTER", 
-                    String.format("✅ كفو <@%s>! الإجابة صحيحة، الشيء هو **%s**.\n💰 ربحت **%d opex**!", winnerId, itemName, reward)).getEmbeds().get(0)).queue();
+                    String.format("✅ كفو <@%s>! الإجابة صحيحة، الشيء هو **%s**.\n💰 ربحت **%d opex**!", event.getAuthor().getId(), itemName, reward)).getEmbeds().get(0)).queue();
 
             // LOG WIN
-            String logWin = String.format("### 🏆 فعالية الصناعة: فوز\n▫️ **الفائز:** <@%s>\n▫️ **الجائزة:** %d opex\n▫️ **الشيء:** %s", 
-                    winnerId, reward, itemName);
+            String logWin = String.format("### 🏆 فعالية الصناعة: فوز (فردية)\n▫️ **الفائز:** <@%s>\n▫️ **الجائزة:** %d opex\n▫️ **الشيء:** %s", 
+                    event.getAuthor().getId(), reward, itemName);
             logManager.logEmbed(event.getGuild(), LogManager.LOG_GAMES, 
                     EmbedUtil.createOldLogEmbed("craft_win", logWin, event.getMember(), null, null, EmbedUtil.SUCCESS));
         }
