@@ -197,12 +197,10 @@ public class JawlahManager extends ListenerAdapter {
         if (event instanceof ButtonInteractionEvent bie) {
             bie.editMessage(edit.build()).queue();
         } else if (event instanceof ModalInteractionEvent mie) {
-            // Convert EditBuilder content to CreateBuilder for the initial reply
-            MessageEditBuilder eb = edit;
             MessageCreateBuilder cb = new MessageCreateBuilder()
-                    .addContent(eb.getContent())
-                    .setEmbeds(eb.getEmbeds())
-                    .setComponents(eb.getComponents());
+                    .addContent(body)
+                    .setEmbeds(edit.getEmbeds())
+                    .setComponents(edit.getComponents());
             mie.reply(cb.build()).queue();
         }
     }
