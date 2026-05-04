@@ -159,7 +159,7 @@ public class BombManager extends ListenerAdapter {
         userCorrectWire.remove(userId);
         userRewards.remove(userId);
 
-        String failMsg = "💥 **بـوووم!** انتهى الوقت وانفجرت القنبلة!\n❌ حظاً أوفر في المرة القادمة.";
+        String failMsg = String.format("💥 **بـوووم!** انتهى الوقت وانفجرت القنبلة!\n✅ السلك الصحيح كان: **%s**\n❌ حظاً أوفر في المرة القادمة.", WIRE_COLORS.get(correct));
         
         hook.editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
                 .setComponents(EmbedUtil.error("BOMB EXPLODED", "`=---------------- 00:00 ----------------=`\n\n" + failMsg))
@@ -233,8 +233,8 @@ public class BombManager extends ListenerAdapter {
             userCorrectWire.remove(userId);
             userRewards.remove(userId);
             
-            String failMsg = String.format("💥 **بـوووم!** قمت بقطع السلك الخطأ (%s) وانفجرت القنبلة في وجهك!\n❌ حظاً أوفر في المرة القادمة.", 
-                    WIRE_COLORS.get(color));
+            String failMsg = String.format("💥 **بـوووم!** قمت بقطع السلك الخطأ (%s) وانفجرت القنبلة!\n✅ السلك الصحيح كان: **%s**\n❌ حظاً أوفر في المرة القادمة.", 
+                    WIRE_COLORS.get(color), WIRE_COLORS.get(correctColor));
             
             event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
                     .setComponents(EmbedUtil.error("BOMB EXPLODED", "`=---------------- BOOM ----------------=`\n\n" + failMsg))

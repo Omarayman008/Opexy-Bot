@@ -138,11 +138,12 @@ public class CraftManager extends ListenerAdapter {
                 
                 if (timeLeft[0] <= 0) {
                     stopTimer(userId);
-                    if (userActiveRecipes.containsKey(userId)) {
+                    Recipe activeRecipe = userActiveRecipes.get(userId);
+                    if (activeRecipe != null) {
                         userActiveRecipes.remove(userId);
                         userRewards.remove(userId);
                         
-                        String failMsg = "⏰ **انتهى الوقت!** لم تنجح في تخمين الشيء المطلوب.\n❌ حظاً أوفر في المرة القادمة.";
+                        String failMsg = String.format("⏰ **انتهى الوقت!** لم تنجح في تخمين الشيء المطلوب.\n✅ الشيء الصحيح هو: **%s**\n❌ حظاً أوفر في المرة القادمة.", activeRecipe.displayName);
                         event.getHook().editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
                                 .setComponents(EmbedUtil.error("CRAFTING TIMEOUT", "`=---------------- 00:00 ----------------=`\n\n" + failMsg))
                                 .useComponentsV2(true)
