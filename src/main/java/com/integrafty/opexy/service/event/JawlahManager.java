@@ -142,11 +142,9 @@ public class JawlahManager extends ListenerAdapter {
                 );
 
         if (event instanceof ButtonInteractionEvent bie) {
-            bie.editMessage(new MessageEditBuilder().setComponents(container).useComponentsV2(true).build())
-                .useComponentsV2(true).queue();
+            bie.editMessage(new MessageEditBuilder().setComponents(container).useComponentsV2(true).build()).queue();
         } else if (event instanceof ModalInteractionEvent mie) {
-            mie.reply(new MessageCreateBuilder().setComponents(container).useComponentsV2(true).build())
-                .useComponentsV2(true).queue();
+            mie.reply(new MessageCreateBuilder().setComponents(container).useComponentsV2(true).build()).queue();
         }
     }
 
