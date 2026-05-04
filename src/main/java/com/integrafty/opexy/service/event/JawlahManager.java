@@ -65,21 +65,29 @@ public class JawlahManager extends ListenerAdapter {
         sendHelpingHandsSelection(event);
     }
 
-    private void sendHelpingHandsSelection(ModalInteractionEvent event) {
-        String body = "### 🛠️ وســـائـــل الـــمـــســـاعـــدة\nاخـــتـــر وســـائـــل الـــمـــســـاعـــدة الـــمـــتـــاحـــة لـــكـــل فـــريـــق فـــي هـــذه الـــجـــولـــة.";
+    private void sendHelpingHandsSelection(net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent event) {
+        JawlahGame game = activeGames.get(event.getChannel().getIdLong());
         
-        event.reply(new MessageCreateBuilder()
+        String enabledStr = game.getEnabledHelpers().isEmpty() ? "*لا يوجد*" : String.join(" - ", game.getEnabledHelpers());
+        String body = "### 🛠️ وســـائـــل الـــمـــســـاعـــدة\n" +
+                "اخـــتـــر وســـائـــل الـــمـــســـاعـــدة الـــمـــتـــاحـــة لـــكـــل فـــريـــق فـــي هـــذه الـــجـــولـــة.\n\n" +
+                "**الـــمـــســـاعـــدات الـــمـــفـــعـــلـــه:**\n" +
+                enabledStr;
+        
+        MessageEditBuilder edit = new MessageEditBuilder()
                 .setComponents(EmbedUtil.containerBranded("SETUP", "حـــدّد وســـائـــل الـــمـــســـاعـــدة", body, EmbedUtil.BANNER_MAIN,
                         ActionRow.of(
                                 Button.secondary("jawlah_help_1", "جاوب جوابين ✌️"),
-                                Button.secondary("jawlah_help_2", "اتصال بصديق 📞"),
                                 Button.secondary("jawlah_help_3", "الحفرة ⛳"),
                                 Button.secondary("jawlah_help_4", "اعكس الدور 🔄"),
                                 Button.secondary("jawlah_help_5", "السؤال الذهبي 🏆")
                         ),
                         ActionRow.of(Button.success("jawlah_start_confirm", "بـــدء الـــلـــعـــب 🚀"))
                 ))
-                .useComponentsV2(true).build()).queue();
+                .useComponentsV2(true);
+
+        if (event instanceof ButtonInteractionEvent bie) bie.editMessage(edit.build()).queue();
+        else if (event instanceof ModalInteractionEvent mie) mie.reply(edit.build()).queue();
     }
 
     @Override
@@ -200,7 +208,6 @@ public class JawlahManager extends ListenerAdapter {
                         ),
                         ActionRow.of(
                                 Button.secondary("jawlah_help_1", "جاوب جوابين ✌️"),
-                                Button.secondary("jawlah_help_2", "اتصال بصديق 📞"),
                                 Button.secondary("jawlah_help_4", "اعكس الدور 🔄"),
                                 Button.secondary("jawlah_help_5", "السؤال الذهبي 🏆")
                         ),
@@ -258,24 +265,28 @@ public class JawlahManager extends ListenerAdapter {
                 eventManager.endGroupEvent();
                 event.reply("🛑 تم إنهاء لعبة جولة.").queue();
             }
-            case "jawlah_help_1" -> event.reply("✅ تم تفعيل: **جاوب جوابين**").setEphemeral(true).queue();
-            case "jawlah_help_2" -> event.reply("✅ تم تفعيل: **اتصال بصديق**").setEphemeral(true).queue();
+            case "jawlah_help_1" -> {
+                game.getEnabledHelpers().add("جاوب جوابين ✌️");
+                if (game.selectedValue > 0) showQuestionPrompt(event, game);
+                else sendHelpingHandsSelection(event);
+            }
             case "jawlah_help_3" -> {
                 game.setPitActive(true);
-                event.reply("⛳ تم تفعيل: **الحفرة**").setEphemeral(true).queue();
-                sendBoard(event);
+                game.getEnabledHelpers().add("الحفرة ⛳");
+                if (game.selectedValue > 0) showQuestionPrompt(event, game);
+                else sendHelpingHandsSelection(event);
             }
             case "jawlah_help_4" -> {
                 game.setTurnA(!game.turnA);
-                event.reply("🔄 تم تفعيل: **اعكس الدور**").setEphemeral(true).queue();
+                game.getEnabledHelpers().add("اعكس الدور 🔄");
                 if (game.selectedValue > 0) showQuestionPrompt(event, game);
-                else sendBoard(event);
+                else sendHelpingHandsSelection(event);
             }
             case "jawlah_help_5" -> {
                 game.setGoldenQuestion(true);
-                event.reply("🏆 تم تفعيل: **السؤال الذهبي**").setEphemeral(true).queue();
+                game.getEnabledHelpers().add("السؤال الذهبي 🏆");
                 if (game.selectedValue > 0) showQuestionPrompt(event, game);
-                else sendBoard(event);
+                else sendHelpingHandsSelection(event);
             }
         }
     }
@@ -350,6 +361,7 @@ public class JawlahManager extends ListenerAdapter {
         private boolean goldenQuestion = false;
         
         private final Set<String> usedQuestions = new HashSet<>();
+        private final Set<String> enabledHelpers = new LinkedHashSet<>();
 
         public JawlahGame(long channelId, long organizerId) {
             this.channelId = channelId;
