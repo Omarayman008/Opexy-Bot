@@ -49,12 +49,12 @@ public class CraftManager extends ListenerAdapter {
             Map.entry("D", "<:dimoand:1500878887662518334>"), // Diamond
             Map.entry("P", "<:Minecraft_Sugar_Cane_Item__HD_Pn:1500879626824585426>"), // Sugar Cane (Paper)
             Map.entry("B", "<:coble_stone:1500879838041608243>"), // Cobblestone
-            Map.entry("C", "<:obsadian:1500879689659584643>"), // Obsidian/Coal
+            Map.entry("C", "⬛"), // Coal (Using black square for now)
             Map.entry("E", "🔳"), // Empty
             Map.entry("R", "<:red_stone:1500879139010383913>"), // Redstone
             Map.entry("L", "<:string:1500880235510497360>"), // String
             Map.entry("F", "<:Minecraft_Gunpowder_pngremovebgp:1500879430367707366>"), // Gunpowder
-            Map.entry("Q", "<:quartz:1500880509960589404>"), // Quartz
+            Map.entry("Q", "⬜"), // Quartz/Glass (Using white square for glass)
             Map.entry("O", "<:obsadian:1500879689659584643>"), // Obsidian
             Map.entry("T", "<:torch:1500879281654464652>"), // Torch
             Map.entry("H", "<:Enchanted_Book__Minecraft_Plugin:1500879162246828203>"), // Book
@@ -65,7 +65,7 @@ public class CraftManager extends ListenerAdapter {
             Map.entry("Z", "<:sand:1500879926696607846>"), // Sand
             Map.entry("V", "<:water_empty_bottle:1500880709315723428>"), // Glass Bottle
             Map.entry("M", "<:emraled_ingot:1500879037868806237>"), // Emerald
-            Map.entry("Y", "<:hay_bale:1500880117302562856>"), // Hay Bale
+            Map.entry("Y", "<:hay_bale:1500880117302562856>"), // Hay Bale/Wheat
             Map.entry("J", "<:feather:1500880285431238807>")  // Feather
     );
 
@@ -108,7 +108,7 @@ public class CraftManager extends ListenerAdapter {
             new Recipe(new String[][]{{"I", "I", "I"}, {"I", "I", "I"}, {"E", "E", "E"}}, List.of("درع", "chestplate", "درع حديد", "الدرع", "درع الحديد", "تشيست بليت"), "درع حديد", Difficulty.HARD),
             new Recipe(new String[][]{{"G", "G", "G"}, {"G", "A", "G"}, {"G", "G", "G"}}, List.of("تفاحة ذهبية", "golden apple", "تفاحة ذهب", "قولدن ابل"), "تفاحة ذهبية", Difficulty.HARD),
             new Recipe(new String[][]{{"O", "O", "O"}, {"O", "N", "O"}, {"O", "O", "O"}}, List.of("صندوق اندر", "ender chest", "اندر تشيست"), "صندوق اندر", Difficulty.HARD),
-            new Recipe(new String[][]{{"G", "G", "G"}, {"G", "K", "G"}, {"O", "O", "O"}}, List.of("بيكون", "beacon", "منارة", "بيكن"), "بيكون", Difficulty.HARD),
+            new Recipe(new String[][]{{"Q", "Q", "Q"}, {"Q", "K", "Q"}, {"O", "O", "O"}}, List.of("بيكون", "beacon", "منارة", "بيكن"), "بيكون", Difficulty.HARD),
             new Recipe(new String[][]{{"F", "Z", "F"}, {"Z", "F", "Z"}, {"F", "Z", "F"}}, List.of("تي ان تي", "tnt", "متفجرات"), "TNT", Difficulty.HARD),
             new Recipe(new String[][]{{"F", "E", "E"}, {"S", "E", "E"}, {"J", "E", "E"}}, List.of("سهم", "arrow", "سهام"), "سهم", Difficulty.HARD),
 
@@ -126,7 +126,7 @@ public class CraftManager extends ListenerAdapter {
             new Recipe(new String[][]{{"I", "E", "I"}, {"E", "I", "E"}, {"E", "E", "E"}}, List.of("سطل", "bucket", "سطل حديد", "جردل"), "سطل حديد", Difficulty.MEDIUM),
             new Recipe(new String[][]{{"W", "E", "W"}, {"E", "W", "E"}, {"E", "E", "E"}}, List.of("وعاء", "bowl", "صحن"), "وعاء خشبي", Difficulty.EASY),
             new Recipe(new String[][]{{"P", "P", "P"}, {"E", "E", "E"}, {"E", "E", "E"}}, List.of("ورق", "paper", "ورقة"), "ورق", Difficulty.EASY),
-            new Recipe(new String[][]{{"K", "K", "K"}, {"E", "E", "E"}, {"E", "E", "E"}}, List.of("خبز", "bread", "الخبز"), "خبز", Difficulty.EASY),
+            new Recipe(new String[][]{{"Y", "Y", "Y"}, {"E", "E", "E"}, {"E", "E", "E"}}, List.of("خبز", "bread", "الخبز"), "خبز", Difficulty.EASY),
             new Recipe(new String[][]{{"S", "S", "S"}, {"S", "U", "S"}, {"S", "S", "S"}}, List.of("لوحة", "painting", "لوحه"), "لوحة فنية", Difficulty.MEDIUM),
             new Recipe(new String[][]{{"Q", "Q", "Q"}, {"W", "W", "W"}, {"E", "E", "E"}}, List.of("سرير", "bed", "السرير"), "سرير", Difficulty.MEDIUM),
             new Recipe(new String[][]{{"W", "S", "W"}, {"W", "S", "W"}, {"E", "E", "E"}}, List.of("سياج", "fence", "سور"), "سياج خشبي", Difficulty.MEDIUM),
