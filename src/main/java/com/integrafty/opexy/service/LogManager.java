@@ -23,6 +23,7 @@ public class LogManager {
     public static final String LOG_MODS_CMD   = "1500224277453078548";
     public static final String LOG_ROLES      = "1500224341399441639";
     public static final String LOG_USERS      = "1500224421963632650";
+    public static final String LOG_GAMES      = "1500808391633801216";
 
     private final Map<String, TextChannel> channelCache = new ConcurrentHashMap<>();
 

@@ -49,7 +49,7 @@ public class PipePuzzleCommand implements MultiSlashCommand {
         String difficulty = event.getOption("difficulty") != null ? event.getOption("difficulty").getAsString() : "easy";
         int size = difficulty.equals("easy") ? 3 : difficulty.equals("medium") ? 4 : 5;
         
-        String renderedGrid = pipePuzzleManager.startNewGame(event.getUser().getIdLong(), size);
+        String renderedGrid = pipePuzzleManager.startNewGame(event.getUser().getIdLong(), size, event.getGuild());
 
         event.reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
                 .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("ENGINEERING", "لغز الأنابيب — صعوبة: " + difficulty, "استخدم الأسهم للتحرك والزر الدائري لتدوير الأنبوب!\n\n" + renderedGrid, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN,

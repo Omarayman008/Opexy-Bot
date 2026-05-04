@@ -28,12 +28,14 @@ public class AuctionManager extends ListenerAdapter {
     private final AchievementService achievementService;
     private final EventManager eventManager;
     private final EconomyService economyService;
+    private final LogManager logManager;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-    public AuctionManager(AchievementService achievementService, EventManager eventManager, EconomyService economyService) {
+    public AuctionManager(AchievementService achievementService, EventManager eventManager, EconomyService economyService, LogManager logManager) {
         this.achievementService = achievementService;
         this.eventManager = eventManager;
         this.economyService = economyService;
+        this.logManager = logManager;
     }
 
     private long currentHighestBid = 0;
@@ -46,19 +48,23 @@ public class AuctionManager extends ListenerAdapter {
     private String guildId = null;
     private String targetRoleId = null;
 
-    public void startAuction(net.dv8tion.jda.api.entities.channel.middleman.MessageChannel channel, String prize, String targetRoleId, int duration, long targetPrice) {
+    public void startAuction(net.dv8tion.jda.api.entities.channel.middleman.MessageChannel channel, net.dv8tion.jda.api.entities.Guild guild, net.dv8tion.jda.api.entities.Member organizer, String prize, String targetRoleId, int duration, long targetPrice) {
         this.currentPrize = prize;
         this.targetRoleId = targetRoleId;
         this.durationSeconds = duration > 0 ? duration : 30;
         this.targetPrice = targetPrice;
         this.currentHighestBid = 0;
         this.highestBidderId = 0;
-        
-        if (channel instanceof net.dv8tion.jda.api.entities.channel.middleman.GuildChannel gc) {
-            this.guildId = gc.getGuild().getId();
-        }
+        this.guildId = guild.getId();
 
         log.info("[Auction] Starting auction in channel {} for {} seconds. Prize: {}", channel.getName(), durationSeconds, currentPrize);
+        
+        // LOGGING
+        String logDetails = String.format("### 🏆 فعالية المزاد: بدء المزاد\n▫️ **المنظم:** %s\n▫️ **الجائزة:** %s\n▫️ **المدة:** %d ثانية", 
+                organizer.getAsMention(), prize, durationSeconds);
+        logManager.logEmbed(guild, LogManager.LOG_GAMES, 
+                EmbedUtil.createOldLogEmbed("auction", logDetails, organizer, null, null, EmbedUtil.INFO));
+
         if (endTask != null) endTask.cancel(false);
         endTask = scheduler.schedule(() -> {
             log.info("[Auction] Timer expired for auction in channel {}", channel.getName());
@@ -217,6 +223,14 @@ public class AuctionManager extends ListenerAdapter {
                     .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("AUCTION", "🏁 انتهى المزاد!", body, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN))
                     .useComponentsV2(true).build())
                     .useComponentsV2(true).queue();
+
+            // LOGGING
+            String winnerMention = highestBidderId != 0 ? "<@" + highestBidderId + ">" : "لا يوجد";
+            String logDetails = String.format("### 🏆 فعالية المزاد: انتهى المزاد\n▫️ **الفائز:** %s\n▫️ **السعر النهائي:** %d opex\n▫️ **الجائزة:** %s", 
+                    winnerMention, currentHighestBid, currentPrize);
+            logManager.logEmbed(channel instanceof net.dv8tion.jda.api.entities.channel.middleman.GuildChannel ? ((net.dv8tion.jda.api.entities.channel.middleman.GuildChannel)channel).getGuild() : null, 
+                    LogManager.LOG_GAMES, 
+                    EmbedUtil.createOldLogEmbed("auction", logDetails, null, null, null, EmbedUtil.SUCCESS));
 
         } catch (Exception e) {
             log.error("[Auction] Error finishing auction: ", e);

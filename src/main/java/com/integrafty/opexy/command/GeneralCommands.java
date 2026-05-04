@@ -13,6 +13,8 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
@@ -59,7 +61,8 @@ public class GeneralCommands implements MultiSlashCommand {
 
         list.add(Commands.slash("give", "شـــحـــن رصـــيـــد لـــعـــضـــو (خاص بالإدارة)")
                 .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
-                .addOption(OptionType.INTEGER, "amount", "الـــمـــبـــلـــغ", true));
+                .addOption(OptionType.INTEGER, "amount", "الـــمـــبـــلـــغ", true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)));
 
         list.add(Commands.slash("transfer", "تـــحـــويـــل رصـــيـــد لـــمـــســـتـــخـــدم آخـــر")
                 .addOption(OptionType.USER, "user", "الـــمـــســـتـــخـــدم الـــمـــرســـل إلـــيـــه", true)
@@ -69,7 +72,8 @@ public class GeneralCommands implements MultiSlashCommand {
                 .addOptions(new net.dv8tion.jda.api.interactions.commands.build.OptionData(OptionType.STRING, "type", "نوع الفعالية المراد إيقافها", false)
                         .addChoice("المزاد (Auction)", "auction")
                         .addChoice("المافيا (Mafia)", "mafia")
-                        .addChoice("الكل (All)", "all")));
+                        .addChoice("الكل (All)", "all"))
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)));
 
         return list;
     }

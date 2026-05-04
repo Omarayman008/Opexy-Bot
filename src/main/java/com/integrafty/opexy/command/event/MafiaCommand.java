@@ -8,7 +8,8 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.components.actionrow.ActionRow;
-import net.dv8tion.jda.api.components.buttons.Button;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -34,7 +35,8 @@ public class MafiaCommand implements MultiSlashCommand {
 
     @Override
     public List<SlashCommandData> getCommandDataList() {
-        return List.of(Commands.slash("mafia", "بدء لعبة المافيا (Staff Only)"));
+        return List.of(Commands.slash("mafia", "بدء لعبة المافيا (Staff Only)")
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)));
     }
 
     @Override
@@ -55,7 +57,7 @@ public class MafiaCommand implements MultiSlashCommand {
             return;
         }
 
-        mafiaManager.startNewGame(event.getChannel().getIdLong());
+        mafiaManager.startNewGame(event.getChannel().getIdLong(), event.getGuild(), event.getMember());
 
         String body = "تم فتح باب الانضمام للعبة المافيا!\n\n**القوانين:**\n• الحد الأدنى للاعبين: 5.\n• الأدوار: مافيا، طبيب، محقق، مواطن.\n• النهار للمناقشة، والليل لتنفيذ الأدوار.";
 

@@ -7,6 +7,8 @@ import com.integrafty.opexy.service.event.ScavengerHuntManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,7 +40,8 @@ public class ScavengerHuntCommand implements MultiSlashCommand {
     @Override
     public List<SlashCommandData> getCommandDataList() {
         return List.of(Commands.slash("hunt", "بدء فعالية الصيد (Scavenger Hunt)")
-                .addOption(net.dv8tion.jda.api.interactions.commands.OptionType.INTEGER, "reward", "مبلغ الجائزة (افتراضي 5000)", false));
+                .addOption(net.dv8tion.jda.api.interactions.commands.OptionType.INTEGER, "reward", "مبلغ الجائزة (افتراضي 5000)", false)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)));
     }
 
     @Override
@@ -60,7 +63,7 @@ public class ScavengerHuntCommand implements MultiSlashCommand {
         }
 
         long reward = event.getOption("reward") != null ? event.getOption("reward").getAsLong() : 5000;
-        String code = huntManager.startHunt(reward);
+        String code = huntManager.startHunt(reward, event.getGuild(), event.getMember());
 
         List<TextChannel> channels = event.getGuild().getTextChannels().stream()
                 .filter(ch -> ch.canTalk())

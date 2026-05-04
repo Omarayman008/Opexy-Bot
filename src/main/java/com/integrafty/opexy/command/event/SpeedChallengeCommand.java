@@ -6,6 +6,8 @@ import com.integrafty.opexy.service.event.EventManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
@@ -22,6 +24,7 @@ public class SpeedChallengeCommand implements MultiSlashCommand {
 
     private final EventManager eventManager;
     private final AchievementService achievementService;
+    private final LogManager logManager;
     private final Random random = new Random();
 
     @Value("${opexy.roles.hype-manager}")
@@ -35,10 +38,11 @@ public class SpeedChallengeCommand implements MultiSlashCommand {
             "درع ذهبي", "خشب محلل", "بوابة النذر", "تنين الاندر", "قرية القرويين",
             "صندوق مخفي", "بيوم الغابة", "كهف عميق", "منجم قديم", "خيوط عنكبوت"
     );
-
-    public SpeedChallengeCommand(EventManager eventManager, AchievementService achievementService) {
+...
+    public SpeedChallengeCommand(EventManager eventManager, AchievementService achievementService, LogManager logManager) {
         this.eventManager = eventManager;
         this.achievementService = achievementService;
+        this.logManager = logManager;
     }
 
     @Override
@@ -47,7 +51,8 @@ public class SpeedChallengeCommand implements MultiSlashCommand {
                 .addOptions(new OptionData(OptionType.STRING, "difficulty", "الصعوبة", true)
                         .addChoice("سهل (Easy)", "easy")
                         .addChoice("متوسط (Medium)", "medium")
-                        .addChoice("صعب (Hard)", "hard")));
+                        .addChoice("صعب (Hard)", "hard"))
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)));
     }
 
     @Override
@@ -59,6 +64,12 @@ public class SpeedChallengeCommand implements MultiSlashCommand {
 
         String word = MINECRAFT_WORDS.get(random.nextInt(MINECRAFT_WORDS.size()));
         String body = "أسرع شخص يكتب الكلمة التالية يربح **" + reward + " opex**!\n\nالكلمة هي:\n**" + word + "**";
+
+        // LOGGING
+        String logDetails = String.format("### ⚡ تحدي السرعة: بدء التحدي\n▫️ **المنظم:** %s\n▫️ **الكلمة:** %s\n▫️ **الجائزة:** %d opex", 
+                event.getMember().getAsMention(), word, reward);
+        logManager.logEmbed(event.getGuild(), LogManager.LOG_GAMES, 
+                EmbedUtil.createOldLogEmbed("speed", logDetails, event.getMember(), null, null, EmbedUtil.INFO));
 
         event.reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
                 .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("SPEED", "⚡ تحدي الـ 7 ثواني!", body, com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN))
@@ -88,6 +99,13 @@ public class SpeedChallengeCommand implements MultiSlashCommand {
                             achievementService.updateStats(msgEvent.getAuthor().getIdLong(), event.getGuild(), stats -> {
                                 stats.setSpeedWins(stats.getSpeedWins() + 1);
                             });
+
+                            // LOGGING
+                            String logWin = String.format("### ⚡ تحدي السرعة: فوز\n▫️ **الفائز:** <@%s>\n▫️ **الوقت:** %.2f ثانية\n▫️ **الكلمة:** %s", 
+                                    msgEvent.getAuthor().getId(), (timeTaken / 1000.0), word);
+                            logManager.logEmbed(event.getGuild(), LogManager.LOG_GAMES, 
+                                    EmbedUtil.createOldLogEmbed("speed", logWin, null, msgEvent.getAuthor(), null, EmbedUtil.SUCCESS));
+
                             event.getJDA().removeEventListener(this);
                         }
                     }
@@ -107,6 +125,11 @@ public class SpeedChallengeCommand implements MultiSlashCommand {
                                     com.integrafty.opexy.utils.EmbedUtil.BANNER_MAIN))
                             .useComponentsV2(true).build())
                             .useComponentsV2(true).queue();
+
+                    // LOGGING
+                    String logTimeout = String.format("### ⚡ تحدي السرعة: انتهى الوقت\n▫️ **الكلمة:** %s\n▫️ لم يفز أحد.", word);
+                    logManager.logEmbed(event.getGuild(), LogManager.LOG_GAMES, 
+                            EmbedUtil.createOldLogEmbed("speed", logTimeout, null, null, null, EmbedUtil.DANGER));
                 }
             });
         });

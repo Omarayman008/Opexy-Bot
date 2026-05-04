@@ -10,7 +10,8 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.components.actionrow.ActionRow;
-import net.dv8tion.jda.api.components.buttons.Button;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -45,7 +46,8 @@ public class AuctionCommand implements MultiSlashCommand {
                         .addChoice("صندوق عشوائي (Mystery Box)", "صندوق عشوائي"))
                 .addOptions(new OptionData(OptionType.ROLE, "target_role", "الرتبة المعروضة (إذا كانت الجائزة رتبة)", false))
                 .addOptions(new OptionData(OptionType.INTEGER, "duration", "مدة المزاد بالثواني (افتراضي 30 ثانية)", false))
-                .addOptions(new OptionData(OptionType.INTEGER, "target_price", "السعر المستهدف لإنهاء المزاد فوراً", false)));
+                .addOptions(new OptionData(OptionType.INTEGER, "target_price", "السعر المستهدف لإنهاء المزاد فوراً", false))
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)));
     }
 
     @Override
@@ -81,7 +83,7 @@ public class AuctionCommand implements MultiSlashCommand {
         }
 
         String roleId = (targetRole != null) ? targetRole.getId() : null;
-        auctionManager.startAuction(event.getChannel(), prize, roleId, duration, targetPrice);
+        auctionManager.startAuction(event.getChannel(), event.getGuild(), event.getMember(), prize, roleId, duration, targetPrice);
 
         String body = "تم بدء مزاد على **جائزة غامضة**! 📦\n\n**القوانين:**\n• المزايدة تبدأ بـ 10 opex.\n• المزايدة الأعلى تفوز بالمحتوى.\n• المحتوى سيبقى مجهولاً حتى نهاية المزاد!";
 

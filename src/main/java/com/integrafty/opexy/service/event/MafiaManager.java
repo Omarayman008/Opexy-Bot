@@ -22,18 +22,26 @@ public class MafiaManager extends ListenerAdapter {
 
     private final AchievementService achievementService;
     private final EventManager eventManager;
+    private final LogManager logManager;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     private MafiaGame currentGame = null;
     private long organizerId = 0;
 
-    public MafiaManager(AchievementService achievementService, EventManager eventManager) {
+    public MafiaManager(AchievementService achievementService, EventManager eventManager, LogManager logManager) {
         this.achievementService = achievementService;
         this.eventManager = eventManager;
+        this.logManager = logManager;
     }
 
-    public void startNewGame(long channelId) {
+    public void startNewGame(long channelId, net.dv8tion.jda.api.entities.Guild guild, net.dv8tion.jda.api.entities.Member organizer) {
         this.currentGame = new MafiaGame(channelId);
+        this.organizerId = organizer.getIdLong();
+        
+        // LOGGING
+        String logDetails = String.format("### 🕵️ فعالية المافيا: بدء الفعالية\n▫️ **المنظم:** %s\n▫️ **القناة:** <#%d>", organizer.getAsMention(), channelId);
+        logManager.logEmbed(guild, LogManager.LOG_GAMES, 
+                EmbedUtil.createOldLogEmbed("mafia", logDetails, organizer, null, null, EmbedUtil.INFO));
     }
 
     @Override
@@ -285,6 +293,12 @@ public class MafiaManager extends ListenerAdapter {
                 if (role == MafiaGame.Role.CITIZEN) s.setCitizenCount(s.getCitizenCount() + 1);
             });
         }
+        // LOGGING
+        String logDetails = String.format("### 🕵️ فعالية المافيا: انتهت اللعبة\n▫️ **الفائز:** %s\n▫️ **عدد اللاعبين:** %d", 
+                winner, currentGame.getPlayers().size());
+        logManager.logEmbed(event.getGuild(), LogManager.LOG_GAMES, 
+                EmbedUtil.createOldLogEmbed("mafia", logDetails, null, null, null, EmbedUtil.SUCCESS));
+
         currentGame = null;
     }
 

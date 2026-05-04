@@ -17,15 +17,30 @@ public class ScavengerHuntManager extends ListenerAdapter {
     private final EventManager eventManager;
     private final AchievementService achievementService;
     private final EconomyService economyService;
+    private final LogManager logManager;
     private final Random random = new Random();
 
     private String activeCode = null;
     private long reward = 5000;
 
-    public String startHunt(long rewardAmount) {
+    public String startHunt(long rewardAmount, net.dv8tion.jda.api.entities.Guild guild, net.dv8tion.jda.api.entities.Member organizer) {
         this.activeCode = "OP-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         this.reward = rewardAmount;
+        
+        // LOGGING
+        String logDetails = String.format("### 🔍 فعالية الصيد: بدء الفعالية\n▫️ **المنظم:** %s\n▫️ **الجائزة:** %d opex\n▫️ **الكود:** ||%s||", 
+                organizer.getAsMention(), rewardAmount, activeCode);
+        logManager.logEmbed(guild, LogManager.LOG_GAMES, 
+                EmbedUtil.createOldLogEmbed("hunt", logDetails, organizer, null, null, EmbedUtil.INFO));
+                
         return activeCode;
+    }
+
+    public ScavengerHuntManager(EventManager eventManager, AchievementService achievementService, EconomyService economyService, LogManager logManager) {
+        this.eventManager = eventManager;
+        this.achievementService = achievementService;
+        this.economyService = economyService;
+        this.logManager = logManager;
     }
 
     public void stopHunt() {
@@ -38,18 +53,25 @@ public class ScavengerHuntManager extends ListenerAdapter {
 
         String content = event.getMessage().getContentRaw().trim().toUpperCase();
         if (content.equals(activeCode)) {
+            String winnerId = event.getAuthor().getId();
             activeCode = null; // One winner only
             eventManager.endGroupEvent();
             
-            economyService.addBalance(event.getAuthor().getId(), event.getGuild().getId(), reward);
+            economyService.addBalance(winnerId, event.getGuild().getId(), reward);
             
             event.getChannel().sendMessage(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
                     .setComponents(EmbedUtil.containerBranded("EVENT", "🎉 فائز بفعالية الصيد!", 
-                            "مبروك <@" + event.getAuthor().getId() + ">! لقد وجدت الكود الصحيح وفزت بـ **" + reward + " opex**!", 
+                            "مبروك <@" + winnerId + ">! لقد وجدت الكود الصحيح وفزت بـ **" + reward + " opex**!", 
                             EmbedUtil.BANNER_MAIN))
                     .useComponentsV2(true).build())
                     .useComponentsV2(true).queue();
             
+            // LOGGING
+            String logDetails = String.format("### 🔍 فعالية الصيد: انتهت الفعالية\n▫️ **الفائز:** <@%s>\n▫️ **الجائزة:** %d opex", 
+                    winnerId, reward);
+            logManager.logEmbed(event.getGuild(), LogManager.LOG_GAMES, 
+                    EmbedUtil.createOldLogEmbed("hunt", logDetails, null, null, null, EmbedUtil.SUCCESS));
+
             // Stats
             achievementService.updateStats(event.getAuthor().getIdLong(), event.getGuild(), s -> {});
         }

@@ -19,11 +19,13 @@ public class PipePuzzleManager extends ListenerAdapter {
     private final Map<Long, Integer> gameSizes = new HashMap<>();
     private final AchievementService achievementService;
     private final EconomyService economyService;
+    private final LogManager logManager;
     private final Random random = new Random();
 
-    public PipePuzzleManager(AchievementService achievementService, EconomyService economyService) {
+    public PipePuzzleManager(AchievementService achievementService, EconomyService economyService, LogManager logManager) {
         this.achievementService = achievementService;
         this.economyService = economyService;
+        this.logManager = logManager;
     }
 
     @Override
@@ -95,16 +97,30 @@ public class PipePuzzleManager extends ListenerAdapter {
             if (event.getGuild() != null) {
                 achievementService.updateStats(userId, event.getGuild(), s -> s.setPipeWins(s.getPipeWins() + 1));
             }
+
+            // LOGGING
+            String diffStr = size == 3 ? "سهل" : size == 4 ? "متوسط" : "صعب";
+            String logDetails = String.format("### 🎮 فعالية الأنابيب: فوز\n▫️ **اللاعب:** <@%d>\n▫️ **الصعوبة:** %s\n▫️ **الجائزة:** %d opex", 
+                    userId, diffStr, reward);
+            logManager.logEmbed(event.getGuild(), LogManager.LOG_GAMES, 
+                    EmbedUtil.createOldLogEmbed("pipes", logDetails, null, net.dv8tion.jda.api.entities.UserSnowflake.fromId(userId), null, EmbedUtil.SUCCESS));
         } else {
             event.reply("❌ المسار غير مكتمل! تأكد من أن جميع الأنابيب متصلة ببعضها البعض.").setEphemeral(true).queue();
         }
     }
 
-    public String startNewGame(long userId, int size) {
+    public String startNewGame(long userId, int size, net.dv8tion.jda.api.entities.Guild guild) {
         char[][] grid = generateGrid(size);
         games.put(userId, grid);
         cursors.put(userId, new int[] { 1, 1 });
         gameSizes.put(userId, size);
+
+        // LOGGING
+        String diffStr = size == 3 ? "سهل" : size == 4 ? "متوسط" : "صعب";
+        String logDetails = String.format("### 🎮 فعالية الأنابيب: بدء لعبة\n▫️ **اللاعب:** <@%d>\n▫️ **الصعوبة:** %s", userId, diffStr);
+        logManager.logEmbed(guild, LogManager.LOG_GAMES, 
+                EmbedUtil.createOldLogEmbed("pipes", logDetails, null, net.dv8tion.jda.api.entities.UserSnowflake.fromId(userId), null, EmbedUtil.INFO));
+
         return renderGrid(grid, 1, 1);
     }
 
