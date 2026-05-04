@@ -25,6 +25,16 @@ public class CraftManager extends ListenerAdapter {
     private final Map<Long, Recipe> userActiveRecipes = new HashMap<>();
     private final Map<Long, Long> userRewards = new HashMap<>();
 
+    public enum Difficulty {
+        EASY(20, "سهل"),
+        MEDIUM(30, "وسط"),
+        HARD(40, "صعب");
+
+        final int reward;
+        final String displayName;
+        Difficulty(int r, String d) { this.reward = r; this.displayName = d; }
+    }
+
     private static final Map<String, String> ITEMS = Map.of(
             "W", "🪵", // Wood
             "S", "🥢", // Stick
@@ -42,35 +52,49 @@ public class CraftManager extends ListenerAdapter {
         final String[][] grid;
         final List<String> possibleNames;
         final String displayName;
+        final Difficulty difficulty;
     }
 
     private static final List<Recipe> RECIPES = List.of(
-            new Recipe(new String[][]{{"E", "D", "E"}, {"E", "D", "E"}, {"E", "S", "E"}}, List.of("سيف", "sword", "سيف دايموند"), "سيف دايموند"),
-            new Recipe(new String[][]{{"D", "D", "D"}, {"E", "S", "E"}, {"E", "S", "E"}}, List.of("بيكاكس", "pickaxe", "فأس"), "بيكاكس دايموند"),
-            new Recipe(new String[][]{{"W", "W", "W"}, {"W", "E", "W"}, {"W", "W", "W"}}, List.of("صندوق", "chest", "تشيست"), "صندوق"),
-            new Recipe(new String[][]{{"B", "B", "B"}, {"B", "E", "B"}, {"B", "B", "B"}}, List.of("فرن", "furnace", "فرن"), "فرن حجري"),
-            new Recipe(new String[][]{{"I", "I", "I"}, {"E", "I", "E"}, {"E", "I", "E"}}, List.of("درع", "chestplate", "درع حديد"), "درع حديدي"),
-            new Recipe(new String[][]{{"E", "E", "E"}, {"S", "S", "S"}, {"S", "S", "S"}}, List.of("سلم", "ladder", "سلم"), "سلم خشب"),
-            new Recipe(new String[][]{{"W", "W", "E"}, {"W", "S", "E"}, {"E", "S", "E"}}, List.of("اكس", "axe", "فأس"), "فأس خشبي"),
-            new Recipe(new String[][]{{"P", "P", "P"}, {"P", "E", "P"}, {"P", "P", "P"}}, List.of("خريطة", "map", "ماب"), "خريطة فارغة")
+            // EASY
+            new Recipe(new String[][]{{"W", "W", "E"}, {"W", "W", "E"}, {"E", "E", "E"}}, List.of("ورك بينش", "طاولة صنع", "crafting table", "workbench"), "طاولة صنع", Difficulty.EASY),
+            new Recipe(new String[][]{{"S", "E", "E"}, {"S", "E", "E"}, {"E", "E", "E"}}, List.of("عصا", "stick", "عصاي"), "عصا", Difficulty.EASY),
+            new Recipe(new String[][]{{"W", "W", "W"}, {"W", "W", "W"}, {"W", "W", "W"}}, List.of("بلوك خشب", "wood block", "خشب"), "بلوك خشب", Difficulty.EASY),
+            
+            // MEDIUM
+            new Recipe(new String[][]{{"E", "D", "E"}, {"E", "D", "E"}, {"E", "S", "E"}}, List.of("سيف", "sword", "سيف دايموند"), "سيف دايموند", Difficulty.MEDIUM),
+            new Recipe(new String[][]{{"D", "D", "D"}, {"E", "S", "E"}, {"E", "S", "E"}}, List.of("بيكاكس", "pickaxe", "فأس"), "بيكاكس دايموند", Difficulty.MEDIUM),
+            new Recipe(new String[][]{{"W", "W", "W"}, {"W", "E", "W"}, {"W", "W", "W"}}, List.of("صندوق", "chest", "تشيست"), "صندوق", Difficulty.MEDIUM),
+            
+            // HARD
+            new Recipe(new String[][]{{"I", "I", "I"}, {"I", "S", "I"}, {"E", "S", "E"}}, List.of("بيكاكس حديد", "iron pickaxe"), "بيكاكس حديد", Difficulty.HARD),
+            new Recipe(new String[][]{{"G", "G", "G"}, {"E", "S", "E"}, {"E", "S", "E"}}, List.of("بيكاكس ذهب", "gold pickaxe"), "بيكاكس ذهب", Difficulty.HARD),
+            new Recipe(new String[][]{{"P", "P", "P"}, {"P", "E", "P"}, {"P", "P", "P"}}, List.of("خريطة", "map", "ماب"), "خريطة فارغة", Difficulty.HARD),
+            new Recipe(new String[][]{{"B", "B", "B"}, {"B", "E", "B"}, {"B", "B", "B"}}, List.of("فرن", "furnace", "فرن"), "فرن حجري", Difficulty.HARD)
     );
 
-    public String startCraft(long userId, long rewardAmount, Guild guild, Member organizer) {
-        Recipe recipe = RECIPES.get(new Random().nextInt(RECIPES.size()));
+    public String startCraft(long userId, Difficulty difficulty, Guild guild, Member organizer) {
+        List<Recipe> possible = RECIPES.stream().filter(r -> r.difficulty == difficulty).toList();
+        Recipe recipe = possible.get(new Random().nextInt(possible.size()));
+        
         userActiveRecipes.put(userId, recipe);
-        userRewards.put(userId, rewardAmount);
+        userRewards.put(userId, (long) difficulty.reward);
 
         StringBuilder sb = new StringBuilder();
+        sb.append("```\n");
+        sb.append("   1   2   3\n");
         for (int i = 0; i < 3; i++) {
+            sb.append(i + 1).append(" ");
             for (int j = 0; j < 3; j++) {
-                sb.append(ITEMS.get(recipe.grid[i][j])).append(" ");
+                sb.append("[").append(ITEMS.get(recipe.grid[i][j])).append("]");
             }
             sb.append("\n");
         }
+        sb.append("```");
 
         // LOGGING
-        String logDetails = String.format("### 🛠️ فعالية الصناعة: بدء (فردية)\n▫️ **اللاعب:** %s\n▫️ **الجائزة:** %d opex\n▫️ **الشيء المطلوب:** %s", 
-                organizer.getAsMention(), rewardAmount, recipe.displayName);
+        String logDetails = String.format("### 🛠️ فعالية الصناعة: بدء (فردية)\n▫️ **اللاعب:** %s\n▫️ **الصعوبة:** %s\n▫️ **الجائزة:** %d opex", 
+                organizer.getAsMention(), difficulty.displayName, difficulty.reward);
         logManager.logEmbed(guild, LogManager.LOG_GAMES, 
                 EmbedUtil.createOldLogEmbed("craft", logDetails, organizer, null, null, EmbedUtil.INFO));
 
@@ -101,8 +125,8 @@ public class CraftManager extends ListenerAdapter {
                     .build()).queue();
 
             // LOG WIN
-            String logWin = String.format("### 🏆 فعالية الصناعة: فوز (فردية)\n▫️ **الفائز:** <@%s>\n▫️ **الجائزة:** %d opex\n▫️ **الشيء:** %s", 
-                    event.getAuthor().getId(), reward, itemName);
+            String logWin = String.format("### 🏆 فعالية الصناعة: فوز (فردية)\n▫️ **الفائز:** <@%s>\n▫️ **الصعوبة:** %s\n▫️ **الشيء:** %s", 
+                    event.getAuthor().getId(), activeRecipe.difficulty.displayName, itemName);
             logManager.logEmbed(event.getGuild(), LogManager.LOG_GAMES, 
                     EmbedUtil.createOldLogEmbed("craft_win", logWin, event.getMember(), null, null, EmbedUtil.SUCCESS));
         }

@@ -29,21 +29,26 @@ public class CraftCommand implements MultiSlashCommand {
     @Override
     public List<SlashCommandData> getCommandDataList() {
         return List.of(Commands.slash("craft", "بدء لعبة التخمين من خلال الصناعة (فردية)")
-                .addOptions(new OptionData(OptionType.INTEGER, "reward", "قيمة الجائزة بالـ opex", true)));
+                .addOptions(new OptionData(OptionType.STRING, "difficulty", "درجة الصعوبة", true)
+                        .addChoice("سهل (20 opex)", "EASY")
+                        .addChoice("وسط (30 opex)", "MEDIUM")
+                        .addChoice("صعب (40 opex)", "HARD")));
     }
 
     @Override
     public void execute(SlashCommandInteractionEvent event) {
         if (!event.getName().equals("craft")) return;
 
-        int reward = event.getOption("reward").getAsInt();
+        String diffStr = event.getOption("difficulty").getAsString();
+        CraftManager.Difficulty difficulty = CraftManager.Difficulty.valueOf(diffStr);
         long userId = event.getUser().getIdLong();
         
-        String grid = craftManager.startCraft(userId, reward, event.getGuild(), event.getMember());
+        String grid = craftManager.startCraft(userId, difficulty, event.getGuild(), event.getMember());
 
         String description = String.format("أمامك طاولة كرافتنق خاصة بك يا %s... خمن ما هو الشيء الذي يتم صنعه؟\n\n", event.getUser().getAsMention()) +
                 grid + "\n" +
-                "💰 الجائزة: **" + reward + " opex**\n\n" +
+                "💰 الجائزة: **" + difficulty.reward + " opex**\n" +
+                "📊 الصعوبة: **" + difficulty.displayName + "**\n\n" +
                 "💡 اكتب الإجابة مباشرة في الشات!";
 
         event.reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()

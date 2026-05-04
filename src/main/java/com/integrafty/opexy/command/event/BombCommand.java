@@ -33,8 +33,10 @@ public class BombCommand implements MultiSlashCommand {
         @Override
         public List<SlashCommandData> getCommandDataList() {
                 return List.of(Commands.slash("bomb", "بدء لعبة تفكيك القنبلة (فردية)")
-                                .addOptions(new OptionData(OptionType.INTEGER, "reward", "قيمة الجائزة بالـ opex",
-                                                true)));
+                                .addOptions(new OptionData(OptionType.STRING, "difficulty", "درجة الصعوبة", true)
+                                                .addChoice("سهل (15 ثانية - 10 opex)", "EASY")
+                                                .addChoice("وسط (10 ثواني - 15 opex)", "MEDIUM")
+                                                .addChoice("صعب (5 ثواني - 20 opex)", "HARD")));
         }
 
         @Override
@@ -42,17 +44,21 @@ public class BombCommand implements MultiSlashCommand {
                 if (!event.getName().equals("bomb"))
                         return;
 
-                int reward = event.getOption("reward").getAsInt();
-
+                String diffStr = event.getOption("difficulty").getAsString();
+                BombManager.Difficulty difficulty = BombManager.Difficulty.valueOf(diffStr);
                 long userId = event.getUser().getIdLong();
-                String hint = bombManager.startBomb(userId, reward, event.getGuild(), event.getMember());
+
+                String hint = bombManager.startBomb(userId, difficulty, event.getGuild(), event.getMember(), event.getHook());
 
                 String body = String.format("🆘 **تحذير!** تم زرع قنبلة موقوتة خاصة بك يا %s!\n" +
                                 "يجب قطع سلك واحد لإبطال مفعولها. هناك سلك واحد صحيح والبقية ستفجر المكان!\n\n" +
                                 "🔍 **التلميح:** `%s`\n\n" +
-                                "💰 الجائزة: **%d opex**", event.getUser().getAsMention(), hint, reward);
+                                "💰 الجائزة: **%d opex**", event.getUser().getAsMention(), hint, difficulty.reward);
+
+                String timerFormat = String.format("`=----------------%02d:%02d----------------=`", 0, difficulty.seconds);
 
                 event.reply(new MessageCreateBuilder()
+                                .setContent(timerFormat)
                                 .setComponents(EmbedUtil.containerBranded("DEFUSAL", "⚠️ قنبلة الوقت!", body,
                                                 EmbedUtil.BANNER_MAIN,
                                                 ActionRow.of(
