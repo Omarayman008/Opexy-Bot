@@ -32,6 +32,7 @@ public class JawlahManager extends ListenerAdapter {
 
     private final JDA jda;
     private final EventManager eventManager;
+    private final com.integrafty.opexy.service.LogManager logManager;
     private final Map<Long, JawlahGame> activeGames = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, List<JawlahQuestion>> questionBank = new HashMap<>();
 

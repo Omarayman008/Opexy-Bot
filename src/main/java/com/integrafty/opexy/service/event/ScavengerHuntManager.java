@@ -55,6 +55,7 @@ public class ScavengerHuntManager extends ListenerAdapter {
             economyService.addBalance(winnerId, event.getGuild().getId(), reward);
             
             event.getChannel().sendMessage(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
+                    .setContent("<@" + winnerId + ">")
                     .setComponents(EmbedUtil.containerBranded("EVENT", "🎉 فائز بفعالية الصيد!", 
                             "مبروك <@" + winnerId + ">! لقد وجدت الكود الصحيح وفزت بـ **" + reward + " opex**!", 
                             EmbedUtil.BANNER_MAIN))

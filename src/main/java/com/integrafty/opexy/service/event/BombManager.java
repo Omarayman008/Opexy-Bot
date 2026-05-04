@@ -219,6 +219,7 @@ public class BombManager extends ListenerAdapter {
                     event.getUser().getId(), WIRE_COLORS.get(color), reward);
             
             event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+                    .setContent(event.getUser().getAsMention())
                     .setComponents(EmbedUtil.success("BOMB DEFUSED", "`=---------------- SAFE ----------------=`\n\n" + successMsg))
                     .useComponentsV2(true)
                     .build()).queue();

@@ -92,6 +92,7 @@ public class PipePuzzleManager extends ListenerAdapter {
             economyService.addBalance(String.valueOf(userId), guildId, reward);
 
             event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+                    .setContent(event.getUser().getAsMention())
                     .setComponents(com.integrafty.opexy.utils.EmbedUtil.success("تم الحل", "🎉 مبروك! لقد قمت بحل اللغز بنجاح!\n💰 الجائزة: **" + reward + "** Opex"))
                     .useComponentsV2(true).build())
                     .useComponentsV2(true).queue();
