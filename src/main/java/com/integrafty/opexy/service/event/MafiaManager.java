@@ -1,5 +1,7 @@
 package com.integrafty.opexy.service.event;
 
+import com.integrafty.opexy.service.LogManager;
+import com.integrafty.opexy.utils.EmbedUtil;
 import com.integrafty.opexy.entity.UserStats;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.EmbedBuilder;

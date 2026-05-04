@@ -2,6 +2,7 @@ package com.integrafty.opexy.service.event;
 
 import com.integrafty.opexy.utils.EmbedUtil;
 import com.integrafty.opexy.service.EconomyService;
+import com.integrafty.opexy.service.LogManager;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;

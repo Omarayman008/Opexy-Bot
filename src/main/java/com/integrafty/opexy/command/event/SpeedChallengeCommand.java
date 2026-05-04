@@ -1,6 +1,7 @@
 package com.integrafty.opexy.command.event;
 
 import com.integrafty.opexy.command.base.MultiSlashCommand;
+import com.integrafty.opexy.service.LogManager;
 import com.integrafty.opexy.service.event.AchievementService;
 import com.integrafty.opexy.service.event.EventManager;
 import net.dv8tion.jda.api.EmbedBuilder;
