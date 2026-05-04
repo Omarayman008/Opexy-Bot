@@ -42,9 +42,11 @@ public class PipePuzzleManager extends ListenerAdapter {
         long userId = event.getUser().getIdLong();
         log.info("[PipePuzzle] Interaction from user {}: ID={}", userId, id);
         
+        event.deferEdit().queue(); // Acknowledge early to prevent timeouts
+
         if (!games.containsKey(userId)) {
             log.warn("[PipePuzzle] Game not found for user {}", userId);
-            event.reply("❌ انتهت صلاحية هذه اللعبة أو تم إعادة تشغيل البوت. يرجى البدء بلعبة جديدة.").setEphemeral(true).queue();
+            event.getHook().sendMessage("❌ انتهت صلاحية هذه اللعبة أو تم إعادة تشغيل البوت. يرجى البدء بلعبة جديدة.").setEphemeral(true).queue();
             return;
         }
 
@@ -77,11 +79,11 @@ public class PipePuzzleManager extends ListenerAdapter {
         int cols = grid[0].length;
 
         if (!canConnect(grid[0][0], 0)) {
-            event.reply("❌ البداية غير موصلة! تأكد من أن الأنبوب الأول متصل بـ 🏁").setEphemeral(true).queue();
+            event.getHook().sendMessage("❌ البداية غير موصلة! تأكد من أن الأنبوب الأول متصل بـ 🏁").setEphemeral(true).queue();
             return;
         }
         if (!canConnect(grid[rows - 1][cols - 1], 2)) {
-            event.reply("❌ النهاية غير موصلة! تأكد من أن الأنبوب الأخير متصل بـ 🚩").setEphemeral(true).queue();
+            event.getHook().sendMessage("❌ النهاية غير موصلة! تأكد من أن الأنبوب الأخير متصل بـ 🚩").setEphemeral(true).queue();
             return;
         }
 
@@ -114,7 +116,7 @@ public class PipePuzzleManager extends ListenerAdapter {
             logManager.logEmbed(event.getGuild(), LogManager.LOG_GAMES, 
                     EmbedUtil.createOldLogEmbed("pipes", logDetails, null, net.dv8tion.jda.api.entities.UserSnowflake.fromId(userId), null, EmbedUtil.SUCCESS));
         } else {
-            event.reply("❌ المسار غير مكتمل! تأكد من أن جميع الأنابيب متصلة ببعضها البعض.").setEphemeral(true).queue();
+            event.getHook().sendMessage("❌ المسار غير مكتمل! تأكد من أن جميع الأنابيب متصلة ببعضها البعض.").setEphemeral(true).queue();
         }
     }
 
@@ -137,7 +139,7 @@ public class PipePuzzleManager extends ListenerAdapter {
     private void updateGame(ButtonInteractionEvent event, char[][] grid, int[] cursor) {
         String renderedGrid = renderGrid(grid, cursor[0], cursor[1]);
 
-        event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+        event.getHook().editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
                 .setComponents(com.integrafty.opexy.utils.EmbedUtil.containerBranded("ENGINEERING",
                         "لغز الأنابيب — قيد الحل",
                         "استخدم الأسهم للتحرك والزر الدائري لتدوير الأنبوب!\n\n" + renderedGrid,
