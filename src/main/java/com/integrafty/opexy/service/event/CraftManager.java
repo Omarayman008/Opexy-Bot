@@ -75,7 +75,8 @@ public class CraftManager extends ListenerAdapter {
             Map.entry("Z", "<:sand:1500879926696607846>"), // Sand
             Map.entry("V", "<:water_empty_bottle:1500880709315723428>"), // Glass Bottle
             Map.entry("M", "<:emraled_ingot:1500879037868806237>"), // Emerald
-            Map.entry("Y", "<:hay_bale:1500880117302562856>"), // Hay Bale/Wheat
+            Map.entry("Y", "<:hay_bale:1500880117302562856>"), // Hay Bale Block
+            Map.entry("WH", "<:wheat_minecraft_itemsremovebgpre:1500879408032911492>"), // Wheat
             Map.entry("J", "<:feather:1500880285431238807>")  // Feather
     );
 
@@ -136,7 +137,8 @@ public class CraftManager extends ListenerAdapter {
             new Recipe(new String[][]{{"I", "E", "I"}, {"E", "I", "E"}, {"E", "E", "E"}}, List.of("سطل", "bucket", "سطل حديد", "جردل"), "سطل حديد", Difficulty.MEDIUM),
             new Recipe(new String[][]{{"W", "E", "W"}, {"E", "W", "E"}, {"E", "E", "E"}}, List.of("وعاء", "bowl", "صحن"), "وعاء خشبي", Difficulty.EASY),
             new Recipe(new String[][]{{"P", "P", "P"}, {"E", "E", "E"}, {"E", "E", "E"}}, List.of("ورق", "paper", "ورقة"), "ورق", Difficulty.EASY),
-            new Recipe(new String[][]{{"Y", "Y", "Y"}, {"E", "E", "E"}, {"E", "E", "E"}}, List.of("خبز", "bread", "الخبز"), "خبز", Difficulty.EASY),
+            new Recipe(new String[][]{{"WH", "WH", "WH"}, {"E", "E", "E"}, {"E", "E", "E"}}, List.of("خبز", "bread", "الخبز"), "خبز", Difficulty.EASY),
+            new Recipe(new String[][]{{"WH", "WH", "WH"}, {"WH", "WH", "WH"}, {"WH", "WH", "WH"}}, List.of("بلوك قش", "hay bale", "بلوك القش", "قش"), "بلوك قش", Difficulty.MEDIUM),
             new Recipe(new String[][]{{"S", "S", "S"}, {"S", "U", "S"}, {"S", "S", "S"}}, List.of("لوحة", "painting", "لوحه"), "لوحة فنية", Difficulty.MEDIUM),
             new Recipe(new String[][]{{"U", "U", "U"}, {"W", "W", "W"}, {"E", "E", "E"}}, List.of("سرير", "bed", "السرير"), "سرير", Difficulty.MEDIUM),
             new Recipe(new String[][]{{"W", "S", "W"}, {"W", "S", "W"}, {"E", "E", "E"}}, List.of("سياج", "fence", "سور"), "سياج خشبي", Difficulty.MEDIUM),
