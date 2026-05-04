@@ -130,8 +130,7 @@ public class JawlahManager extends ListenerAdapter {
         Button joinB = Button.danger("jawlah_join_b", "انضمام لـ " + game.teamBName + " 🔴")
                 .withDisabled(game.teamBPlayers.size() >= game.maxPlayersPerTeam);
 
-        MessageCreateBuilder create = new MessageCreateBuilder()
-                .setComponents(EmbedUtil.containerBranded("SETUP", "تـــجـــهـــيـــز الـــفـــرق والـــمـــســـاعـــدات", body, EmbedUtil.BANNER_MAIN,
+        net.dv8tion.jda.api.components.container.Container container = EmbedUtil.containerBranded("SETUP", "تـــجـــهـــيـــز الـــفـــرق والـــمـــســـاعـــدات", body, EmbedUtil.BANNER_MAIN,
                         ActionRow.of(joinA, joinB),
                         ActionRow.of(
                                 Button.secondary("jawlah_help_1", "جاوب جوابين ✌️"),
@@ -140,13 +139,12 @@ public class JawlahManager extends ListenerAdapter {
                                 Button.secondary("jawlah_help_5", "السؤال الذهبي 🏆")
                         ),
                         ActionRow.of(Button.success("jawlah_start_confirm", "بـــدء الـــلـــعـــب 🚀"))
-                ))
-                .useComponentsV2(true);
+                );
 
         if (event instanceof ButtonInteractionEvent bie) {
-            bie.editMessage(MessageEditBuilder.fromCreateData(create.build()).build()).queue();
+            bie.editMessage(new MessageEditBuilder().setComponents(container).useComponentsV2(true).build()).queue();
         } else if (event instanceof ModalInteractionEvent mie) {
-            mie.reply(create.build()).queue();
+            mie.reply(new MessageCreateBuilder().setComponents(container).useComponentsV2(true).build()).queue();
         }
     }
 
