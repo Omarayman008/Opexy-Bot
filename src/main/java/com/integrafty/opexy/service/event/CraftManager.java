@@ -116,7 +116,7 @@ public class CraftManager extends ListenerAdapter {
             new Recipe(new String[][]{{"I", "I", "I"}, {"E", "I", "E"}, {"I", "I", "I"}}, List.of("سندان", "anvil", "السندان", "انفيل"), "سندان", Difficulty.HARD),
             new Recipe(new String[][]{{"W", "W", "W"}, {"W", "R", "W"}, {"W", "W", "W"}}, List.of("نوت بلوك", "note block", "موسيقى", "النوت بلوك"), "نوت بلوك", Difficulty.HARD),
             new Recipe(new String[][]{{"I", "E", "I"}, {"I", "I", "I"}, {"I", "I", "I"}}, List.of("درع", "chestplate", "درع حديد", "الدرع", "درع الحديد", "تشيست بليت"), "درع حديد", Difficulty.HARD),
-            new Recipe(new String[][]{{"G", "G", "G"}, {"G", "A", "G"}, {"G", "G", "G"}}, List.of("تفاحة ذهبية", "golden apple", "تفاحة ذهب", "قولدن ابل"), "تفاحة ذهبية", Difficulty.HARD),
+            new Recipe(new String[][]{{"G", "G", "G"}, {"G", "A", "G"}, {"G", "G", "G"}}, List.of("تفاحة ذهبية", "golden apple", "تفاحة ذهب", "قولدن ابل", "جولدن ابل"), "تفاحة ذهبية", Difficulty.HARD),
             new Recipe(new String[][]{{"O", "O", "O"}, {"O", "N", "O"}, {"O", "O", "O"}}, List.of("صندوق اندر", "ender chest", "اندر تشيست"), "صندوق اندر", Difficulty.HARD),
             new Recipe(new String[][]{{"X", "X", "X"}, {"X", "K", "X"}, {"O", "O", "O"}}, List.of("بيكون", "beacon", "منارة", "بيكن"), "بيكون", Difficulty.HARD),
             new Recipe(new String[][]{{"F", "Z", "F"}, {"Z", "F", "Z"}, {"F", "Z", "F"}}, List.of("تي ان تي", "tnt", "متفجرات"), "TNT", Difficulty.HARD),
