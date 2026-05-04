@@ -219,9 +219,8 @@ public class BombManager extends ListenerAdapter {
                     event.getUser().getId(), WIRE_COLORS.get(color), reward);
             
             event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
-                    .setContent(event.getUser().getAsMention())
-                    .setEmbeds(EmbedUtil.successEmbed("BOMB DEFUSED", successMsg))
-                    .setComponents(Collections.emptyList())
+                    .setComponents(EmbedUtil.containerBranded("BOMB DEFUSED", "Challenge Complete", successMsg, EmbedUtil.BANNER_MAIN))
+                    .useComponentsV2(true)
                     .build()).queue();
 
             // LOG WIN

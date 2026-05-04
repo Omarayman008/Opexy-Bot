@@ -8,6 +8,9 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.springframework.stereotype.Service;
 
+import net.dv8tion.jda.api.JDA;
+import jakarta.annotation.PostConstruct;
+import java.util.Collections;
 import java.util.Random;
 import java.util.UUID;
 
@@ -15,6 +18,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ScavengerHuntManager extends ListenerAdapter {
 
+    private final JDA jda;
     private final EventManager eventManager;
     private final AchievementService achievementService;
     private final EconomyService economyService;
@@ -23,6 +27,12 @@ public class ScavengerHuntManager extends ListenerAdapter {
 
     private String activeCode = null;
     private long reward = 5000;
+
+    @PostConstruct
+    public void init() {
+        // Redundant - CommandManager registers all ListenerAdapter beans automatically
+        // jda.addEventListener(this);
+    }
 
     public String startHunt(long rewardAmount, net.dv8tion.jda.api.entities.Guild guild, net.dv8tion.jda.api.entities.Member organizer) {
         this.activeCode = "OP-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
@@ -55,9 +65,11 @@ public class ScavengerHuntManager extends ListenerAdapter {
             economyService.addBalance(winnerId, event.getGuild().getId(), reward);
             
             event.getChannel().sendMessage(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
-                    .setContent("<@" + winnerId + ">")
-                    .setEmbeds(EmbedUtil.successEmbed("EVENT", "🎉 مبروك <@" + winnerId + ">! لقد وجدت الكود الصحيح وفزت بـ **" + reward + " opex**!"))
-                    .build()).queue();
+                    .setComponents(EmbedUtil.success("EVENT", "🎉 مبروك <@" + winnerId + ">! لقد وجدت الكود الصحيح وفزت بـ **" + reward + " opex**!"))
+                    .useComponentsV2(true)
+                    .build())
+                    .useComponentsV2(true)
+                    .queue();
             
             // LOGGING
             String logDetails = String.format("### 🔍 فعالية الصيد: انتهت الفعالية\n▫️ **الفائز:** <@%s>\n▫️ **الجائزة:** %d opex", 

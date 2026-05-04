@@ -38,7 +38,7 @@ public class JawlahManager extends ListenerAdapter {
 
     @PostConstruct
     public void init() {
-        jda.addEventListener(this);
+        // jda.addEventListener(this); // Handled by CommandManager
         loadQuestions();
     }
 
@@ -305,7 +305,8 @@ public class JawlahManager extends ListenerAdapter {
 
         event.editMessage(new MessageEditBuilder()
                 .setComponents(ActionRow.of(menu.build()), ActionRow.of(Button.secondary("jawlah_back", "الـعـودة لـلـوحـة ⬅️")))
-                .build()).queue();
+                .useComponentsV2(true)
+                .build()).useComponentsV2(true).queue();
     }
 
     private void showQuestionPrompt(net.dv8tion.jda.api.interactions.callbacks.IReplyCallback event, JawlahGame game) {

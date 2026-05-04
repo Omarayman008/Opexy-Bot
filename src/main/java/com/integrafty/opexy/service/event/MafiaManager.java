@@ -61,7 +61,10 @@ public class MafiaManager extends ListenerAdapter {
             currentGame.addPlayer(event.getMember());
             updateLobby(event);
         } else if (id.equals("mafia_start")) {
-            if (event.getMember().getRoles().stream().noneMatch(r -> r.getName().equalsIgnoreCase("hype-manager") || r.getName().equalsIgnoreCase("hype-events"))) {
+            boolean isStaff = event.getMember().hasPermission(net.dv8tion.jda.api.Permission.ADMINISTRATOR) || 
+                             event.getMember().getRoles().stream().anyMatch(r -> r.getName().toLowerCase().contains("hype") || r.getName().toLowerCase().contains("event"));
+            
+            if (userId != organizerId && !isStaff) {
                  event.reply("❌ هذا الزر للمنظمين فقط.").setEphemeral(true).queue();
                  return;
             }
@@ -140,8 +143,12 @@ public class MafiaManager extends ListenerAdapter {
             buttons.add(Button.secondary("mafia_action_" + pid, event.getGuild().getMemberById(pid).getEffectiveName()));
         }
 
-        event.getChannel().sendMessage("اختيارات الليل (تظهر للجميع لكن لا ينفذها إلا صاحب الدور):")
+        event.getChannel().sendMessage(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
+                .setContent("اختيارات الليل (تظهر للجميع لكن لا ينفذها إلا صاحب الدور):")
                 .setComponents(com.integrafty.opexy.util.ComponentUtil.splitToRows(buttons))
+                .useComponentsV2(true)
+                .build())
+                .useComponentsV2(true)
                 .queue();
 
         // Wait 20 seconds for night actions
@@ -210,8 +217,12 @@ public class MafiaManager extends ListenerAdapter {
             buttons.add(Button.danger("mafia_vote_" + pid, event.getGuild().getMemberById(pid).getEffectiveName()));
         }
 
-        event.getChannel().sendMessage("🗳️ حان وقت التصويت! من هو المافيا؟")
+        event.getChannel().sendMessage(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
+                .setContent("🗳️ حان وقت التصويت! من هو المافيا؟")
                 .setComponents(com.integrafty.opexy.util.ComponentUtil.splitToRows(buttons))
+                .useComponentsV2(true)
+                .build())
+                .useComponentsV2(true)
                 .queue();
 
         scheduler.schedule(() -> endDay(event), 15, TimeUnit.SECONDS);

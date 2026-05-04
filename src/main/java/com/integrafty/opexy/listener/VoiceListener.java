@@ -47,7 +47,8 @@ public class VoiceListener extends ListenerAdapter {
 
     @PostConstruct
     public void init() {
-        jda.addEventListener(this);
+        // Redundant as CommandManager handles it automatically via dependency injection
+        // jda.addEventListener(this);
     }
 
     @Override
@@ -210,13 +211,13 @@ public class VoiceListener extends ListenerAdapter {
         }
 
         if (channel == null) {
-            event.reply("You do not have an active private room.").setEphemeral(true).queue();
+            if (!event.isAcknowledged()) event.reply("You do not have an active private room.").setEphemeral(true).queue();
             return;
         }
 
         Optional<VoiceRoomEntity> roomOpt = voiceRoomRepository.findByChannelId(channel.getId());
         if (roomOpt.isEmpty()) {
-            event.reply("This room is not registered in the system.").setEphemeral(true).queue();
+            if (!event.isAcknowledged()) event.reply("This room is not registered in the system.").setEphemeral(true).queue();
             return;
         }
 
@@ -225,7 +226,7 @@ public class VoiceListener extends ListenerAdapter {
         boolean isAdmin = event.getMember().hasPermission(Permission.MANAGE_CHANNEL);
 
         if (!isOwner && !isAdmin && !id.equals("voice_ownership")) {
-            event.reply("You do not have permission to control this room.").setEphemeral(true).queue();
+            if (!event.isAcknowledged()) event.reply("You do not have permission to control this room.").setEphemeral(true).queue();
             return;
         }
 
@@ -503,7 +504,7 @@ public class VoiceListener extends ListenerAdapter {
                     VoiceRoomEntity roomLim = roomOpt.get();
                     roomLim.setUserLimit(limit);
                     voiceRoomRepository.save(roomLim);
-                    event.reply("User limit updated to: " + (limit == 0 ? "Unlimited" : limit)).setEphemeral(true).queue();
+                    if (!event.isAcknowledged()) event.reply("User limit updated to: " + (limit == 0 ? "Unlimited" : limit)).setEphemeral(true).queue();
                 } catch (Exception e) { 
                     event.reply("Please enter a valid number (0-99).").setEphemeral(true).queue(); 
                 }

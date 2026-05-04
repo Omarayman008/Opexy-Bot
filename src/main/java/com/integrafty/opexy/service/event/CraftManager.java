@@ -9,6 +9,8 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.JDA;
+import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -17,6 +19,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class CraftManager extends ListenerAdapter {
 
+    private final JDA jda;
     private final AchievementService achievementService;
     private final EconomyService economyService;
     private final LogManager logManager;
@@ -29,6 +32,12 @@ public class CraftManager extends ListenerAdapter {
     private final Map<Long, net.dv8tion.jda.api.interactions.InteractionHook> userHooks = new HashMap<>();
     private final Map<Long, java.util.concurrent.ScheduledFuture<?>> userTimers = new HashMap<>();
     private final java.util.concurrent.ScheduledExecutorService scheduler = java.util.concurrent.Executors.newScheduledThreadPool(4);
+
+    @PostConstruct
+    public void init() {
+        // Redundant as CommandManager handles it, but kept if needed for manual control
+        // jda.addEventListener(this);
+    }
 
     public enum Difficulty {
         EASY(20, 30, "سهل"),
@@ -256,16 +265,19 @@ public class CraftManager extends ListenerAdapter {
 
             if (hook != null) {
                 hook.editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
-                        .setContent(event.getAuthor().getAsMention())
-                        .setEmbeds(EmbedUtil.successEmbed("CRAFTING SUCCESS", successMsg))
-                        .setComponents(Collections.emptyList())
-                        .build()).queue();
+                        .setComponents(EmbedUtil.success("CRAFTING SUCCESS", successMsg))
+                        .useComponentsV2(true)
+                        .build())
+                        .useComponentsV2(true)
+                        .queue();
                 event.getMessage().delete().queue(null, e -> {});
             } else {
                 event.getChannel().sendMessage(new MessageCreateBuilder()
-                        .setContent(event.getAuthor().getAsMention())
-                        .setEmbeds(EmbedUtil.successEmbed("CRAFTING MASTER", successMsg))
-                        .build()).queue();
+                        .setComponents(EmbedUtil.success("CRAFTING MASTER", successMsg))
+                        .useComponentsV2(true)
+                        .build())
+                        .useComponentsV2(true)
+                        .queue();
             }
 
             // LOG WIN
