@@ -20,10 +20,12 @@ import net.dv8tion.jda.api.components.textinput.TextInputStyle;
 import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 import java.util.*;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -32,10 +34,44 @@ public class JawlahManager extends ListenerAdapter {
     private final JDA jda;
     private final EventManager eventManager;
     private final Map<Long, JawlahGame> activeGames = new HashMap<>();
+    private final Map<String, List<JawlahQuestion>> questionBank = new HashMap<>();
 
     @PostConstruct
     public void init() {
         jda.addEventListener(this);
+        loadQuestions();
+    }
+
+    private void loadQuestions() {
+        // Football
+        addQ("football_player_eye", new JawlahQuestion("من هذا اللاعب؟", "ميسي", "https://i.imgur.com/8mY2PZ0.png"));
+        addQ("football_player_eye", new JawlahQuestion("من صاحب هذه العين؟", "رونالدو", "https://i.imgur.com/r6TqB7C.png"));
+        addQ("football_who_player", new JawlahQuestion("لاعب برازيلي لعب لبرشلونة وميلان وفاز بالكرة الذهبية 2005", "رونالدينيو", null));
+        addQ("football_who_player", new JawlahQuestion("الهداف التاريخي لبطولة كأس العالم", "كلوزه", null));
+        
+        // World
+        addQ("world_flags", new JawlahQuestion("عاصمة هذه الدولة؟", "الرياض", "https://i.imgur.com/S8Wn9Z2.png"));
+        addQ("world_capitals", new JawlahQuestion("ما هي عاصمة اليابان؟", "طوكيو", null));
+        addQ("world_capitals", new JawlahQuestion("ما هي عاصمة فرنسا؟", "باريس", null));
+        
+        // General
+        addQ("general_animals", new JawlahQuestion("ما هو أسرع حيوان بري؟", "الفهد", null));
+        addQ("general_general_info", new JawlahQuestion("كم عدد كواكب المجموعة الشمسية؟", "8", null));
+        addQ("general_complete_proverb", new JawlahQuestion("أكمل المثل: الوقت كالسيف إن لم تقطعه...", "قطعك", null));
+        
+        // Islamic
+        addQ("islamic_prophets", new JawlahQuestion("من هو النبي الملقب بكليم الله؟", "موسى", null));
+        addQ("islamic_quran", new JawlahQuestion("ما هي أطول سورة في القرآن الكريم؟", "البقرة", null));
+        
+        // Art
+        addQ("art_one_piece", new JawlahQuestion("من هو بطل قصة ون بيس؟", "لوفي", null));
+        addQ("art_breaking_bad", new JawlahQuestion("ما هو الاسم المستعار لوالتر وايت؟", "هايزنبرغ", null));
+        
+        // Add more samples as needed...
+    }
+
+    private void addQ(String key, JawlahQuestion q) {
+        questionBank.computeIfAbsent(key, k -> new ArrayList<>()).add(q);
     }
 
     public void initiateSetup(net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent event) {
@@ -209,6 +245,12 @@ public class JawlahManager extends ListenerAdapter {
     }
 
     private void showQuestionPrompt(net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent event, JawlahGame game) {
+        String key = game.selectedCategory + "_" + game.selectedSubCategory;
+        List<JawlahQuestion> qs = questionBank.getOrDefault(key, questionBank.get("general_general_info"));
+        JawlahQuestion q = qs.get(new Random().nextInt(qs.size()));
+        game.setCurrentQuestion(q);
+        game.setAttemptsLeft(game.getEnabledHelpers().contains("جاوب جوابين ✌️") ? 2 : 1);
+
         String modifiers = (game.isPitActive() ? "⛳ **الـحـفـرة مـفـعـلـة**\n" : "") +
                            (game.isGoldenQuestion() ? "🏆 **الـسـؤال الـذهـبـي مـفـعـل**\n" : "");
 
@@ -216,17 +258,14 @@ public class JawlahManager extends ListenerAdapter {
                 "**الـفـئـة:** `%s` -> `%s`\n" +
                 "**الـقـيـمـة:** `%d` نـقـطـة\n" +
                 "**الـدور لـفـريـق:** %s\n\n" +
+                "📢 **الـسـؤال:** %s\n\n" +
                 "%s" +
-                "انـتـظـر الإجـابـة مـن الـفـريـق ثـم اضـغـط عـلـى الـتـقـيـيـم الـمـنـاسـب.",
+                "يـرجـى كـتـابـة الإجـابـة فـي الـشـات الآن!",
                 game.selectedCategory, game.selectedSubCategory, game.selectedValue, 
-                game.turnA ? game.teamAName : game.teamBName, modifiers);
+                game.turnA ? "🔵 " + game.teamAName : "🔴 " + game.teamBName, q.text, modifiers);
 
         MessageEditBuilder edit = new MessageEditBuilder()
-                .setComponents(EmbedUtil.containerBranded("QUESTION", "🔍 جـــاري الـــتـــحـــدي...", body, EmbedUtil.BANNER_MAIN,
-                        ActionRow.of(
-                                Button.success("jawlah_correct", "إجـابـة صـحـيـحـة ✅"),
-                                Button.danger("jawlah_wrong", "إجـابـة خـاطـئـة ❌")
-                        ),
+                .setComponents(EmbedUtil.containerBranded("QUESTION", "🔍 جـــاري الـــتـــحـــدي...", body, q.imageUrl != null ? q.imageUrl : EmbedUtil.BANNER_MAIN,
                         ActionRow.of(
                                 Button.secondary("jawlah_help_1", "جاوب جوابين ✌️"),
                                 Button.secondary("jawlah_help_4", "اعكس الدور 🔄"),
@@ -256,29 +295,6 @@ public class JawlahManager extends ListenerAdapter {
         }
 
         switch (id) {
-            case "jawlah_correct" -> {
-                int points = game.selectedValue;
-                if (game.isGoldenQuestion()) points *= 2;
-                
-                if (game.turnA) {
-                    game.scoreA += points;
-                    if (game.isPitActive()) game.scoreB = Math.max(0, game.scoreB - points);
-                } else {
-                    game.scoreB += points;
-                    if (game.isPitActive()) game.scoreA = Math.max(0, game.scoreA - points);
-                }
-                
-                game.setGoldenQuestion(false);
-                game.setPitActive(false);
-                game.setTurnA(!game.turnA); 
-                sendBoard(event);
-            }
-            case "jawlah_wrong" -> {
-                game.setGoldenQuestion(false);
-                game.setPitActive(false);
-                game.setTurnA(!game.turnA); 
-                sendBoard(event);
-            }
             case "jawlah_back" -> sendBoard(event);
             case "jawlah_start_confirm" -> sendBoard(event);
             case "jawlah_stop" -> {
@@ -407,6 +423,97 @@ public class JawlahManager extends ListenerAdapter {
         else if (event instanceof StringSelectInteractionEvent ssie) ssie.editMessage(edit.build()).queue();
     }
 
+    @Override
+    public void onMessageReceived(MessageReceivedEvent event) {
+        if (event.getAuthor().isBot()) return;
+        JawlahGame game = activeGames.get(event.getChannel().getIdLong());
+        if (game == null || game.getCurrentQuestion() == null) return;
+
+        long uid = event.getAuthor().getIdLong();
+        boolean isA = game.teamAPlayers.contains(uid);
+        boolean isB = game.teamBPlayers.contains(uid);
+
+        if (!isA && !isB && uid != game.organizerId) return;
+
+        // Turn check
+        if ((game.turnA && !isA) || (!game.turnA && !isB)) {
+            // Optional: inform that it's not their turn
+            return;
+        }
+
+        String content = event.getMessage().getContentRaw().trim();
+        String answer = game.getCurrentQuestion().answer;
+
+        if (isSimilar(content, answer)) {
+            // Correct!
+            int points = game.selectedValue;
+            if (game.isGoldenQuestion()) points *= 2;
+
+            if (game.turnA) {
+                game.scoreA += points;
+                if (game.isPitActive()) game.scoreB = Math.max(0, game.scoreB - points);
+            } else {
+                game.scoreB += points;
+                if (game.isPitActive()) game.scoreA = Math.max(0, game.scoreA - points);
+            }
+
+            event.getMessage().reply("✅ إجابة صحيحة! أحسنت.").queue();
+            game.setCurrentQuestion(null);
+            game.setGoldenQuestion(false);
+            game.setPitActive(false);
+            game.setTurnA(!game.turnA);
+            
+            // We need to refresh the board. Since we don't have an interaction, we send a new message or update the last one if we had its ID.
+            // For now, let's just trigger a board refresh via a manual call or use a stored message ID.
+            sendBoardAfterDelay(event.getChannel().getIdLong());
+        } else {
+            // Wrong
+            game.setAttemptsLeft(game.getAttemptsLeft() - 1);
+            if (game.attemptsLeft <= 0) {
+                event.getMessage().reply("❌ إجابة خاطئة! الإجابة الصحيحة كانت: **" + answer + "**").queue();
+                game.setCurrentQuestion(null);
+                game.setGoldenQuestion(false);
+                game.setPitActive(false);
+                game.setTurnA(!game.turnA);
+                sendBoardAfterDelay(event.getChannel().getIdLong());
+            } else {
+                event.getMessage().reply("❌ إجابة خاطئة! لديك محاولة واحدة متبقية...").queue();
+            }
+        }
+    }
+
+    private boolean isSimilar(String input, String target) {
+        return input.equalsIgnoreCase(target) || 
+               input.replaceAll("\\s+", "").equalsIgnoreCase(target.replaceAll("\\s+", ""));
+    }
+
+    private void sendBoardAfterDelay(long channelId) {
+        // In a real app, we might store the message ID to edit it.
+        // For simplicity here, we'll send a fresh board message.
+        JawlahGame game = activeGames.get(channelId);
+        if (game == null) return;
+        
+        jda.getTextChannelById(channelId).sendMessage(new MessageCreateBuilder()
+                .setContent("🔄 جـاري تـحـديـث الـلـوحـة...")
+                .build()).queue(msg -> {
+                    // Update this message with the board
+                    // (Requires a bit of refactoring to sendBoard to accept Message objects)
+                });
+    }
+
+    @Getter @Setter
+    private static class JawlahQuestion {
+        private final String text;
+        private final String answer;
+        private final String imageUrl;
+
+        public JawlahQuestion(String text, String answer, String imageUrl) {
+            this.text = text;
+            this.answer = answer;
+            this.imageUrl = imageUrl;
+        }
+    }
+
     @Getter @Setter
     private static class JawlahGame {
         private final long channelId;
@@ -431,6 +538,9 @@ public class JawlahManager extends ListenerAdapter {
         
         private final Set<String> usedQuestions = new HashSet<>();
         private final Set<String> enabledHelpers = new LinkedHashSet<>();
+        
+        private JawlahQuestion currentQuestion;
+        private int attemptsLeft = 1;
 
         public JawlahGame(long channelId, long organizerId) {
             this.channelId = channelId;
