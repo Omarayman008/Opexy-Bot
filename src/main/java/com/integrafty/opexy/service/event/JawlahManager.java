@@ -187,16 +187,21 @@ public class JawlahManager extends ListenerAdapter {
                 .build()).queue();
     }
 
-    private void showQuestionPrompt(StringSelectInteractionEvent event, JawlahGame game) {
+    private void showQuestionPrompt(net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent event, JawlahGame game) {
+        String modifiers = (game.isPitActive() ? "⛳ **الـحـفـرة مـفـعـلـة**\n" : "") +
+                           (game.isGoldenQuestion() ? "🏆 **الـسـؤال الـذهـبـي مـفـعـل**\n" : "");
+
         String body = String.format("### ❓ ســـؤال الـــتـــحـــدي\n\n" +
                 "**الـفـئـة:** `%s` -> `%s`\n" +
                 "**الـقـيـمـة:** `%d` نـقـطـة\n" +
                 "**الـدور لـفـريـق:** %s\n\n" +
+                "%s" +
                 "انـتـظـر الإجـابـة مـن الـفـريـق ثـم اضـغـط عـلـى الـتـقـيـيـم الـمـنـاسـب.",
-                game.selectedCategory, game.selectedSubCategory, game.selectedValue, game.turnA ? game.teamAName : game.teamBName);
+                game.selectedCategory, game.selectedSubCategory, game.selectedValue, 
+                game.turnA ? game.teamAName : game.teamBName, modifiers);
 
-        event.editMessage(new MessageEditBuilder()
-                .setComponents(EmbedUtil.containerBranded("QUESTION", "🔍 جـــاري بـــحـــث الـــســـؤال...", body, EmbedUtil.BANNER_MAIN,
+        MessageEditBuilder edit = new MessageEditBuilder()
+                .setComponents(EmbedUtil.containerBranded("QUESTION", "🔍 جـــاري الـــتـــحـــدي...", body, EmbedUtil.BANNER_MAIN,
                         ActionRow.of(
                                 Button.success("jawlah_correct", "إجـابـة صـحـيـحـة ✅"),
                                 Button.danger("jawlah_wrong", "إجـابـة خـاطـئـة ❌")
@@ -211,7 +216,10 @@ public class JawlahManager extends ListenerAdapter {
                                 Button.secondary("jawlah_back", "الـعـودة لـلـوحـة ⬅️")
                         )
                 ))
-                .useComponentsV2(true).build()).queue();
+                .useComponentsV2(true);
+
+        if (event instanceof ButtonInteractionEvent bie) bie.editMessage(edit.build()).queue();
+        else if (event instanceof StringSelectInteractionEvent ssie) ssie.editMessage(edit.build()).queue();
     }
 
     @Override
@@ -240,7 +248,6 @@ public class JawlahManager extends ListenerAdapter {
                     if (game.isPitActive()) game.scoreA = Math.max(0, game.scoreA - points);
                 }
                 
-                // Reset modifiers
                 game.setGoldenQuestion(false);
                 game.setPitActive(false);
                 game.setTurnA(!game.turnA); 
@@ -263,22 +270,28 @@ public class JawlahManager extends ListenerAdapter {
             case "jawlah_help_2" -> event.reply("✅ تم تفعيل: **اتصال بصديق**").setEphemeral(true).queue();
             case "jawlah_help_3" -> {
                 game.setPitActive(true);
-                event.reply("⛳ تم تفعيل: **الحفرة** (سيتم خصم النقاط من الخصم عند الإجابة الصحيحة)").setEphemeral(true).queue();
+                event.reply("⛳ تم تفعيل: **الحفرة**").setEphemeral(true).queue();
+                // If on board, don't show prompt. If on board, the board shows modifiers.
+                sendBoard(event);
             }
             case "jawlah_help_4" -> {
                 game.setTurnA(!game.turnA);
                 event.reply("🔄 تم تفعيل: **اعكس الدور**").setEphemeral(true).queue();
-                sendBoard(event);
+                if (game.selectedValue > 0) showQuestionPrompt(event, game);
+                else sendBoard(event);
             }
             case "jawlah_help_5" -> {
                 game.setGoldenQuestion(true);
-                event.reply("🏆 تم تفعيل: **السؤال الذهبي** (النقاط مضاعفة!)").setEphemeral(true).queue();
+                event.reply("🏆 تم تفعيل: **السؤال الذهبي**").setEphemeral(true).queue();
+                if (game.selectedValue > 0) showQuestionPrompt(event, game);
+                else sendBoard(event);
             }
         }
     }
 
-    private void sendBoard(ButtonInteractionEvent event) {
+    private void sendBoard(net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent event) {
         JawlahGame game = activeGames.get(event.getChannel().getIdLong());
+        game.setSelectedValue(0); // Clear selected value when returning to board
         
         String modifiers = (game.isPitActive() ? "⛳ **الـحـفـرة مـفـعـلـة**\n" : "") +
                            (game.isGoldenQuestion() ? "🏆 **الـسـؤال الـذهـبـي مـفـعـل**\n" : "");
@@ -303,12 +316,15 @@ public class JawlahManager extends ListenerAdapter {
                 .addOption("فن 🎨", "art")
                 .build();
 
-        event.editMessage(new MessageEditBuilder()
+        MessageEditBuilder edit = new MessageEditBuilder()
                 .setComponents(EmbedUtil.containerBranded("GAME", "🎮 لوحـة الـتـحـدي — Jawlah Board", body, EmbedUtil.BANNER_MAIN,
                         ActionRow.of(categoryMenu),
                         ActionRow.of(Button.danger("jawlah_stop", "إنـهـاء الـلـعـبـة 🛑"))
                 ))
-                .useComponentsV2(true).build()).queue();
+                .useComponentsV2(true);
+
+        if (event instanceof ButtonInteractionEvent bie) bie.editMessage(edit.build()).queue();
+        else if (event instanceof StringSelectInteractionEvent ssie) ssie.editMessage(edit.build()).queue();
     }
 
     @Getter @Setter
