@@ -18,6 +18,9 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class BombManager extends ListenerAdapter {
+    private final AchievementService achievementService;
+    private final EconomyService economyService;
+    private final LogManager logManager;
 
     public enum Difficulty {
         EASY(10, 15, "سهل"),
@@ -32,6 +35,7 @@ public class BombManager extends ListenerAdapter {
 
     private final Map<Long, String> userCorrectWire = new HashMap<>();
     private final Map<Long, Long> userRewards = new HashMap<>();
+    private final Map<Long, Long> userGuilds = new HashMap<>();
     private final Map<Long, java.util.concurrent.ScheduledFuture<?>> userTimers = new HashMap<>();
     private final java.util.concurrent.ScheduledExecutorService scheduler = java.util.concurrent.Executors.newScheduledThreadPool(4);
 
@@ -58,6 +62,7 @@ public class BombManager extends ListenerAdapter {
         
         userCorrectWire.put(userId, correct);
         userRewards.put(userId, (long) difficulty.reward);
+        userGuilds.put(userId, guild.getIdLong());
 
         String hint = HARD_HINTS.get(correct).get(new Random().nextInt(3));
 
@@ -115,8 +120,17 @@ public class BombManager extends ListenerAdapter {
         // LOG FAIL
         String logFail = String.format("### 💥 فعالية القنبلة: انفجار (فردية - انتهاء الوقت)\n▫️ **اللاعب:** <@%d>\n▫️ **السلك الصحيح كان:** %s", 
                 userId, WIRE_COLORS.get(correct));
-        // We can't easily get the guild from just userId here without extra storage, 
-        // but since it's individual and we logged the start, it's fine for now.
+        
+        Long guildId = userGuilds.get(userId);
+        if (guildId != null) {
+            net.dv8tion.jda.api.entities.Guild guild = hook.getJDA().getGuildById(guildId);
+            if (guild != null) {
+                logManager.logEmbed(guild, LogManager.LOG_GAMES, 
+                        EmbedUtil.createOldLogEmbed("bomb_timeout", logFail, null, net.dv8tion.jda.api.entities.UserSnowflake.fromId(userId), null, EmbedUtil.DANGER));
+            }
+        }
+        
+        userGuilds.remove(userId);
     }
 
     @Override
@@ -143,6 +157,7 @@ public class BombManager extends ListenerAdapter {
         cancelTimer(userId);
         String correctColor = userCorrectWire.get(userId);
         long reward = userRewards.get(userId);
+        userGuilds.remove(userId);
 
         if (color.equals(correctColor)) {
             userCorrectWire.remove(userId);

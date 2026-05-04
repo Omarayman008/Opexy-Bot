@@ -17,7 +17,6 @@ import java.util.*;
 @RequiredArgsConstructor
 public class CraftManager extends ListenerAdapter {
 
-    private final EventManager eventManager;
     private final AchievementService achievementService;
     private final EconomyService economyService;
     private final LogManager logManager;
