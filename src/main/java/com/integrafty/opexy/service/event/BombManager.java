@@ -41,7 +41,7 @@ public class BombManager extends ListenerAdapter {
     private final Map<Long, String> userHints = new HashMap<>();
     private final Map<Long, String> userMentions = new HashMap<>();
     private final Map<Long, java.util.concurrent.ScheduledFuture<?>> userTimers = new HashMap<>();
-    private final java.util.concurrent.ScheduledExecutorService scheduler = java.util.concurrent.Executors.newScheduledThreadPool(4);
+    private final java.util.concurrent.ScheduledExecutorService scheduler = java.util.concurrent.Executors.newScheduledThreadPool(10);
 
     private static final Map<String, String> WIRE_COLORS = Map.of(
             "red", "الأحمر",
@@ -101,27 +101,32 @@ public class BombManager extends ListenerAdapter {
         final int[] timeLeft = {difficulty.seconds};
         
         java.util.concurrent.ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(() -> {
-            timeLeft[0]--;
-            
-            if (timeLeft[0] <= 0) {
-                explode(userId, event.getHook());
-                return;
-            }
+            try {
+                timeLeft[0]--;
+                
+                if (timeLeft[0] <= 0) {
+                    explode(userId, event.getHook());
+                    return;
+                }
 
-            String body = getBombBody(userMentions.get(userId), userHints.get(userId), difficulty.reward, timeLeft[0]);
-            
-            event.getHook().editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
-                    .setComponents(EmbedUtil.containerBranded("DEFUSAL", "⚠️ قنبلة الوقت!", body, EmbedUtil.BANNER_MAIN,
-                            ActionRow.of(
-                                    Button.danger("wire_red_" + userId, "السلك الأحمر").withEmoji(Emoji.fromUnicode("🔴")),
-                                    Button.primary("wire_blue_" + userId, "السلك الأزرق").withEmoji(Emoji.fromUnicode("🔵")),
-                                    Button.success("wire_green_" + userId, "السلك الأخضر").withEmoji(Emoji.fromUnicode("🟢")),
-                                    Button.secondary("wire_yellow_" + userId, "السلك الأصفر").withEmoji(Emoji.fromUnicode("🟡")),
-                                    Button.secondary("wire_purple_" + userId, "السلك البنفسجي").withEmoji(Emoji.fromUnicode("🟣"))
-                            )))
-                    .useComponentsV2(true)
-                    .build()).queue(null, e -> cancelTimer(userId));
-            
+                String body = getBombBody(userMentions.get(userId), userHints.get(userId), difficulty.reward, timeLeft[0]);
+                
+                event.getHook().editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+                        .setComponents(EmbedUtil.containerBranded("DEFUSAL", "⚠️ قنبلة الوقت!", body, EmbedUtil.BANNER_MAIN,
+                                ActionRow.of(
+                                        Button.danger("wire_red_" + userId, "السلك الأحمر").withEmoji(Emoji.fromUnicode("🔴")),
+                                        Button.primary("wire_blue_" + userId, "السلك الأزرق").withEmoji(Emoji.fromUnicode("🔵")),
+                                        Button.success("wire_green_" + userId, "السلك الأخضر").withEmoji(Emoji.fromUnicode("🟢")),
+                                        Button.secondary("wire_yellow_" + userId, "السلك الأصفر").withEmoji(Emoji.fromUnicode("🟡")),
+                                        Button.secondary("wire_purple_" + userId, "السلك البنفسجي").withEmoji(Emoji.fromUnicode("🟣"))
+                                )))
+                        .useComponentsV2(true)
+                        .build()).queue(null, e -> {
+                            // Don't cancel on error
+                        });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }, 1, 1, java.util.concurrent.TimeUnit.SECONDS);
         
         userTimers.put(userId, future);

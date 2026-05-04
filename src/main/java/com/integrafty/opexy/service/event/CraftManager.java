@@ -133,29 +133,34 @@ public class CraftManager extends ListenerAdapter {
         final int[] timeLeft = {difficulty.seconds};
         
         java.util.concurrent.ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(() -> {
-            timeLeft[0]--;
-            
-            if (timeLeft[0] <= 0) {
-                stopTimer(userId);
-                if (userActiveRecipes.containsKey(userId)) {
-                    userActiveRecipes.remove(userId);
-                    userRewards.remove(userId);
-                    
-                    String failMsg = "⏰ **انتهى الوقت!** لم تنجح في تخمين الشيء المطلوب.\n❌ حظاً أوفر في المرة القادمة.";
-                    event.getHook().editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
-                            .setComponents(EmbedUtil.error("CRAFTING TIMEOUT", "`=---------------- 00:00 ----------------=`\n\n" + failMsg))
-                            .useComponentsV2(true)
-                            .build()).queue();
+            try {
+                timeLeft[0]--;
+                
+                if (timeLeft[0] <= 0) {
+                    stopTimer(userId);
+                    if (userActiveRecipes.containsKey(userId)) {
+                        userActiveRecipes.remove(userId);
+                        userRewards.remove(userId);
+                        
+                        String failMsg = "⏰ **انتهى الوقت!** لم تنجح في تخمين الشيء المطلوب.\n❌ حظاً أوفر في المرة القادمة.";
+                        event.getHook().editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+                                .setComponents(EmbedUtil.error("CRAFTING TIMEOUT", "`=---------------- 00:00 ----------------=`\n\n" + failMsg))
+                                .useComponentsV2(true)
+                                .build()).queue();
+                    }
+                    return;
                 }
-                return;
-            }
 
-            String body = getCraftBody(userMentions.get(userId), grid, difficulty.reward, timeLeft[0]);
-            event.getHook().editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
-                    .setComponents(EmbedUtil.containerBranded("CRAFTING", "🛠️ ماذا نصنع؟", body, EmbedUtil.BANNER_MAIN))
-                    .useComponentsV2(true)
-                    .build()).queue(null, e -> stopTimer(userId));
-            
+                String body = getCraftBody(userMentions.get(userId), grid, difficulty.reward, timeLeft[0]);
+                event.getHook().editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+                        .setComponents(EmbedUtil.containerBranded("CRAFTING", "🛠️ ماذا نصنع؟", body, EmbedUtil.BANNER_MAIN))
+                        .useComponentsV2(true)
+                        .build()).queue(null, e -> {
+                            // Ignore transient errors
+                        });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }, 1, 1, java.util.concurrent.TimeUnit.SECONDS);
         
         userTimers.put(userId, future);
