@@ -207,10 +207,15 @@ public class PipePuzzleManager extends ListenerAdapter {
         for (int i = 0; i < grid.length; i++) {
             for (int j = 0; j < grid[i].length; j++) {
                 if (i == cursorR && j == cursorC) {
-                    // Red background for cursor to keep 1-char width
-                    sb.append("\u001B[41m").append(grid[i][j]).append("\u001B[0m");
+                    // Red background for cursor
+                    sb.append("\u001B[41m").append(grid[i][j] == ' ' ? '·' : grid[i][j]).append("\u001B[0m");
                 } else {
-                    sb.append(grid[i][j]);
+                    if (grid[i][j] == ' ') {
+                        // Light gray dots for empty spaces (ANSI 2;37m is dim white/gray)
+                        sb.append("\u001B[2;37m·\u001B[0m");
+                    } else {
+                        sb.append(grid[i][j]);
+                    }
                 }
             }
             sb.append("\n");
