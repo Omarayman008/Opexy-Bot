@@ -142,9 +142,11 @@ public class JawlahManager extends ListenerAdapter {
                 );
 
         if (event instanceof ButtonInteractionEvent bie) {
-            bie.editMessage(new MessageEditBuilder().setComponents(List.of(container)).useComponentsV2(true).build()).queue();
+            bie.editMessage(new MessageEditBuilder().setComponents(container).useComponentsV2(true).build())
+                .useComponentsV2(true).queue();
         } else if (event instanceof ModalInteractionEvent mie) {
-            mie.reply(new MessageCreateBuilder().setComponents(List.of(container)).useComponentsV2(true).build()).queue();
+            mie.reply(new MessageCreateBuilder().setComponents(container).useComponentsV2(true).build())
+                .useComponentsV2(true).queue();
         }
     }
 
@@ -266,7 +268,7 @@ public class JawlahManager extends ListenerAdapter {
                 game.turnA ? "🔵 " + game.teamAName : "🔴 " + game.teamBName, q.text, modifiers);
 
         MessageEditBuilder edit = new MessageEditBuilder()
-                .setComponents(List.of(EmbedUtil.containerBranded("QUESTION", "🔍 جـــاري الـــتـــحـــدي...", body, q.imageUrl != null ? q.imageUrl : EmbedUtil.BANNER_MAIN,
+                .setComponents(EmbedUtil.containerBranded("QUESTION", "🔍 جـــاري الـــتـــحـــدي...", body, q.imageUrl != null ? q.imageUrl : EmbedUtil.BANNER_MAIN,
                         ActionRow.of(
                                 Button.secondary("jawlah_help_1", "جاوب جوابين ✌️"),
                                 Button.secondary("jawlah_help_4", "اعكس الدور 🔄"),
@@ -275,11 +277,11 @@ public class JawlahManager extends ListenerAdapter {
                         ActionRow.of(
                                 Button.secondary("jawlah_back", "الـعـودة لـلـوحـة ⬅️")
                         )
-                )))
+                ))
                 .useComponentsV2(true);
 
-        if (event instanceof ButtonInteractionEvent bie) bie.editMessage(edit.build()).queue();
-        else if (event instanceof StringSelectInteractionEvent ssie) ssie.editMessage(edit.build()).queue();
+        if (event instanceof ButtonInteractionEvent bie) bie.editMessage(edit.build()).useComponentsV2(true).queue();
+        else if (event instanceof StringSelectInteractionEvent ssie) ssie.editMessage(edit.build()).useComponentsV2(true).queue();
     }
 
     @Override
@@ -413,15 +415,18 @@ public class JawlahManager extends ListenerAdapter {
                 .build();
 
         MessageEditBuilder edit = new MessageEditBuilder()
-                .setComponents(List.of(EmbedUtil.containerBranded("GAME", "🎮 لوحـة الـتـحـدي — Jawlah Board", body, EmbedUtil.BANNER_MAIN,
+                .setComponents(EmbedUtil.containerBranded("GAME", "🎮 لوحـة الـتـحـدي — Jawlah Board", body, EmbedUtil.BANNER_MAIN,
                         ActionRow.of(categoryMenu),
                         ActionRow.of(valueMenu),
                         ActionRow.of(Button.danger("jawlah_stop", "إنـهـاء الـلـعـبـة 🛑"))
-                )))
+                ))
                 .useComponentsV2(true);
 
-        if (event instanceof ButtonInteractionEvent bie) bie.editMessage(edit.build()).queue();
-        else if (event instanceof StringSelectInteractionEvent ssie) ssie.editMessage(edit.build()).queue();
+        if (event instanceof ButtonInteractionEvent bie) {
+            bie.editMessage(edit.build()).useComponentsV2(true).queue(m -> game.setBoardMessageId(m.getIdLong()));
+        } else if (event instanceof StringSelectInteractionEvent ssie) {
+            ssie.editMessage(edit.build()).useComponentsV2(true).queue(m -> game.setBoardMessageId(m.getIdLong()));
+        }
     }
 
     @Override
@@ -464,9 +469,7 @@ public class JawlahManager extends ListenerAdapter {
             game.setPitActive(false);
             game.setTurnA(!game.turnA);
             
-            // We need to refresh the board. Since we don't have an interaction, we send a new message or update the last one if we had its ID.
-            // For now, let's just trigger a board refresh via a manual call or use a stored message ID.
-            sendBoardAfterDelay(event.getChannel().getIdLong());
+            refreshBoard(game);
         } else {
             // Wrong
             game.setAttemptsLeft(game.getAttemptsLeft() - 1);
@@ -476,30 +479,61 @@ public class JawlahManager extends ListenerAdapter {
                 game.setGoldenQuestion(false);
                 game.setPitActive(false);
                 game.setTurnA(!game.turnA);
-                sendBoardAfterDelay(event.getChannel().getIdLong());
+                refreshBoard(game);
             } else {
                 event.getMessage().reply("❌ إجابة خاطئة! لديك محاولة واحدة متبقية...").queue();
             }
         }
     }
 
-    private boolean isSimilar(String input, String target) {
-        return input.equalsIgnoreCase(target) || 
-               input.replaceAll("\\s+", "").equalsIgnoreCase(target.replaceAll("\\s+", ""));
-    }
-
-    private void sendBoardAfterDelay(long channelId) {
-        // In a real app, we might store the message ID to edit it.
-        // For simplicity here, we'll send a fresh board message.
-        JawlahGame game = activeGames.get(channelId);
-        if (game == null) return;
+    private void refreshBoard(JawlahGame game) {
+        if (game.getBoardMessageId() == 0) return;
         
-        jda.getTextChannelById(channelId).sendMessage(new MessageCreateBuilder()
-                .setContent("🔄 جـاري تـحـديـث الـلـوحـة...")
-                .build()).queue(msg -> {
-                    // Update this message with the board
-                    // (Requires a bit of refactoring to sendBoard to accept Message objects)
-                });
+        int totalQuestions = 6 * 3; 
+        int usedCount = game.getUsedQuestions().size();
+        int remaining = totalQuestions - usedCount;
+
+        String modifiers = (game.isPitActive() ? "⛳ **الـحـفـرة مـفـعـلـة**\n" : "") +
+                           (game.isGoldenQuestion() ? "🏆 **الـسـؤال الـذهـبـي مـفـعـل**\n" : "");
+
+        String body = String.format("### 🏆 %s\n\n" +
+                "**الـنـتـيـجـة:**\n" +
+                "🔵 **%s**: `%d` نـقـطـة\n" +
+                "🔴 **%s**: `%d` نـقـطـة\n\n" +
+                "📊 **الأســـئـــلـــة الـــمـــتـــبـــقـــيـــة:** `%d / %d`\n\n" +
+                "%s" +
+                "**الـدور الـحـالـي:** %s\n\n" +
+                "يـرجـى اخـتـيـار الـفـئـة والـقـيـمـة مـن الـقـوائـم أدناه.",
+                game.gameName, game.teamAName, game.scoreA, game.teamBName, game.scoreB, 
+                remaining, totalQuestions, modifiers, game.turnA ? "🔵 " + game.teamAName : "🔴 " + game.teamBName);
+
+        StringSelectMenu categoryMenu = StringSelectMenu.create("jawlah_category")
+                .setPlaceholder("اخـتـر الـفـئـة...")
+                .addOption("كرة قدم ⚽", "football")
+                .addOption("خمن 🔍", "guess")
+                .addOption("حول العالم 🌍", "world")
+                .addOption("عام 📚", "general")
+                .addOption("إسلاميات 🌙", "islamic")
+                .addOption("فن 🎨", "art")
+                .build();
+
+        StringSelectMenu valueMenu = StringSelectMenu.create("jawlah_value")
+                .setPlaceholder("اخـتـر الـقـيـمـة (300, 600, 900)...")
+                .addOption("300 نـقـطـة", "300")
+                .addOption("600 نـقـطـة", "600")
+                .addOption("900 نـقـطـة", "900")
+                .build();
+
+        MessageEditBuilder edit = new MessageEditBuilder()
+                .setComponents(EmbedUtil.containerBranded("GAME", "🎮 لوحـة الـتـحـدي — Jawlah Board", body, EmbedUtil.BANNER_MAIN,
+                        ActionRow.of(categoryMenu),
+                        ActionRow.of(valueMenu),
+                        ActionRow.of(Button.danger("jawlah_stop", "إنـهـاء الـلـعـبـة 🛑"))
+                ))
+                .useComponentsV2(true);
+
+        jda.getTextChannelById(game.getChannelId()).editMessageById(game.getBoardMessageId(), edit.build())
+            .useComponentsV2(true).queue(null, e -> {});
     }
 
     @Getter @Setter
@@ -542,6 +576,7 @@ public class JawlahManager extends ListenerAdapter {
         
         private JawlahQuestion currentQuestion;
         private int attemptsLeft = 1;
+        private long boardMessageId;
 
         public JawlahGame(long channelId, long organizerId) {
             this.channelId = channelId;
