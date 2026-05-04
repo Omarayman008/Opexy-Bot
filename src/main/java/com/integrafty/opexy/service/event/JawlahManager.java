@@ -44,31 +44,35 @@ public class JawlahManager extends ListenerAdapter {
     }
 
     private void loadQuestions() {
-        // Football
-        addQ("football_player_eye", new JawlahQuestion("من هذا اللاعب؟", "ميسي", "https://i.imgur.com/8mY2PZ0.png"));
-        addQ("football_player_eye", new JawlahQuestion("من صاحب هذه العين؟", "رونالدو", "https://i.imgur.com/r6TqB7C.png"));
-        addQ("football_who_player", new JawlahQuestion("لاعب برازيلي لعب لبرشلونة وميلان وفاز بالكرة الذهبية 2005", "رونالدينيو", null));
-        addQ("football_who_player", new JawlahQuestion("الهداف التاريخي لبطولة كأس العالم", "كلوزه", null));
+        // Football - who_player
+        addQ("football_who_player_300", new JawlahQuestion("من هو اللاعب الملقب بـ 'البرغوث'؟", "ميسي", null));
+        addQ("football_who_player_600", new JawlahQuestion("لاعب سجل 5 أهداف في 9 دقائق مع بايرن ميونخ؟", "ليفاندوفسكي", null));
+        addQ("football_who_player_900", new JawlahQuestion("من هو اللاعب الوحيد الذي فاز بكأس العالم 3 مرات؟", "بيليه", null));
+
+        // Football - club_logos
+        addQ("football_club_logos_300", new JawlahQuestion("نادي يلقب بـ 'الملكي' وشعاره يحتوي على تاج؟", "ريال مدريد", null));
+        addQ("football_club_logos_600", new JawlahQuestion("نادي إيطالي يلقب بـ 'السيدة العجوز'؟", "يوفنتوس", null));
+        addQ("football_club_logos_900", new JawlahQuestion("نادي ألماني يلقب بـ 'أسود الفيستفاليا'؟", "بروسيا دورتموند", null));
+
+        // Football - player_name
+        addQ("football_player_name_300", new JawlahQuestion("هداف الدوري الإنجليزي التاريخي؟", "آلان شيرر", null));
+        addQ("football_player_name_600", new JawlahQuestion("من هو الحارس الذي فاز بالكرة الذهبية الوحيد؟", "ياشين", null));
+        addQ("football_player_name_900", new JawlahQuestion("أول لاعب عربي فاز بالدوري الإنجليزي؟", "رياض محرز", null));
+
+        // Guess
+        addQ("guess_guess_food_300", new JawlahQuestion("خمن الأكلة: تتكون من أرز ولحم وتشتهر بها السعودية؟", "كبسة", null));
+        addQ("guess_guess_img_600", new JawlahQuestion("خمن الدولة: عاصمتها الرباط؟", "المغرب", null));
+        addQ("guess_guess_name_900", new JawlahQuestion("خمن الشخصية: مكتشف الجاذبية؟", "نيوتن", null));
+
+        // Islamic
+        addQ("islamic_prophets_300", new JawlahQuestion("من هو سيف الله المسلول؟", "خالد بن الوليد", null));
+        addQ("islamic_quran_600", new JawlahQuestion("ما هي أطول سورة في القرآن الكريم؟", "البقرة", null));
+        addQ("islamic_history_900", new JawlahQuestion("من هو الصحابي الذي اهتز لموته عرش الرحمن؟", "سعد بن معاذ", null));
         
         // World
-        addQ("world_flags", new JawlahQuestion("عاصمة هذه الدولة؟", "الرياض", "https://i.imgur.com/S8Wn9Z2.png"));
-        addQ("world_capitals", new JawlahQuestion("ما هي عاصمة اليابان؟", "طوكيو", null));
-        addQ("world_capitals", new JawlahQuestion("ما هي عاصمة فرنسا؟", "باريس", null));
-        
-        // General
-        addQ("general_animals", new JawlahQuestion("ما هو أسرع حيوان بري؟", "الفهد", null));
-        addQ("general_general_info", new JawlahQuestion("كم عدد كواكب المجموعة الشمسية؟", "8", null));
-        addQ("general_complete_proverb", new JawlahQuestion("أكمل المثل: الوقت كالسيف إن لم تقطعه...", "قطعك", null));
-        
-        // Islamic
-        addQ("islamic_prophets", new JawlahQuestion("من هو النبي الملقب بكليم الله؟", "موسى", null));
-        addQ("islamic_quran", new JawlahQuestion("ما هي أطول سورة في القرآن الكريم؟", "البقرة", null));
-        
-        // Art
-        addQ("art_one_piece", new JawlahQuestion("من هو بطل قصة ون بيس؟", "لوفي", null));
-        addQ("art_breaking_bad", new JawlahQuestion("ما هو الاسم المستعار لوالتر وايت؟", "هايزنبرغ", null));
-        
-        // Add more samples as needed...
+        addQ("world_world_capitals_300", new JawlahQuestion("ما هي عاصمة اليابان؟", "طوكيو", null));
+        addQ("world_world_capitals_600", new JawlahQuestion("ما هي عاصمة فرنسا؟", "باريس", null));
+        addQ("world_world_capitals_900", new JawlahQuestion("ما هي عاصمة المملكة العربية السعودية؟", "الرياض", null));
     }
 
     private void addQ(String key, JawlahQuestion q) {
@@ -247,8 +251,8 @@ public class JawlahManager extends ListenerAdapter {
     }
 
     private void showQuestionPrompt(net.dv8tion.jda.api.interactions.callbacks.IMessageEditCallback event, JawlahGame game) {
-        String key = game.selectedCategory + "_" + game.selectedSubCategory;
-        List<JawlahQuestion> qs = questionBank.getOrDefault(key, questionBank.get("general_general_info"));
+        String key = game.selectedCategory + "_" + game.selectedSubCategory + "_" + game.selectedValue;
+        List<JawlahQuestion> qs = questionBank.getOrDefault(key, questionBank.get("general_general_info_300"));
         JawlahQuestion q = qs.get(new Random().nextInt(qs.size()));
         game.setCurrentQuestion(q);
         game.setAttemptsLeft(game.getEnabledHelpers().contains("جاوب جوابين ✌️") ? 2 : 1);
