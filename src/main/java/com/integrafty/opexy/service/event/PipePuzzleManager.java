@@ -91,11 +91,11 @@ public class PipePuzzleManager extends ListenerAdapter {
             String guildId = event.getGuild() != null ? event.getGuild().getId() : "global";
             economyService.addBalance(String.valueOf(userId), guildId, reward);
 
-            event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+            event.getHook().editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
                     .setContent(event.getUser().getAsMention())
-                    .setComponents(com.integrafty.opexy.utils.EmbedUtil.success("تم الحل", "🎉 مبروك! لقد قمت بحل اللغز بنجاح!\n💰 الجائزة: **" + reward + "** Opex"))
-                    .useComponentsV2(true).build())
-                    .useComponentsV2(true).queue();
+                    .setEmbeds(com.integrafty.opexy.utils.EmbedUtil.successEmbed("تم الحل", "🎉 مبروك! لقد قمت بحل اللغز بنجاح!\n💰 الجائزة: **" + reward + "** Opex"))
+                    .setComponents(Collections.emptyList())
+                    .build()).queue();
             
             if (event.getGuild() != null) {
                 achievementService.updateStats(userId, event.getGuild(), s -> s.setPipeWins(s.getPipeWins() + 1));

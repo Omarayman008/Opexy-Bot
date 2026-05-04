@@ -220,8 +220,8 @@ public class BombManager extends ListenerAdapter {
             
             event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
                     .setContent(event.getUser().getAsMention())
-                    .setComponents(EmbedUtil.success("BOMB DEFUSED", "`=---------------- SAFE ----------------=`\n\n" + successMsg))
-                    .useComponentsV2(true)
+                    .setEmbeds(EmbedUtil.successEmbed("BOMB DEFUSED", successMsg))
+                    .setComponents(Collections.emptyList())
                     .build()).queue();
 
             // LOG WIN

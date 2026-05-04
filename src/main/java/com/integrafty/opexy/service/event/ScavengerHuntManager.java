@@ -56,11 +56,8 @@ public class ScavengerHuntManager extends ListenerAdapter {
             
             event.getChannel().sendMessage(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
                     .setContent("<@" + winnerId + ">")
-                    .setComponents(EmbedUtil.containerBranded("EVENT", "🎉 فائز بفعالية الصيد!", 
-                            "مبروك <@" + winnerId + ">! لقد وجدت الكود الصحيح وفزت بـ **" + reward + " opex**!", 
-                            EmbedUtil.BANNER_MAIN))
-                    .useComponentsV2(true).build())
-                    .useComponentsV2(true).queue();
+                    .setEmbeds(EmbedUtil.successEmbed("EVENT", "🎉 مبروك <@" + winnerId + ">! لقد وجدت الكود الصحيح وفزت بـ **" + reward + " opex**!"))
+                    .build()).queue();
             
             // LOGGING
             String logDetails = String.format("### 🔍 فعالية الصيد: انتهت الفعالية\n▫️ **الفائز:** <@%s>\n▫️ **الجائزة:** %d opex", 

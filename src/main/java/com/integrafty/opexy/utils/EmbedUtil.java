@@ -208,6 +208,36 @@ public class EmbedUtil {
         return rulesArabicPanel();
     }
 
+    public static MessageEmbed successEmbed(String title, String description) {
+        return new EmbedBuilder()
+                .setTitle("✅ " + title)
+                .setDescription(description)
+                .setColor(SUCCESS)
+                .setImage(BANNER_MAIN)
+                .setFooter("UNIFIED TERMINAL v1.2.0 • HIGHCORE AGENCY")
+                .build();
+    }
+
+    public static MessageEmbed errorEmbed(String title, String description) {
+        return new EmbedBuilder()
+                .setTitle("❌ " + title)
+                .setDescription(description)
+                .setColor(DANGER)
+                .setImage(BANNER_MAIN)
+                .setFooter("UNIFIED TERMINAL v1.2.0 • HIGHCORE AGENCY")
+                .build();
+    }
+
+    public static MessageEmbed infoEmbed(String title, String description) {
+        return new EmbedBuilder()
+                .setTitle("ℹ️ " + title)
+                .setDescription(description)
+                .setColor(INFO)
+                .setImage(BANNER_MAIN)
+                .setFooter("UNIFIED TERMINAL v1.2.0 • HIGHCORE AGENCY")
+                .build();
+    }
+
     public static Container success(String title, String description) {
         return containerBranded("نجاح", title, "✅ " + description, BANNER_MAIN);
     }
