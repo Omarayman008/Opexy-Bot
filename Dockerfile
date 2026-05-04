@@ -1,8 +1,12 @@
 # Build stage
 FROM maven:3.8.5-eclipse-temurin-17 AS build
-COPY . /app
 WORKDIR /app
-RUN mvn clean package -DskipTests
+# Cache dependencies
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+# Build application
+COPY . .
+RUN mvn package -DskipTests -B
 
 # Run stage
 FROM eclipse-temurin:17-jre-focal
