@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +32,7 @@ public class JawlahManager extends ListenerAdapter {
 
     private final JDA jda;
     private final EventManager eventManager;
-    private final Map<Long, JawlahGame> activeGames = new HashMap<>();
+    private final Map<Long, JawlahGame> activeGames = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, List<JawlahQuestion>> questionBank = new HashMap<>();
 
     @PostConstruct
@@ -634,7 +635,6 @@ public class JawlahManager extends ListenerAdapter {
         
         private final Set<String> usedQuestions = new HashSet<>();
         private final Set<String> enabledHelpers = new LinkedHashSet<>();
-        
         private JawlahQuestion currentQuestion;
         private int attemptsLeft = 1;
 
