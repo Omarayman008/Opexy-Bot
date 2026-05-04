@@ -369,11 +369,40 @@ public class ModerationCommands implements MultiSlashCommand {
             replyEphemeral(event, EmbedUtil.error("INVALID AMOUNT", "Provide a value between 1 and 100."));
             return;
         }
+
+        // Defer reply immediately to avoid timeout
+        event.deferReply(true).queue();
+
         event.getChannel().getIterableHistory().takeAsync(amt).thenAccept(msgs -> {
-            event.getGuildChannel().deleteMessages(msgs).queue(v -> {
-                replyEphemeral(event, EmbedUtil.success("Purge Complete", amt + " messages purged."));
-                logModAction(event, "clear", "Intelligence Wipe: " + amt + " units in " + event.getChannel().getAsMention(), null, EmbedUtil.DANGER);
-            });
+            try {
+                // Filter messages older than 2 weeks (Discord limit for bulk delete)
+                long twoWeeksAgo = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(14);
+                List<net.dv8tion.jda.api.entities.Message> toDelete = msgs.stream()
+                        .filter(m -> m.getTimeCreated().toInstant().toEpochMilli() > twoWeeksAgo)
+                        .toList();
+
+                if (toDelete.isEmpty()) {
+                    event.getHook().sendMessage(new MessageCreateBuilder()
+                            .setComponents(EmbedUtil.error("FAIL", "تـــم الـــعـــثـــور عـــلـــى رســـائـــل قـــديـــمـــة جـــداً (أكـــثـــر مـــن أسبوعـــيـــن) ولا يـــمـــكـــن حـــذفـــهـــا بـــالـــجـــمـــلـــة."))
+                            .useComponentsV2(true).build()).queue();
+                    return;
+                }
+
+                event.getGuildChannel().deleteMessages(toDelete).queue(v -> {
+                    event.getHook().sendMessage(new MessageCreateBuilder()
+                            .setComponents(EmbedUtil.success("Purge Complete", toDelete.size() + " messages purged successfully."))
+                            .useComponentsV2(true).build()).queue();
+                    logModAction(event, "clear", "Intelligence Wipe: " + toDelete.size() + " units in " + event.getChannel().getAsMention(), null, EmbedUtil.DANGER);
+                }, e -> {
+                    event.getHook().sendMessage(new MessageCreateBuilder()
+                            .setComponents(EmbedUtil.error("ERROR", "حدث خطأ أثناء الحذف: " + e.getMessage()))
+                            .useComponentsV2(true).build()).queue();
+                });
+            } catch (Exception e) {
+                event.getHook().sendMessage(new MessageCreateBuilder()
+                        .setComponents(EmbedUtil.error("SYSTEM ERROR", e.getMessage()))
+                        .useComponentsV2(true).build()).queue();
+            }
         });
     }
 
