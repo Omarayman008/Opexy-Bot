@@ -46,6 +46,9 @@ public class CraftCommand implements MultiSlashCommand {
                 "💰 الجائزة: **" + reward + " opex**\n\n" +
                 "💡 اكتب الإجابة مباشرة في الشات!";
 
-        event.replyEmbeds(EmbedUtil.containerBranded("CRAFTING", "🛠️ ماذا نصنع؟", description, EmbedUtil.BANNER_MAIN).getEmbeds().get(0)).queue();
+        event.reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
+                .setComponents(EmbedUtil.containerBranded("CRAFTING", "🛠️ ماذا نصنع؟", description, EmbedUtil.BANNER_MAIN))
+                .useComponentsV2(true)
+                .build()).queue();
     }
 }

@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -91,10 +92,13 @@ public class CraftManager extends ListenerAdapter {
             userRewards.remove(userId);
 
             economyService.addBalance(event.getAuthor().getId(), event.getGuild().getId(), (int) reward);
-            achievementService.incrementGameWin(event.getAuthor().getId());
+            achievementService.updateStats(userId, event.getGuild(), s -> s.setCraftWins(s.getCraftWins() + 1));
 
-            event.getChannel().sendMessageEmbeds(EmbedUtil.success("CRAFTING MASTER", 
-                    String.format("✅ كفو <@%s>! الإجابة صحيحة، الشيء هو **%s**.\n💰 ربحت **%d opex**!", event.getAuthor().getId(), itemName, reward)).getEmbeds().get(0)).queue();
+            event.getChannel().sendMessage(new MessageCreateBuilder()
+                    .setComponents(EmbedUtil.success("CRAFTING MASTER", 
+                            String.format("✅ كفو <@%s>! الإجابة صحيحة، الشيء هو **%s**.\n💰 ربحت **%d opex**!", event.getAuthor().getId(), itemName, reward)))
+                    .useComponentsV2(true)
+                    .build()).queue();
 
             // LOG WIN
             String logWin = String.format("### 🏆 فعالية الصناعة: فوز (فردية)\n▫️ **الفائز:** <@%s>\n▫️ **الجائزة:** %d opex\n▫️ **الشيء:** %s", 

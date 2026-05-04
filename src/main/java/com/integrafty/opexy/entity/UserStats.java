@@ -47,6 +47,12 @@ public class UserStats {
     @Column(name = "speed_wins", columnDefinition = "int default 0")
     private int speedWins = 0;
 
+    @Column(name = "bomb_wins", columnDefinition = "int default 0")
+    private int bombWins = 0;
+
+    @Column(name = "craft_wins", columnDefinition = "int default 0")
+    private int craftWins = 0;
+
     // Shop Items
     @Column(name = "shield_count", columnDefinition = "int default 0")
     private int shieldCount = 0;
@@ -86,6 +92,12 @@ public class UserStats {
 
     public int getSpeedWins() { return speedWins; }
     public void setSpeedWins(int speedWins) { this.speedWins = speedWins; }
+
+    public int getBombWins() { return bombWins; }
+    public void setBombWins(int bombWins) { this.bombWins = bombWins; }
+
+    public int getCraftWins() { return craftWins; }
+    public void setCraftWins(int craftWins) { this.craftWins = craftWins; }
 
     public int getShieldCount() { return shieldCount; }
     public void setShieldCount(int shieldCount) { this.shieldCount = shieldCount; }

@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -92,13 +93,15 @@ public class BombManager extends ListenerAdapter {
             
             String winnerId = event.getUser().getId();
             economyService.addBalance(winnerId, event.getGuild().getId(), (int) reward);
-            achievementService.incrementGameWin(winnerId);
+            achievementService.updateStats(Long.parseLong(winnerId), event.getGuild(), s -> s.setBombWins(s.getBombWins() + 1));
 
             String successMsg = String.format("✅ تهانينا <@%s>! لقد قمت بقطع السلك الصحيح (%s) وأبطلت مفعول القنبلة بنجاح!\n💰 حصلت على **%d opex**", 
                     winnerId, WIRE_COLORS.get(color), reward);
             
-            event.editMessageEmbeds(EmbedUtil.success("BOMB DEFUSED", successMsg).getEmbeds().get(0))
-                    .setComponents().queue();
+            event.editMessage(new MessageEditBuilder()
+                    .setComponents(EmbedUtil.success("BOMB DEFUSED", successMsg))
+                    .useComponentsV2(true)
+                    .build()).queue();
 
             // LOG WIN
             String logWin = String.format("### 🏆 فعالية القنبلة: فوز (فردية)\n▫️ **الفائز:** <@%s>\n▫️ **الجائزة:** %d opex\n▫️ **السلك:** %s", 
@@ -113,14 +116,16 @@ public class BombManager extends ListenerAdapter {
             String failMsg = String.format("💥 **بـوووم!** قمت بقطع السلك الخطأ (%s) وانفجرت القنبلة في وجهك!\n❌ حظاً أوفر في المرة القادمة.", 
                     WIRE_COLORS.get(color));
             
-            event.editMessageEmbeds(EmbedUtil.error("BOMB EXPLODED", failMsg).getEmbeds().get(0))
-                    .setComponents().queue();
+            event.editMessage(new MessageEditBuilder()
+                    .setComponents(EmbedUtil.error("BOMB EXPLODED", failMsg))
+                    .useComponentsV2(true)
+                    .build()).queue();
 
             // LOG FAIL
             String logFail = String.format("### 💥 فعالية القنبلة: انفجار (فردية)\n▫️ **اللاعب:** <@%s>\n▫️ **السلك المقطوع:** %s\n▫️ **السلك الصحيح كان:** %s", 
                     event.getUser().getId(), WIRE_COLORS.get(color), WIRE_COLORS.get(correctColor));
             logManager.logEmbed(event.getGuild(), LogManager.LOG_GAMES, 
-                    EmbedUtil.createOldLogEmbed("bomb_fail", logFail, event.getMember(), null, null, EmbedUtil.ERROR));
+                    EmbedUtil.createOldLogEmbed("bomb_fail", logFail, event.getMember(), null, null, EmbedUtil.DANGER));
         }
     }
 }

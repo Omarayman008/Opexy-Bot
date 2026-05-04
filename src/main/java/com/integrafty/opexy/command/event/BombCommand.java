@@ -22,47 +22,53 @@ import java.util.List;
 @Component
 public class BombCommand implements MultiSlashCommand {
 
-    private final EventManager eventManager;
-    private final BombManager bombManager;
+        private final EventManager eventManager;
+        private final BombManager bombManager;
 
-    public BombCommand(EventManager eventManager, BombManager bombManager) {
-        this.eventManager = eventManager;
-        this.bombManager = bombManager;
-    }
+        public BombCommand(EventManager eventManager, BombManager bombManager) {
+                this.eventManager = eventManager;
+                this.bombManager = bombManager;
+        }
 
-    @Override
-    public List<SlashCommandData> getCommandDataList() {
-        return List.of(Commands.slash("bomb", "بدء لعبة تفكيك القنبلة (فردية)")
-                .addOptions(new OptionData(OptionType.INTEGER, "reward", "قيمة الجائزة بالـ opex", true)));
-    }
+        @Override
+        public List<SlashCommandData> getCommandDataList() {
+                return List.of(Commands.slash("bomb", "بدء لعبة تفكيك القنبلة (فردية)")
+                                .addOptions(new OptionData(OptionType.INTEGER, "reward", "قيمة الجائزة بالـ opex",
+                                                true)));
+        }
 
-    @Override
-    public void execute(SlashCommandInteractionEvent event) {
-        if (!event.getName().equals("bomb")) return;
+        @Override
+        public void execute(SlashCommandInteractionEvent event) {
+                if (!event.getName().equals("bomb"))
+                        return;
 
-        int reward = event.getOption("reward").getAsInt();
-        // Limit reward for non-staff? Or keep as is? 
-        // User didn't specify limits, but let's assume they know what they are doing.
-        // Actually, if it's for everyone, anyone can generate money? 
-        // I should probably add a cooldown or a fixed reward for members.
-        
-        long userId = event.getUser().getIdLong();
-        String hint = bombManager.startBomb(userId, reward, event.getGuild(), event.getMember());
+                int reward = event.getOption("reward").getAsInt();
 
-        String body = String.format("🆘 **تحذير!** تم زرع قنبلة موقوتة خاصة بك يا %s!\n" +
-                "يجب قطع سلك واحد لإبطال مفعولها. هناك سلك واحد صحيح والبقية ستفجر المكان!\n\n" +
-                "🔍 **التلميح:** `%s`\n\n" +
-                "💰 الجائزة: **%d opex**", event.getUser().getAsMention(), hint, reward);
+                long userId = event.getUser().getIdLong();
+                String hint = bombManager.startBomb(userId, reward, event.getGuild(), event.getMember());
 
-        event.reply(new MessageCreateBuilder()
-                .setComponents(EmbedUtil.containerBranded("DEFUSAL", "⚠️ قنبلة الوقت!", body, EmbedUtil.BANNER_MAIN,
-                        ActionRow.of(
-                                Button.danger("wire_red_" + userId, "السلك الأحمر").withEmoji(Emoji.fromUnicode("🔴")),
-                                Button.primary("wire_blue_" + userId, "السلك الأزرق").withEmoji(Emoji.fromUnicode("🔵")),
-                                Button.success("wire_green_" + userId, "السلك الأخضر").withEmoji(Emoji.fromUnicode("🟢")),
-                                Button.secondary("wire_yellow_" + userId, "السلك الأصفر").withEmoji(Emoji.fromUnicode("🟡")),
-                                Button.secondary("wire_purple_" + userId, "السلك البنفسجي").withEmoji(Emoji.fromUnicode("🟣"))
-                        )))
-                .build()).queue();
-    }
+                String body = String.format("🆘 **تحذير!** تم زرع قنبلة موقوتة خاصة بك يا %s!\n" +
+                                "يجب قطع سلك واحد لإبطال مفعولها. هناك سلك واحد صحيح والبقية ستفجر المكان!\n\n" +
+                                "🔍 **التلميح:** `%s`\n\n" +
+                                "💰 الجائزة: **%d opex**", event.getUser().getAsMention(), hint, reward);
+
+                event.reply(new MessageCreateBuilder()
+                                .setComponents(EmbedUtil.containerBranded("DEFUSAL", "⚠️ قنبلة الوقت!", body,
+                                                EmbedUtil.BANNER_MAIN,
+                                                ActionRow.of(
+                                                                Button.danger("wire_red_" + userId, "السلك الأحمر")
+                                                                                .withEmoji(Emoji.fromUnicode("🔴")),
+                                                                Button.primary("wire_blue_" + userId, "السلك الأزرق")
+                                                                                .withEmoji(Emoji.fromUnicode("🔵")),
+                                                                Button.success("wire_green_" + userId, "السلك الأخضر")
+                                                                                .withEmoji(Emoji.fromUnicode("🟢")),
+                                                                Button.secondary("wire_yellow_" + userId,
+                                                                                "السلك الأصفر")
+                                                                                .withEmoji(Emoji.fromUnicode("🟡")),
+                                                                Button.secondary("wire_purple_" + userId,
+                                                                                "السلك البنفسجي")
+                                                                                .withEmoji(Emoji.fromUnicode("🟣")))))
+                                .useComponentsV2(true)
+                                .build()).queue();
+        }
 }
