@@ -42,5 +42,9 @@ public class UserEntity {
     private int warningCount = 0;
 
     @Column(name = "event_points")
-    private int eventPoints = 0;
+    private Integer eventPoints = 0;
+
+    public int getEventPoints() {
+        return eventPoints == null ? 0 : eventPoints;
+    }
 }
