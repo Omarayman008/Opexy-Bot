@@ -130,14 +130,15 @@ public class PipePuzzleManager extends ListenerAdapter {
     }
     private char[][] generateGrid(int size) {
         char[][] grid = new char[size][size];
-        char[] allPieces = {'═', '║', '╔', '╗', '╝', '╚'};
         
+        // 1. Fill everything with empty spaces for a clean look
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
-                grid[i][j] = allPieces[random.nextInt(allPieces.length)];
+                grid[i][j] = ' ';
             }
         }
 
+        // 2. Generate a random path from (0,0) to (size-1, size-1)
         List<int[]> path = new ArrayList<>();
         int currR = 0, currC = 0;
         path.add(new int[]{currR, currC});
@@ -149,6 +150,7 @@ public class PipePuzzleManager extends ListenerAdapter {
             path.add(new int[]{currR, currC});
         }
 
+        // 3. Place pipes ONLY along the path
         for (int k = 0; k < path.size(); k++) {
             int[] curr = path.get(k);
             int prevR = (k == 0) ? -1 : path.get(k-1)[0];
@@ -158,8 +160,10 @@ public class PipePuzzleManager extends ListenerAdapter {
             grid[curr[0]][curr[1]] = getPieceConnecting(prevR - curr[0], prevC - curr[1], nextR - curr[0], nextC - curr[1]);
         }
         
+        // 4. Scramble ONLY the path pieces (others remain empty)
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
+                if (grid[i][j] == ' ') continue;
                 int rotations = random.nextInt(4);
                 for (int r = 0; r < rotations; r++) {
                     grid[i][j] = rotatePiece(grid[i][j]);
