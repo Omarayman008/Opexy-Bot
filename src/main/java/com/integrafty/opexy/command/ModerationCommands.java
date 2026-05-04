@@ -470,7 +470,7 @@ public class ModerationCommands implements MultiSlashCommand {
         if (target == null) return;
 
         UserEntity user = userRepository.findByUserIdAndGuildId(target.getId(), event.getGuild().getId())
-                .orElse(new UserEntity(target.getId(), event.getGuild().getId(), 0, 0, false, null, null, 0));
+                .orElse(new UserEntity(target.getId(), event.getGuild().getId(), 0, 0, false, null, null, 0, 0));
         
         user.setWarningCount(user.getWarningCount() + 1);
         userRepository.save(user);

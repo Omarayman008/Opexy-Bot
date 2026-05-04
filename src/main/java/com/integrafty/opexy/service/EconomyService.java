@@ -23,7 +23,7 @@ public class EconomyService {
     @Transactional
     public void addBalance(String userId, String guildId, long amount) {
         UserEntity user = userRepository.findByUserIdAndGuildId(userId, guildId)
-                .orElse(new UserEntity(userId, guildId, 0, 0, false, null, null, 0));
+                .orElse(new UserEntity(userId, guildId, 0, 0, false, null, null, 0, 0));
         user.setBalance(user.getBalance() + amount);
         user.setTotalEarned(user.getTotalEarned() + (amount > 0 ? amount : 0));
         userRepository.save(user);
