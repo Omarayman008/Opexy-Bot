@@ -266,7 +266,7 @@ public class JawlahManager extends ListenerAdapter {
                 game.turnA ? "🔵 " + game.teamAName : "🔴 " + game.teamBName, q.text, modifiers);
 
         MessageEditBuilder edit = new MessageEditBuilder()
-                .setComponents(EmbedUtil.containerBranded("QUESTION", "🔍 جـــاري الـــتـــحـــدي...", body, q.imageUrl != null ? q.imageUrl : EmbedUtil.BANNER_MAIN,
+                .setComponents(List.of(EmbedUtil.containerBranded("QUESTION", "🔍 جـــاري الـــتـــحـــدي...", body, q.imageUrl != null ? q.imageUrl : EmbedUtil.BANNER_MAIN,
                         ActionRow.of(
                                 Button.secondary("jawlah_help_1", "جاوب جوابين ✌️"),
                                 Button.secondary("jawlah_help_4", "اعكس الدور 🔄"),
@@ -275,7 +275,7 @@ public class JawlahManager extends ListenerAdapter {
                         ActionRow.of(
                                 Button.secondary("jawlah_back", "الـعـودة لـلـوحـة ⬅️")
                         )
-                ))
+                )))
                 .useComponentsV2(true);
 
         if (event instanceof ButtonInteractionEvent bie) bie.editMessage(edit.build()).queue();
@@ -413,11 +413,11 @@ public class JawlahManager extends ListenerAdapter {
                 .build();
 
         MessageEditBuilder edit = new MessageEditBuilder()
-                .setComponents(EmbedUtil.containerBranded("GAME", "🎮 لوحـة الـتـحـدي — Jawlah Board", body, EmbedUtil.BANNER_MAIN,
+                .setComponents(List.of(EmbedUtil.containerBranded("GAME", "🎮 لوحـة الـتـحـدي — Jawlah Board", body, EmbedUtil.BANNER_MAIN,
                         ActionRow.of(categoryMenu),
                         ActionRow.of(valueMenu),
                         ActionRow.of(Button.danger("jawlah_stop", "إنـهـاء الـلـعـبـة 🛑"))
-                ))
+                )))
                 .useComponentsV2(true);
 
         if (event instanceof ButtonInteractionEvent bie) bie.editMessage(edit.build()).queue();
