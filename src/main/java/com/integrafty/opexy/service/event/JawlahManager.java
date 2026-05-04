@@ -62,7 +62,6 @@ public class JawlahManager extends ListenerAdapter {
         game.setTeamBName(teamB);
         activeGames.put(event.getChannel().getIdLong(), game);
 
-        // Send Helping Hands Selection
         sendHelpingHandsSelection(event);
     }
 
@@ -101,9 +100,18 @@ public class JawlahManager extends ListenerAdapter {
             sendSubCategoryMenu(event, game);
         } else if (id.equals("jawlah_subcategory")) {
             game.setSelectedSubCategory(event.getValues().get(0));
-            sendValueMenu(event, game);
+            event.reply("تم اختيار الفئة: **" + game.getSelectedSubCategory() + "**. الآن اختر القيمة من اللوحة الرئيسية.").setEphemeral(true).queue();
         } else if (id.equals("jawlah_value")) {
-            game.setSelectedValue(Integer.parseInt(event.getValues().get(0)));
+            int val = Integer.parseInt(event.getValues().get(0));
+            String key = game.getSelectedCategory() + "_" + val;
+            
+            if (game.getUsedQuestions().contains(key)) {
+                event.reply("⚠️ هذا السؤال تم استخدامه بالفعل! اختر قيمة أخرى.").setEphemeral(true).queue();
+                return;
+            }
+            
+            game.setSelectedValue(val);
+            game.getUsedQuestions().add(key);
             showQuestionPrompt(event, game);
         }
     }
@@ -168,22 +176,6 @@ public class JawlahManager extends ListenerAdapter {
 
         event.editMessage(new MessageEditBuilder()
                 .setComponents(ActionRow.of(menu.build()), ActionRow.of(Button.secondary("jawlah_back", "الـعـودة لـلـوحـة ⬅️")))
-                .build()).queue();
-    }
-
-    private void sendValueMenu(StringSelectInteractionEvent event, JawlahGame game) {
-        StringSelectMenu valueMenu = StringSelectMenu.create("jawlah_value")
-                .setPlaceholder("اخـتـر قـيـمـة الـنـقـاط...")
-                .addOption("100 نقطة", "100")
-                .addOption("200 نقطة", "200")
-                .addOption("300 نقطة", "300")
-                .addOption("400 نقطة", "400")
-                .addOption("500 نقطة", "500")
-                .addOption("600 نقطة", "600")
-                .build();
-
-        event.editMessage(new MessageEditBuilder()
-                .setComponents(ActionRow.of(valueMenu), ActionRow.of(Button.secondary("jawlah_back", "الـعـودة لـلـوحـة ⬅️")))
                 .build()).queue();
     }
 
@@ -271,7 +263,6 @@ public class JawlahManager extends ListenerAdapter {
             case "jawlah_help_3" -> {
                 game.setPitActive(true);
                 event.reply("⛳ تم تفعيل: **الحفرة**").setEphemeral(true).queue();
-                // If on board, don't show prompt. If on board, the board shows modifiers.
                 sendBoard(event);
             }
             case "jawlah_help_4" -> {
@@ -291,8 +282,12 @@ public class JawlahManager extends ListenerAdapter {
 
     private void sendBoard(net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent event) {
         JawlahGame game = activeGames.get(event.getChannel().getIdLong());
-        game.setSelectedValue(0); // Clear selected value when returning to board
+        game.setSelectedValue(0); 
         
+        int totalQuestions = 6 * 3; 
+        int usedCount = game.getUsedQuestions().size();
+        int remaining = totalQuestions - usedCount;
+
         String modifiers = (game.isPitActive() ? "⛳ **الـحـفـرة مـفـعـلـة**\n" : "") +
                            (game.isGoldenQuestion() ? "🏆 **الـسـؤال الـذهـبـي مـفـعـل**\n" : "");
 
@@ -300,11 +295,12 @@ public class JawlahManager extends ListenerAdapter {
                 "**الـنـتـيـجـة:**\n" +
                 "🔵 **%s**: `%d` نـقـطـة\n" +
                 "🔴 **%s**: `%d` نـقـطـة\n\n" +
+                "📊 **الأســـئـــلـــة الـــمـــتـــبـــقـــيـــة:** `%d / %d`\n\n" +
                 "%s" +
                 "**الـدور الـحـالـي:** %s\n\n" +
                 "يـرجـى اخـتـيـار الـفـئـة والـقـيـمـة مـن الـقـوائـم أدناه.",
                 game.gameName, game.teamAName, game.scoreA, game.teamBName, game.scoreB, 
-                modifiers, game.turnA ? "🔵 " + game.teamAName : "🔴 " + game.teamBName);
+                remaining, totalQuestions, modifiers, game.turnA ? "🔵 " + game.teamAName : "🔴 " + game.teamBName);
 
         StringSelectMenu categoryMenu = StringSelectMenu.create("jawlah_category")
                 .setPlaceholder("اخـتـر الـفـئـة...")
@@ -316,9 +312,17 @@ public class JawlahManager extends ListenerAdapter {
                 .addOption("فن 🎨", "art")
                 .build();
 
+        StringSelectMenu valueMenu = StringSelectMenu.create("jawlah_value")
+                .setPlaceholder("اخـتـر الـقـيـمـة (300, 600, 900)...")
+                .addOption("300 نـقـطـة", "300")
+                .addOption("600 نـقـطـة", "600")
+                .addOption("900 نـقـطـة", "900")
+                .build();
+
         MessageEditBuilder edit = new MessageEditBuilder()
                 .setComponents(EmbedUtil.containerBranded("GAME", "🎮 لوحـة الـتـحـدي — Jawlah Board", body, EmbedUtil.BANNER_MAIN,
                         ActionRow.of(categoryMenu),
+                        ActionRow.of(valueMenu),
                         ActionRow.of(Button.danger("jawlah_stop", "إنـهـاء الـلـعـبـة 🛑"))
                 ))
                 .useComponentsV2(true);
