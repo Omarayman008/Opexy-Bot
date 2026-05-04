@@ -158,7 +158,7 @@ public class CraftManager extends ListenerAdapter {
             sb.append("\n");
         }
 
-        // LOGGING
+        // LOGGING SYSTEM
         String logDetails = String.format("### 🛠️ فعالية الصناعة: بدء (فردية)\n▫️ **اللاعب:** %s\n▫️ **الصعوبة:** %s\n▫️ **الجائزة:** %d opex", 
                 organizer.getAsMention(), difficulty.displayName, difficulty.reward);
         logManager.logEmbed(guild, LogManager.LOG_GAMES, 
