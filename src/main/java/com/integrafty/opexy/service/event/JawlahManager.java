@@ -374,16 +374,6 @@ public class JawlahManager extends ListenerAdapter {
         }
     }
 
-        MessageEditBuilder edit = new MessageEditBuilder()
-                .setComponents(EmbedUtil.containerBranded("GAME", "🎮 لوحـة الـتـحـدي — Jawlah Board", body, EmbedUtil.BANNER_MAIN,
-                        ActionRow.of(categoryMenu),
-                        ActionRow.of(valueMenu),
-                        ActionRow.of(Button.danger("jawlah_stop", "إنـهـاء الـلـعـبـة 🛑"))
-                ))
-                .useComponentsV2(true);
-
-        event.editMessage(edit.build()).queue(m -> game.setBoardMessageId(m.getIdLong()));
-    }
 
     private void sendBoard(net.dv8tion.jda.api.interactions.callbacks.IMessageEditCallback event) {
         JawlahGame game = activeGames.get(event.getChannel().getIdLong());
