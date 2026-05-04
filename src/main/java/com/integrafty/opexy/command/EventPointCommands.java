@@ -29,21 +29,21 @@ public class EventPointCommands implements MultiSlashCommand {
     public List<SlashCommandData> getCommandDataList() {
         List<SlashCommandData> list = new ArrayList<>();
 
-        list.add(Commands.slash("add-point", "إضـــافـــة نـــقـــاط فـــعـــالـــيـــات لـــعـــضـــو")
-                .addOption(OptionType.INTEGER, "amount", "عـــدد الـــنـــقـــاط", true)
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
+        list.add(Commands.slash("add-point", "إضافة نقاط فعاليات لعضو")
+                .addOption(OptionType.INTEGER, "amount", "عدد النقاط", true)
+                .addOption(OptionType.USER, "user", "العضو المستهدف", true)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.KICK_MEMBERS)));
 
-        list.add(Commands.slash("remove-point", "ســـحـــب نـــقـــاط فـــعـــالـــيـــات مـــن عـــضـــو")
-                .addOption(OptionType.INTEGER, "amount", "عـــدد الـــنـــقـــاط", true)
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
+        list.add(Commands.slash("remove-point", "سحب نقاط فعاليات من عضو")
+                .addOption(OptionType.INTEGER, "amount", "عدد النقاط", true)
+                .addOption(OptionType.USER, "user", "العضو المستهدف", true)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.KICK_MEMBERS)));
 
-        list.add(Commands.slash("points", "عـــرض نـــقـــاط الـــفـــعـــالـــيـــات لـــك أو لـــلـــجـــمـــيـــع")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو (اخـــتـــيـــاري)", false));
+        list.add(Commands.slash("points", "عرض نقاط الفعاليات لك أو للجميع")
+                .addOption(OptionType.USER, "user", "العضو (اختياري)", false));
 
-        list.add(Commands.slash("rest-points", "تـــصـــفـــيـــر نـــقـــاط الـــفـــعـــالـــيـــات لـــلـــجـــمـــيـــع أو لـــعـــضـــو مـــعـــيـــن")
-                .addOption(OptionType.USER, "user", "الـــعـــضـــو (اخـــتـــيـــاري)", false)
+        list.add(Commands.slash("rest-points", "تصفير نقاط الفعاليات للجميع أو لعضو معين")
+                .addOption(OptionType.USER, "user", "العضو (اختياري)", false)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.KICK_MEMBERS)));
 
         return list;

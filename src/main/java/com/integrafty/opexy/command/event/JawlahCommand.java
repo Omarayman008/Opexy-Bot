@@ -26,7 +26,7 @@ public class JawlahCommand implements SlashCommand {
 
     @Override
     public SlashCommandData getCommandData() {
-        return Commands.slash("jawlah", "بـــدء لـــعـــبـــة جـــولـــة (لـــلـــمـــنـــظـــمـــيـــن فـــقـــط)");
+        return Commands.slash("jawlah", "بدء لعبة جولة (للمنظمين فقط)");
     }
 
     @Override
