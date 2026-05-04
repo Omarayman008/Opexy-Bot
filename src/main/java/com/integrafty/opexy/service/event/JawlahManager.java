@@ -154,8 +154,13 @@ public class JawlahManager extends ListenerAdapter {
         game.setTeamBName(teamB);
         game.setMaxPlayersPerTeam(maxPlayers);
         activeGames.put(event.getChannel().getIdLong(), game);
-
         sendHelpingHandsSelection(event);
+
+        // LOGGING
+        String logDetails = String.format("### 🏆 فعالية جولة: بدء\n▫️ **المنظم:** %s\n▫️ **القناة:** <#%d>", 
+                event.getMember().getAsMention(), event.getChannel().getIdLong());
+        logManager.logEmbed(event.getGuild(), com.integrafty.opexy.service.LogManager.LOG_GAMES, 
+                EmbedUtil.createOldLogEmbed("jawlah", logDetails, event.getMember(), null, null, EmbedUtil.INFO));
     }
 
     private void sendHelpingHandsSelection(net.dv8tion.jda.api.interactions.callbacks.IReplyCallback event) {
@@ -362,6 +367,12 @@ public class JawlahManager extends ListenerAdapter {
                     event.reply("❌ عذراً، المنظم فقط يمكنه إنهاء اللعبة.").setEphemeral(true).queue();
                     return;
                 }
+                // LOGGING
+                String logStop = String.format("### 🏆 فعالية جولة: إنهاء\n▫️ **المنظم:** %s\n▫️ **النتيجة:** 🔵 %d - 🔴 %d", 
+                        event.getMember().getAsMention(), game.scoreA, game.scoreB);
+                logManager.logEmbed(event.getGuild(), com.integrafty.opexy.service.LogManager.LOG_GAMES, 
+                        EmbedUtil.createOldLogEmbed("jawlah", logStop, event.getMember(), null, null, EmbedUtil.SUCCESS));
+
                 activeGames.remove(event.getChannel().getIdLong());
                 eventManager.endGroupEvent();
                 event.reply("🛑 تم إنهاء لعبة جولة.").queue();
