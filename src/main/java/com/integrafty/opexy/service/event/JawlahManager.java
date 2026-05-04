@@ -143,8 +143,11 @@ public class JawlahManager extends ListenerAdapter {
                 ))
                 .useComponentsV2(true);
 
-        if (event instanceof ButtonInteractionEvent bie) bie.editMessage(edit.build()).queue();
-        else if (event instanceof ModalInteractionEvent mie) mie.reply(edit.build()).queue();
+        if (event instanceof ButtonInteractionEvent bie) {
+            bie.editMessage(edit.build()).queue();
+        } else if (event instanceof ModalInteractionEvent mie) {
+            mie.reply(MessageCreateBuilder.fromEditData(edit.build()).build()).queue();
+        }
     }
 
     @Override
