@@ -52,12 +52,20 @@ public class CraftManager extends ListenerAdapter {
             Map.entry("C", "<:obsadian:1500856426388521097>"), // Obsidian/Coal
             Map.entry("E", "🔲"), // Empty
             Map.entry("R", "<:redstone:1500855636454539315>"), // Redstone
-            Map.entry("L", "🧵"), // String (Default for now)
+            Map.entry("L", "<:String:1500863278484688906>"), // String
             Map.entry("F", "<:MinecraftGunpowderpng:1500855744470319146>"), // Gunpowder
-            Map.entry("Q", "<:wihte_wool:1500857723540209674>"), // White Wool (Quartz alternative)
+            Map.entry("Q", "<:Quartz:1500863495036600513>"), // Quartz
             Map.entry("O", "<:obsadian:1500856426388521097>"), // Obsidian
             Map.entry("T", "<:torch:1500855870840635594>"), // Torch
-            Map.entry("H", "<:EnchantedBookMinecraftPlugin6D:1500855968169328711>")  // Book
+            Map.entry("H", "<:EnchantedBookMinecraftPlugin6D:1500855968169328711>"), // Book
+            Map.entry("A", "<:Red_Apple:1500863813019242546>"), // Apple
+            Map.entry("N", "<:Ender_Eye:1500863572694143078>"), // Ender Eye
+            Map.entry("K", "<:Nether_Star:1500863654051188921>"), // Nether Star
+            Map.entry("U", "<:Leather:1500863416661971126>"), // Leather
+            Map.entry("Z", "<:sand:1500856844296654998>"), // Sand
+            Map.entry("V", "<:Glass_Botlle:1500863727724134521>"), // Glass Bottle
+            Map.entry("M", "<:emrald:1500855555009286247>"), // Emerald
+            Map.entry("Y", "<:Hay_Bale:1500857647132315659>")  // Hay Bale
     );
 
     @RequiredArgsConstructor
@@ -96,7 +104,12 @@ public class CraftManager extends ListenerAdapter {
             new Recipe(new String[][]{{"E", "H", "E"}, {"D", "O", "D"}, {"O", "O", "O"}}, List.of("طاولة تطوير", "enchantment table", "تطوير", "طاوله تطوير", "طاولة التطوير", "انشانتمنت تيبل"), "طاولة تطوير", Difficulty.HARD),
             new Recipe(new String[][]{{"I", "I", "I"}, {"E", "I", "E"}, {"I", "I", "I"}}, List.of("سندان", "anvil", "السندان", "انفيل"), "سندان", Difficulty.HARD),
             new Recipe(new String[][]{{"B", "B", "B"}, {"B", "R", "B"}, {"B", "B", "B"}}, List.of("نوت بلوك", "note block", "موسيقى", "النوت بلوك"), "نوت بلوك", Difficulty.HARD),
-            new Recipe(new String[][]{{"I", "I", "I"}, {"I", "I", "I"}, {"E", "E", "E"}}, List.of("درع", "chestplate", "درع حديد", "الدرع", "درع الحديد", "تشيست بليت"), "درع حديد", Difficulty.HARD)
+            new Recipe(new String[][]{{"I", "I", "I"}, {"I", "I", "I"}, {"E", "E", "E"}}, List.of("درع", "chestplate", "درع حديد", "الدرع", "درع الحديد", "تشيست بليت"), "درع حديد", Difficulty.HARD),
+            new Recipe(new String[][]{{"G", "G", "G"}, {"G", "A", "G"}, {"G", "G", "G"}}, List.of("تفاحة ذهبية", "golden apple", "تفاحة ذهب", "قولدن ابل"), "تفاحة ذهبية", Difficulty.HARD),
+            new Recipe(new String[][]{{"O", "O", "O"}, {"O", "N", "O"}, {"O", "O", "O"}}, List.of("صندوق اندر", "ender chest", "اندر تشيست"), "صندوق اندر", Difficulty.HARD),
+            new Recipe(new String[][]{{"G", "G", "G"}, {"G", "K", "G"}, {"O", "O", "O"}}, List.of("بيكون", "beacon", "منارة", "بيكن"), "بيكون", Difficulty.HARD),
+            new Recipe(new String[][]{{"F", "Z", "F"}, {"Z", "F", "Z"}, {"F", "Z", "F"}}, List.of("تي ان تي", "tnt", "متفجرات"), "TNT", Difficulty.HARD),
+            new Recipe(new String[][]{{"F", "E", "E"}, {"S", "E", "E"}, {"J", "E", "E"}}, List.of("سهم", "arrow", "سهام"), "سهم", Difficulty.HARD)
     );
 
     public String startCraft(long userId, Difficulty difficulty, Guild guild, Member organizer) {
