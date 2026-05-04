@@ -21,6 +21,7 @@ import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.interactions.callbacks.IMessageEditCallback;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
@@ -105,7 +106,7 @@ public class JawlahManager extends ListenerAdapter {
         sendHelpingHandsSelection(event);
     }
 
-    private void sendHelpingHandsSelection(net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent event) {
+    private void sendHelpingHandsSelection(net.dv8tion.jda.api.interactions.callbacks.IMessageEditCallback event) {
         JawlahGame game = activeGames.get(event.getChannel().getIdLong());
         
         String enabledStr = game.getEnabledHelpers().isEmpty() ? "*لا يوجد*" : String.join(" - ", game.getEnabledHelpers());
@@ -245,7 +246,7 @@ public class JawlahManager extends ListenerAdapter {
                 .build()).queue();
     }
 
-    private void showQuestionPrompt(net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent event, JawlahGame game) {
+    private void showQuestionPrompt(net.dv8tion.jda.api.interactions.callbacks.IMessageEditCallback event, JawlahGame game) {
         String key = game.selectedCategory + "_" + game.selectedSubCategory;
         List<JawlahQuestion> qs = questionBank.getOrDefault(key, questionBank.get("general_general_info"));
         JawlahQuestion q = qs.get(new Random().nextInt(qs.size()));
@@ -373,7 +374,18 @@ public class JawlahManager extends ListenerAdapter {
         }
     }
 
-    private void sendBoard(net.dv8tion.jda.api.events.interaction.component.GenericComponentInteractionCreateEvent event) {
+        MessageEditBuilder edit = new MessageEditBuilder()
+                .setComponents(EmbedUtil.containerBranded("GAME", "🎮 لوحـة الـتـحـدي — Jawlah Board", body, EmbedUtil.BANNER_MAIN,
+                        ActionRow.of(categoryMenu),
+                        ActionRow.of(valueMenu),
+                        ActionRow.of(Button.danger("jawlah_stop", "إنـهـاء الـلـعـبـة 🛑"))
+                ))
+                .useComponentsV2(true);
+
+        event.editMessage(edit.build()).queue(m -> game.setBoardMessageId(m.getIdLong()));
+    }
+
+    private void sendBoard(net.dv8tion.jda.api.interactions.callbacks.IMessageEditCallback event) {
         JawlahGame game = activeGames.get(event.getChannel().getIdLong());
         game.setSelectedValue(0); 
         
@@ -420,11 +432,7 @@ public class JawlahManager extends ListenerAdapter {
                 ))
                 .useComponentsV2(true);
 
-        if (event instanceof ButtonInteractionEvent bie) {
-            bie.editMessage(edit.build()).queue(m -> game.setBoardMessageId(m.getIdLong()));
-        } else if (event instanceof StringSelectInteractionEvent ssie) {
-            ssie.editMessage(edit.build()).queue(m -> game.setBoardMessageId(m.getIdLong()));
-        }
+        event.editMessage(edit.build()).queue(m -> game.setBoardMessageId(m.getIdLong()));
     }
 
     @Override
