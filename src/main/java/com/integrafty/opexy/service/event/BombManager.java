@@ -36,6 +36,9 @@ public class BombManager extends ListenerAdapter {
     private final Map<Long, String> userCorrectWire = new HashMap<>();
     private final Map<Long, Long> userRewards = new HashMap<>();
     private final Map<Long, Long> userGuilds = new HashMap<>();
+    private final Map<Long, Difficulty> userDifficulty = new HashMap<>();
+    private final Map<Long, String> userHints = new HashMap<>();
+    private final Map<Long, String> userMentions = new HashMap<>();
     private final Map<Long, java.util.concurrent.ScheduledFuture<?>> userTimers = new HashMap<>();
     private final java.util.concurrent.ScheduledExecutorService scheduler = java.util.concurrent.Executors.newScheduledThreadPool(4);
 
@@ -63,8 +66,11 @@ public class BombManager extends ListenerAdapter {
         userCorrectWire.put(userId, correct);
         userRewards.put(userId, (long) difficulty.reward);
         userGuilds.put(userId, guild.getIdLong());
+        userDifficulty.put(userId, difficulty);
+        userMentions.put(userId, organizer.getAsMention());
 
         String hint = HARD_HINTS.get(correct).get(new Random().nextInt(3));
+        userHints.put(userId, hint);
 
         // LOGGING
         String logDetails = String.format("### 💣 فعالية القنبلة: بدء (فردية)\n▫️ **اللاعب:** %s\n▫️ **الصعوبة:** %s\n▫️ **الجائزة:** %d opex\n▫️ **السلك الصحيح:** %s", 
@@ -86,12 +92,32 @@ public class BombManager extends ListenerAdapter {
                 return;
             }
 
-            String timerFormat = String.format("`=----------------%02d:%02d----------------=`", 0, timeLeft[0]);
-            event.getHook().editOriginal(timerFormat).queue(null, e -> cancelTimer(userId));
+            String body = getBombBody(userMentions.get(userId), userHints.get(userId), difficulty.reward, timeLeft[0]);
+            
+            event.getHook().editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+                    .setComponents(EmbedUtil.containerBranded("DEFUSAL", "⚠️ قنبلة الوقت!", body, EmbedUtil.BANNER_MAIN,
+                            ActionRow.of(
+                                    Button.danger("wire_red_" + userId, "السلك الأحمر").withEmoji(Emoji.fromUnicode("🔴")),
+                                    Button.primary("wire_blue_" + userId, "السلك الأزرق").withEmoji(Emoji.fromUnicode("🔵")),
+                                    Button.success("wire_green_" + userId, "السلك الأخضر").withEmoji(Emoji.fromUnicode("🟢")),
+                                    Button.secondary("wire_yellow_" + userId, "السلك الأصفر").withEmoji(Emoji.fromUnicode("🟡")),
+                                    Button.secondary("wire_purple_" + userId, "السلك البنفسجي").withEmoji(Emoji.fromUnicode("🟣"))
+                            )))
+                    .useComponentsV2(true)
+                    .build()).queue(null, e -> cancelTimer(userId));
             
         }, 1, 1, java.util.concurrent.TimeUnit.SECONDS);
         
         userTimers.put(userId, future);
+    }
+
+    private String getBombBody(String mention, String hint, int reward, int seconds) {
+        String timerFormat = String.format("`=----------------%02d:%02d----------------=`", 0, seconds);
+        return timerFormat + "\n\n" +
+               String.format("🆘 **تحذير!** تم زرع قنبلة موقوتة خاصة بك يا %s!\n" +
+               "يجب قطع سلك واحد لإبطال مفعولها. هناك سلك واحد صحيح والبقية ستفجر المكان!\n\n" +
+               "🔍 **التلميح:** `%s`\n\n" +
+               "💰 الجائزة: **%d opex**", mention, hint, reward);
     }
 
     private void cancelTimer(long userId) {
@@ -99,6 +125,9 @@ public class BombManager extends ListenerAdapter {
             userTimers.get(userId).cancel(true);
             userTimers.remove(userId);
         }
+        userDifficulty.remove(userId);
+        userHints.remove(userId);
+        userMentions.remove(userId);
     }
 
     private void explode(long userId, net.dv8tion.jda.api.interactions.InteractionHook hook) {
@@ -111,9 +140,8 @@ public class BombManager extends ListenerAdapter {
 
         String failMsg = "💥 **بـوووم!** انتهى الوقت وانفجرت القنبلة!\n❌ حظاً أوفر في المرة القادمة.";
         
-        hook.editOriginal(new MessageEditBuilder()
-                .setContent("`=---------------- 00:00 ----------------=`")
-                .setComponents(EmbedUtil.error("BOMB EXPLODED", failMsg))
+        hook.editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+                .setComponents(EmbedUtil.error("BOMB EXPLODED", "`=---------------- 00:00 ----------------=`\n\n" + failMsg))
                 .useComponentsV2(true)
                 .build()).queue();
 
@@ -169,9 +197,8 @@ public class BombManager extends ListenerAdapter {
             String successMsg = String.format("✅ تهانينا <@%s>! لقد قمت بقطع السلك الصحيح (%s) وأبطلت مفعول القنبلة بنجاح!\n💰 حصلت على **%d opex**", 
                     event.getUser().getId(), WIRE_COLORS.get(color), reward);
             
-            event.editMessage(new MessageEditBuilder()
-                    .setContent("`=---------------- SAFE ----------------=`")
-                    .setComponents(EmbedUtil.success("BOMB DEFUSED", successMsg))
+            event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+                    .setComponents(EmbedUtil.success("BOMB DEFUSED", "`=---------------- SAFE ----------------=`\n\n" + successMsg))
                     .useComponentsV2(true)
                     .build()).queue();
 
@@ -188,9 +215,8 @@ public class BombManager extends ListenerAdapter {
             String failMsg = String.format("💥 **بـوووم!** قمت بقطع السلك الخطأ (%s) وانفجرت القنبلة في وجهك!\n❌ حظاً أوفر في المرة القادمة.", 
                     WIRE_COLORS.get(color));
             
-            event.editMessage(new MessageEditBuilder()
-                    .setContent("`=---------------- BOOM ----------------=`")
-                    .setComponents(EmbedUtil.error("BOMB EXPLODED", failMsg))
+            event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+                    .setComponents(EmbedUtil.error("BOMB EXPLODED", "`=---------------- BOOM ----------------=`\n\n" + failMsg))
                     .useComponentsV2(true)
                     .build()).queue();
 

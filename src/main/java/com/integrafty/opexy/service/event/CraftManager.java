@@ -23,15 +23,21 @@ public class CraftManager extends ListenerAdapter {
 
     private final Map<Long, Recipe> userActiveRecipes = new HashMap<>();
     private final Map<Long, Long> userRewards = new HashMap<>();
+    private final Map<Long, Difficulty> userDifficulty = new HashMap<>();
+    private final Map<Long, String> userMentions = new HashMap<>();
+    private final Map<Long, Long> userGuilds = new HashMap<>();
+    private final Map<Long, java.util.concurrent.ScheduledFuture<?>> userTimers = new HashMap<>();
+    private final java.util.concurrent.ScheduledExecutorService scheduler = java.util.concurrent.Executors.newScheduledThreadPool(4);
 
     public enum Difficulty {
-        EASY(20, "سهل"),
-        MEDIUM(30, "وسط"),
-        HARD(40, "صعب");
+        EASY(20, 30, "سهل"),
+        MEDIUM(30, 20, "وسط"),
+        HARD(40, 10, "صعب");
 
         public final int reward;
+        public final int seconds;
         public final String displayName;
-        Difficulty(int r, String d) { this.reward = r; this.displayName = d; }
+        Difficulty(int r, int s, String d) { this.reward = r; this.seconds = s; this.displayName = d; }
     }
 
     private static final Map<String, String> ITEMS = Map.of(
@@ -78,6 +84,9 @@ public class CraftManager extends ListenerAdapter {
         
         userActiveRecipes.put(userId, recipe);
         userRewards.put(userId, (long) difficulty.reward);
+        userDifficulty.put(userId, difficulty);
+        userMentions.put(userId, organizer.getAsMention());
+        userGuilds.put(userId, guild.getIdLong());
 
         StringBuilder sb = new StringBuilder();
         sb.append("```\n");
@@ -100,6 +109,57 @@ public class CraftManager extends ListenerAdapter {
         return sb.toString();
     }
 
+    public void initTimer(long userId, Difficulty difficulty, net.dv8tion.jda.api.interactions.callbacks.IReplyCallback event, String grid) {
+        final int[] timeLeft = {difficulty.seconds};
+        
+        java.util.concurrent.ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(() -> {
+            timeLeft[0]--;
+            
+            if (timeLeft[0] <= 0) {
+                stopTimer(userId);
+                if (userActiveRecipes.containsKey(userId)) {
+                    userActiveRecipes.remove(userId);
+                    userRewards.remove(userId);
+                    
+                    String failMsg = "⏰ **انتهى الوقت!** لم تنجح في تخمين الشيء المطلوب.\n❌ حظاً أوفر في المرة القادمة.";
+                    event.getHook().editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+                            .setComponents(EmbedUtil.error("CRAFTING TIMEOUT", "`=---------------- 00:00 ----------------=`\n\n" + failMsg))
+                            .useComponentsV2(true)
+                            .build()).queue();
+                }
+                return;
+            }
+
+            String body = getCraftBody(userMentions.get(userId), grid, difficulty.reward, timeLeft[0]);
+            event.getHook().editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+                    .setComponents(EmbedUtil.containerBranded("CRAFTING", "🛠️ ماذا نصنع؟", body, EmbedUtil.BANNER_MAIN))
+                    .useComponentsV2(true)
+                    .build()).queue(null, e -> stopTimer(userId));
+            
+        }, 1, 1, java.util.concurrent.TimeUnit.SECONDS);
+        
+        userTimers.put(userId, future);
+    }
+
+    private String getCraftBody(String mention, String grid, int reward, int seconds) {
+        String timerFormat = String.format("`=----------------%02d:%02d----------------=`", 0, seconds);
+        return timerFormat + "\n\n" +
+               String.format("أمامك طاولة كرافتنق خاصة بك يا %s... خمن ما هو الشيء الذي يتم صنعه؟\n\n", mention) +
+               grid + "\n" +
+               "💰 الجائزة: **" + reward + " opex**\n\n" +
+               "💡 اكتب الإجابة مباشرة في الشات!";
+    }
+
+    private void stopTimer(long userId) {
+        if (userTimers.containsKey(userId)) {
+            userTimers.get(userId).cancel(true);
+            userTimers.remove(userId);
+        }
+        userDifficulty.remove(userId);
+        userMentions.remove(userId);
+        userGuilds.remove(userId);
+    }
+
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         long userId = event.getAuthor().getIdLong();
@@ -111,6 +171,7 @@ public class CraftManager extends ListenerAdapter {
         String content = event.getMessage().getContentRaw().trim().toLowerCase();
         if (activeRecipe.possibleNames.contains(content)) {
             String itemName = activeRecipe.displayName;
+            stopTimer(userId);
             userActiveRecipes.remove(userId);
             userRewards.remove(userId);
 

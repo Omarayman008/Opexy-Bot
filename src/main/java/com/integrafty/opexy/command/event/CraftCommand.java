@@ -45,7 +45,9 @@ public class CraftCommand implements MultiSlashCommand {
         
         String grid = craftManager.startCraft(userId, difficulty, event.getGuild(), event.getMember());
 
-        String description = String.format("أمامك طاولة كرافتنق خاصة بك يا %s... خمن ما هو الشيء الذي يتم صنعه؟\n\n", event.getUser().getAsMention()) +
+        String timerFormat = String.format("`=----------------%02d:%02d----------------=`", 0, difficulty.seconds);
+        String description = timerFormat + "\n\n" +
+                String.format("أمامك طاولة كرافتنق خاصة بك يا %s... خمن ما هو الشيء الذي يتم صنعه؟\n\n", event.getUser().getAsMention()) +
                 grid + "\n" +
                 "💰 الجائزة: **" + difficulty.reward + " opex**\n" +
                 "📊 الصعوبة: **" + difficulty.displayName + "**\n\n" +
@@ -54,6 +56,6 @@ public class CraftCommand implements MultiSlashCommand {
         event.reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
                 .setComponents(EmbedUtil.containerBranded("CRAFTING", "🛠️ ماذا نصنع؟", description, EmbedUtil.BANNER_MAIN))
                 .useComponentsV2(true)
-                .build()).queue();
+                .build()).queue(hook -> craftManager.initTimer(userId, difficulty, event, grid));
     }
 }
