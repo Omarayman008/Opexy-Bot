@@ -40,7 +40,6 @@ public class ScavengerHuntCommand implements MultiSlashCommand {
     @Override
     public List<SlashCommandData> getCommandDataList() {
         return List.of(Commands.slash("hunt", "بدء فعالية الصيد (Scavenger Hunt)")
-                .addOption(net.dv8tion.jda.api.interactions.commands.OptionType.INTEGER, "reward", "مبلغ الجائزة (افتراضي 5000)", false)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)));
     }
 
@@ -62,7 +61,7 @@ public class ScavengerHuntCommand implements MultiSlashCommand {
             return;
         }
 
-        long reward = event.getOption("reward") != null ? event.getOption("reward").getAsLong() : 5000;
+        long reward = 5000;
         String code = huntManager.startHunt(reward, event.getGuild(), event.getMember());
 
         List<TextChannel> channels = event.getGuild().getTextChannels().stream()
