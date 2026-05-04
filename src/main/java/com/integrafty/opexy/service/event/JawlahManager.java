@@ -486,6 +486,12 @@ public class JawlahManager extends ListenerAdapter {
         }
     }
 
+    private boolean isSimilar(String input, String target) {
+        if (input == null || target == null) return false;
+        return input.equalsIgnoreCase(target) || 
+               input.replaceAll("\\s+", "").equalsIgnoreCase(target.replaceAll("\\s+", ""));
+    }
+
     private void refreshBoard(JawlahGame game) {
         if (game.getBoardMessageId() == 0) return;
         
