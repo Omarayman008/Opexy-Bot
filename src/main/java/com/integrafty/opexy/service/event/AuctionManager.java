@@ -217,8 +217,21 @@ public class AuctionManager extends ListenerAdapter {
                 }
             }
 
+            String displayedPrize = currentPrize;
+            if (currentPrize.equals("📦 صندوق عشوائي")) {
+                String[] randomItems = {
+                    "💎 100,000 Opex", 
+                    "🔥 Netherite Ingot", 
+                    "🥔 بطاطس مسمومة (Poisonous Potato)", 
+                    "🦴 عظمة كلب (Bone)", 
+                    "🍎 Apple", 
+                    "💩 Rotten Flesh"
+                };
+                displayedPrize = "📦 صندوق عشوائي ➔ (" + randomItems[new java.util.Random().nextInt(randomItems.length)] + ")";
+            }
+
             String body = highestBidderId != 0 ? 
-                "الفائز هو <@" + highestBidderId + "> بسعر **" + currentHighestBid + " opex**!\n\n**الجائزة:** " + currentPrize + "\n\nمبروك للفائز!" :
+                "الفائز هو <@" + highestBidderId + "> بسعر **" + currentHighestBid + " opex**!\n\n**الجائزة:** " + displayedPrize + "\n\nمبروك للفائز!" :
                 "انتهى المزاد دون وجود أي مزايدات.";
             
             channel.sendMessage(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
