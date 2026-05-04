@@ -218,7 +218,8 @@ public class AuctionManager extends ListenerAdapter {
             }
 
             String displayedPrize = currentPrize;
-            if (currentPrize.equals("📦 صندوق عشوائي")) {
+            String prizeLower = currentPrize.toLowerCase();
+            if (prizeLower.contains("صندوق عشوائي") || prizeLower.contains("صندوق غامض") || prizeLower.contains("random box") || prizeLower.contains("mystery box")) {
                 String[] randomItems = {
                     "💎 <:dimoand:1500878887662518334> (10x Diamonds)", 
                     "⭐ <:neather_star:1500880657986097172> (Nether Star)", 
