@@ -138,13 +138,11 @@ public class JawlahManager extends ListenerAdapter {
             case "general" -> {
                 menu.addOption("عالم الحيوان 🦁", "animals");
                 menu.addOption("جيل الطيبين 📺", "old_gen");
-                menu.addOption("مشاهير صغار 👶", "young_celebs");
                 menu.addOption("ولا كلمة 🙊", "no_word");
                 menu.addOption("معلومات عامة 💡", "general_info");
                 menu.addOption("أكمل المثل 📝", "complete_proverb");
                 menu.addOption("وش الأكلة 🥘", "what_food");
                 menu.addOption("الشعار الصحيح ✅", "correct_logo");
-                menu.addOption("بنات وبس 💄", "girls_only");
                 menu.addOption("كودنيمز 🧩", "codenames");
                 menu.addOption("صور ألغاز 🧩", "puzzle_imgs");
                 menu.addOption("شعارات 🏷️", "logos");
@@ -201,7 +199,15 @@ public class JawlahManager extends ListenerAdapter {
                 .setComponents(EmbedUtil.containerBranded("QUESTION", "🔍 جـــاري بـــحـــث الـــســـؤال...", body, EmbedUtil.BANNER_MAIN,
                         ActionRow.of(
                                 Button.success("jawlah_correct", "إجـابـة صـحـيـحـة ✅"),
-                                Button.danger("jawlah_wrong", "إجـابـة خـاطـئـة ❌"),
+                                Button.danger("jawlah_wrong", "إجـابـة خـاطـئـة ❌")
+                        ),
+                        ActionRow.of(
+                                Button.secondary("jawlah_help_1", "جاوب جوابين ✌️"),
+                                Button.secondary("jawlah_help_2", "اتصال بصديق 📞"),
+                                Button.secondary("jawlah_help_4", "اعكس الدور 🔄"),
+                                Button.secondary("jawlah_help_5", "السؤال الذهبي 🏆")
+                        ),
+                        ActionRow.of(
                                 Button.secondary("jawlah_back", "الـعـودة لـلـوحـة ⬅️")
                         )
                 ))
