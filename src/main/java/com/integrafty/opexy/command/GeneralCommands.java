@@ -64,6 +64,11 @@ public class GeneralCommands implements MultiSlashCommand {
                 .addOption(OptionType.INTEGER, "amount", "الـــمـــبـــلـــغ", true)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)));
 
+        list.add(Commands.slash("take", "ســـحـــب رصـــيـــد مـــن عـــضـــو (خاص بالإدارة)")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو الـــمـــســـتـــهـــدف", true)
+                .addOption(OptionType.INTEGER, "amount", "الـــمـــبـــلـــغ", true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)));
+
         list.add(Commands.slash("transfer", "تـــحـــويـــل رصـــيـــد لـــمـــســـتـــخـــدم آخـــر")
                 .addOption(OptionType.USER, "user", "الـــمـــســـتـــخـــدم الـــمـــرســـل إلـــيـــه", true)
                 .addOption(OptionType.INTEGER, "amount", "الـــمـــبـــلـــغ الـــمـــراد تـــحـــويـــلـــه", true));
@@ -92,6 +97,7 @@ public class GeneralCommands implements MultiSlashCommand {
             case "translate" -> handleTranslate(event);
             case "get-emojis" -> handleGetEmojis(event);
             case "give" -> handleGive(event);
+            case "take" -> handleTake(event);
             case "transfer" -> handleTransfer(event);
             case "kill" -> handleKill(event);
         }
@@ -138,6 +144,28 @@ public class GeneralCommands implements MultiSlashCommand {
         
         String body = String.format("تم إضافة **%d opex** بنجاح لحساب <@%s>.", amount, target.getId());
         reply(event, EmbedUtil.success("ADMIN GIFT", body));
+    }
+
+    private void handleTake(SlashCommandInteractionEvent event) {
+        boolean hasAccess = event.getMember() != null && event.getMember().getRoles().stream()
+                .anyMatch(role -> role.getId().equals("1337490826326048922"));
+
+        if (!hasAccess) {
+            replyEphemeral(event, EmbedUtil.error("ACCESS DENIED", "هذا الأمر مخصص لرتبة الإدارة العليا فقط."));
+            return;
+        }
+
+        net.dv8tion.jda.api.entities.User target = event.getOption("user").getAsUser();
+        int amount = event.getOption("amount").getAsInt();
+
+        boolean success = economyService.subtractBalance(target.getId(), event.getGuild().getId(), amount);
+        
+        if (success) {
+            String body = String.format("تم سحب **%d opex** بنجاح من حساب <@%s>.", amount, target.getId());
+            reply(event, EmbedUtil.success("ADMIN PENALTY", body));
+        } else {
+            replyEphemeral(event, EmbedUtil.error("FAILED", "رصيد العضو أقل من المبلغ المطلوب سحبه."));
+        }
     }
 
     private void handleTransfer(SlashCommandInteractionEvent event) {
