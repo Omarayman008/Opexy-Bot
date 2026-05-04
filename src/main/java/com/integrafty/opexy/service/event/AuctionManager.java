@@ -224,7 +224,11 @@ public class AuctionManager extends ListenerAdapter {
                     "🏜️ <:sand:1500879926696607846> (1x Sand)", 
                     "🪵 <:stick:1500879473992794212> (1x Stick)", 
                     "🪨 <:coble_stone:1500879838041608243> (1x Cobblestone)", 
-                    "🪶 <:feather:1500880285431238807> (1x Feather)"
+                    "🪶 <:feather:1500880285431238807> (1x Feather)",
+                    "💣 <:Minecraft_Gunpowder_pngremovebgp:1500879430367707366> (1x Gunpowder)",
+                    "🕸️ <:string:1500880235510497360> (1x String)",
+                    "🐄 <:leather:1500880346206568498> (1x Leather)",
+                    "🧪 <:water_empty_bottle:1500880709315723428> (1x Glass Bottle)"
                 };
                 displayedPrize = "📦 صندوق عشوائي ➔ (" + randomItems[new java.util.Random().nextInt(randomItems.length)] + ")";
             }
