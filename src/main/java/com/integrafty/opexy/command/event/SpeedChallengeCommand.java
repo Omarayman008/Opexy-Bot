@@ -38,7 +38,6 @@ public class SpeedChallengeCommand implements MultiSlashCommand {
             "درع ذهبي", "خشب محلل", "بوابة النذر", "تنين الاندر", "قرية القرويين",
             "صندوق مخفي", "بيوم الغابة", "كهف عميق", "منجم قديم", "خيوط عنكبوت"
     );
-...
     public SpeedChallengeCommand(EventManager eventManager, AchievementService achievementService, LogManager logManager) {
         this.eventManager = eventManager;
         this.achievementService = achievementService;
