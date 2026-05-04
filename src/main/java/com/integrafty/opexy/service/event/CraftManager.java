@@ -69,33 +69,33 @@ public class CraftManager extends ListenerAdapter {
 
     private static final List<Recipe> RECIPES = List.of(
             // EASY
-            new Recipe(new String[][]{{"W", "W", "E"}, {"W", "W", "E"}, {"E", "E", "E"}}, List.of("ورك بينش", "طاولة صنع", "crafting table", "workbench"), "طاولة صنع", Difficulty.EASY),
-            new Recipe(new String[][]{{"S", "E", "E"}, {"S", "E", "E"}, {"E", "E", "E"}}, List.of("عصا", "stick", "عصاي"), "عصا", Difficulty.EASY),
-            new Recipe(new String[][]{{"W", "W", "W"}, {"W", "W", "W"}, {"W", "W", "W"}}, List.of("بلوك خشب", "wood block", "خشب"), "بلوك خشب", Difficulty.EASY),
-            new Recipe(new String[][]{{"C", "E", "E"}, {"S", "E", "E"}, {"E", "E", "E"}}, List.of("شمعة", "torch", "شعلة"), "شمعة", Difficulty.EASY),
-            new Recipe(new String[][]{{"W", "E", "W"}, {"W", "W", "W"}, {"W", "E", "W"}}, List.of("سلم", "ladder", "سلم"), "سلم خشب", Difficulty.EASY),
-            new Recipe(new String[][]{{"W", "W", "E"}, {"W", "W", "E"}, {"W", "W", "E"}}, List.of("باب", "door", "باب خشب"), "باب خشب", Difficulty.EASY),
-            new Recipe(new String[][]{{"W", "W", "W"}, {"E", "E", "E"}, {"E", "E", "E"}}, List.of("سلاب", "slab", "بلاطة"), "بلاطة خشب", Difficulty.EASY),
+            new Recipe(new String[][]{{"W", "W", "E"}, {"W", "W", "E"}, {"E", "E", "E"}}, List.of("ورك بينش", "طاولة صنع", "crafting table", "workbench", "طاوله صنع", "طاولة الصناعة"), "طاولة صنع", Difficulty.EASY),
+            new Recipe(new String[][]{{"S", "E", "E"}, {"S", "E", "E"}, {"E", "E", "E"}}, List.of("عصا", "stick", "عصاي", "العصا"), "عصا", Difficulty.EASY),
+            new Recipe(new String[][]{{"W", "W", "W"}, {"W", "W", "W"}, {"W", "W", "W"}}, List.of("بلوك خشب", "wood block", "خشب", "الخشب", "بلوك الخشب"), "بلوك خشب", Difficulty.EASY),
+            new Recipe(new String[][]{{"C", "E", "E"}, {"S", "E", "E"}, {"E", "E", "E"}}, List.of("شمعة", "torch", "شعلة", "شمعه", "شعلة نار"), "شمعة", Difficulty.EASY),
+            new Recipe(new String[][]{{"W", "E", "W"}, {"W", "W", "W"}, {"W", "E", "W"}}, List.of("سلم", "ladder", "سلم خشب", "السلم"), "سلم خشب", Difficulty.EASY),
+            new Recipe(new String[][]{{"W", "W", "E"}, {"W", "W", "E"}, {"W", "W", "E"}}, List.of("باب", "door", "باب خشب", "الباب"), "باب خشب", Difficulty.EASY),
+            new Recipe(new String[][]{{"W", "W", "W"}, {"E", "E", "E"}, {"E", "E", "E"}}, List.of("سلاب", "slab", "بلاطة", "بلاطة خشب", "بلاطه"), "بلاطة خشب", Difficulty.EASY),
             
             // MEDIUM
-            new Recipe(new String[][]{{"E", "D", "E"}, {"E", "D", "E"}, {"E", "S", "E"}}, List.of("سيف", "sword", "سيف دايموند"), "سيف دايموند", Difficulty.MEDIUM),
-            new Recipe(new String[][]{{"D", "D", "D"}, {"E", "S", "E"}, {"E", "S", "E"}}, List.of("بيكاكس", "pickaxe", "فأس"), "بيكاكس دايموند", Difficulty.MEDIUM),
-            new Recipe(new String[][]{{"W", "W", "W"}, {"W", "E", "W"}, {"W", "W", "W"}}, List.of("صندوق", "chest", "تشيست"), "صندوق", Difficulty.MEDIUM),
-            new Recipe(new String[][]{{"E", "S", "L"}, {"S", "E", "L"}, {"E", "S", "L"}}, List.of("قوس", "bow", "سهم"), "قوس", Difficulty.MEDIUM),
-            new Recipe(new String[][]{{"S", "S", "S"}, {"S", "L", "S"}, {"S", "S", "S"}}, List.of("صنارة", "fishing rod", "صنارة صيد"), "صنارة صيد", Difficulty.MEDIUM),
-            new Recipe(new String[][]{{"I", "I", "I"}, {"I", "E", "I"}, {"I", "I", "I"}}, List.of("خوذة", "helmet", "خوذة حديد"), "خوذة حديد", Difficulty.MEDIUM),
-            new Recipe(new String[][]{{"E", "R", "E"}, {"R", "I", "R"}, {"E", "R", "E"}}, List.of("بوصلة", "compass", "بوصلة"), "بوصلة", Difficulty.MEDIUM),
-            new Recipe(new String[][]{{"E", "G", "E"}, {"G", "R", "G"}, {"E", "G", "E"}}, List.of("ساعة", "clock", "ساعة"), "ساعة", Difficulty.MEDIUM),
+            new Recipe(new String[][]{{"E", "D", "E"}, {"E", "D", "E"}, {"E", "S", "E"}}, List.of("سيف", "sword", "سيف دايموند", "سيف الدايموند", "السيف"), "سيف دايموند", Difficulty.MEDIUM),
+            new Recipe(new String[][]{{"D", "D", "D"}, {"E", "S", "E"}, {"E", "S", "E"}}, List.of("بيكاكس", "pickaxe", "فأس", "بيكاكس دايموند", "بيكاكس الدايموند", "الفأس"), "بيكاكس دايموند", Difficulty.MEDIUM),
+            new Recipe(new String[][]{{"W", "W", "W"}, {"W", "E", "W"}, {"W", "W", "W"}}, List.of("صندوق", "chest", "تشيست", "الصندوق"), "صندوق", Difficulty.MEDIUM),
+            new Recipe(new String[][]{{"E", "S", "L"}, {"S", "E", "L"}, {"E", "S", "L"}}, List.of("قوس", "bow", "سهم", "القوس", "سهم وقوس"), "قوس", Difficulty.MEDIUM),
+            new Recipe(new String[][]{{"S", "S", "S"}, {"S", "L", "S"}, {"S", "S", "S"}}, List.of("صنارة", "fishing rod", "صنارة صيد", "الصنارة", "صناره"), "صنارة صيد", Difficulty.MEDIUM),
+            new Recipe(new String[][]{{"I", "I", "I"}, {"I", "E", "I"}, {"I", "I", "I"}}, List.of("خوذة", "helmet", "خوذة حديد", "خوذه", "الخوذة"), "خوذة حديد", Difficulty.MEDIUM),
+            new Recipe(new String[][]{{"E", "R", "E"}, {"R", "I", "R"}, {"E", "R", "E"}}, List.of("بوصلة", "compass", "البوصلة", "بوصله"), "بوصلة", Difficulty.MEDIUM),
+            new Recipe(new String[][]{{"E", "G", "E"}, {"G", "R", "G"}, {"E", "G", "E"}}, List.of("ساعة", "clock", "ساعه", "الساعة"), "ساعة", Difficulty.MEDIUM),
             
             // HARD
-            new Recipe(new String[][]{{"I", "I", "I"}, {"I", "S", "I"}, {"E", "S", "E"}}, List.of("بيكاكس حديد", "iron pickaxe"), "بيكاكس حديد", Difficulty.HARD),
-            new Recipe(new String[][]{{"G", "G", "G"}, {"E", "S", "E"}, {"E", "S", "E"}}, List.of("بيكاكس ذهب", "gold pickaxe"), "بيكاكس ذهب", Difficulty.HARD),
-            new Recipe(new String[][]{{"P", "P", "P"}, {"P", "E", "P"}, {"P", "P", "P"}}, List.of("خريطة", "map", "ماب"), "خريطة فارغة", Difficulty.HARD),
-            new Recipe(new String[][]{{"B", "B", "B"}, {"B", "E", "B"}, {"B", "B", "B"}}, List.of("فرن", "furnace", "فرن"), "فرن حجري", Difficulty.HARD),
-            new Recipe(new String[][]{{"E", "H", "E"}, {"D", "O", "D"}, {"O", "O", "O"}}, List.of("طاولة تطوير", "enchantment table", "تطوير"), "طاولة تطوير", Difficulty.HARD),
-            new Recipe(new String[][]{{"I", "I", "I"}, {"E", "I", "E"}, {"I", "I", "I"}}, List.of("سندان", "anvil", "سندان"), "سندان", Difficulty.HARD),
-            new Recipe(new String[][]{{"B", "B", "B"}, {"B", "R", "B"}, {"B", "B", "B"}}, List.of("نوت بلوك", "note block", "موسيقى"), "نوت بلوك", Difficulty.HARD),
-            new Recipe(new String[][]{{"I", "I", "I"}, {"I", "I", "I"}, {"E", "E", "E"}}, List.of("درع", "chestplate", "درع حديد"), "درع حديد", Difficulty.HARD)
+            new Recipe(new String[][]{{"I", "I", "I"}, {"I", "S", "I"}, {"E", "S", "E"}}, List.of("بيكاكس حديد", "iron pickaxe", "بيكاكس الحديد"), "بيكاكس حديد", Difficulty.HARD),
+            new Recipe(new String[][]{{"G", "G", "G"}, {"E", "S", "E"}, {"E", "S", "E"}}, List.of("بيكاكس ذهب", "gold pickaxe", "بيكاكس الذهب"), "بيكاكس ذهب", Difficulty.HARD),
+            new Recipe(new String[][]{{"P", "P", "P"}, {"P", "E", "P"}, {"P", "P", "P"}}, List.of("خريطة", "map", "ماب", "خريطة فارغة", "الخريطة"), "خريطة فارغة", Difficulty.HARD),
+            new Recipe(new String[][]{{"B", "B", "B"}, {"B", "E", "B"}, {"B", "B", "B"}}, List.of("فرن", "furnace", "الفرن"), "فرن حجري", Difficulty.HARD),
+            new Recipe(new String[][]{{"E", "H", "E"}, {"D", "O", "D"}, {"O", "O", "O"}}, List.of("طاولة تطوير", "enchantment table", "تطوير", "طاوله تطوير", "طاولة التطوير"), "طاولة تطوير", Difficulty.HARD),
+            new Recipe(new String[][]{{"I", "I", "I"}, {"E", "I", "E"}, {"I", "I", "I"}}, List.of("سندان", "anvil", "السندان"), "سندان", Difficulty.HARD),
+            new Recipe(new String[][]{{"B", "B", "B"}, {"B", "R", "B"}, {"B", "B", "B"}}, List.of("نوت بلوك", "note block", "موسيقى", "النوت بلوك"), "نوت بلوك", Difficulty.HARD),
+            new Recipe(new String[][]{{"I", "I", "I"}, {"I", "I", "I"}, {"E", "E", "E"}}, List.of("درع", "chestplate", "درع حديد", "الدرع", "درع الحديد"), "درع حديد", Difficulty.HARD)
     );
 
     public String startCraft(long userId, Difficulty difficulty, Guild guild, Member organizer) {
