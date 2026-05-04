@@ -40,4 +40,7 @@ public class UserEntity {
 
     @Column(name = "warning_count")
     private int warningCount = 0;
+
+    @Column(name = "event_points")
+    private int eventPoints = 0;
 }
