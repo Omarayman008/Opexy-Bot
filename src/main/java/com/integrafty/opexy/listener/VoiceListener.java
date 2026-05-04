@@ -96,17 +96,26 @@ public class VoiceListener extends ListenerAdapter {
     private void handleCreateRoom(Member member, Category category) {
         // 🛡️ HARD DUPLICATION PREVENTION
         List<VoiceRoomEntity> existingList = voiceRoomRepository.findAllByOwnerId(member.getId());
+        
+        // Reuse existing record if it exists to keep persistent settings
         VoiceRoomEntity room = existingList.isEmpty() ? new VoiceRoomEntity() : existingList.get(0);
+        room.setOwnerId(member.getId());
 
+        // Delete any orphan channels still linked to this user
         for (VoiceRoomEntity old : existingList) {
             if (old.getChannelId() != null && !old.getChannelId().equals("0")) {
                 VoiceChannel oldChannel = member.getGuild().getVoiceChannelById(old.getChannelId());
-                if (oldChannel != null) oldChannel.delete().queue(null, err -> {});
+                if (oldChannel != null) {
+                    try {
+                        oldChannel.delete().queue(null, err -> {});
+                    } catch (Exception e) {
+                        log.warn("Failed to delete old channel: {}", e.getMessage());
+                    }
+                }
             }
         }
         
-        // Wipe all records for owner to start fresh with ONE clean record
-        voiceRoomRepository.deleteAllByOwnerIdNative(member.getId());
+        // DO NOT WIPE DB RECORDS. Update the existing one instead to maintain persistence.
 
         String channelName = room.getRoomName() != null ? room.getRoomName() : "🔊 | " + member.getEffectiveName();
         int bitrate = room.getBitrate() != null ? room.getBitrate() : member.getGuild().getMaxBitrate();
