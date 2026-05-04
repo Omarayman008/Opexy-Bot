@@ -49,7 +49,7 @@ public class CraftManager extends ListenerAdapter {
             Map.entry("D", "<:dimoand:1500878887662518334>"), // Diamond
             Map.entry("P", "<:Minecraft_Sugar_Cane_Item__HD_Pn:1500879626824585426>"), // Sugar Cane (Paper)
             Map.entry("B", "<:coble_stone:1500879838041608243>"), // Cobblestone
-            Map.entry("C", "⬛"), // Coal (Using black square for now)
+            Map.entry("C", "<:Coal_JE4_BE3:1500973041805557954>"), // Coal
             Map.entry("E", "🔳"), // Empty
             Map.entry("R", "<:red_stone:1500879139010383913>"), // Redstone
             Map.entry("L", "<:string:1500880235510497360>"), // String
