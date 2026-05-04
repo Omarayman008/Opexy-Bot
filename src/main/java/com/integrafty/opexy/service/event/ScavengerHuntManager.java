@@ -37,12 +37,6 @@ public class ScavengerHuntManager extends ListenerAdapter {
         return activeCode;
     }
 
-    public ScavengerHuntManager(EventManager eventManager, AchievementService achievementService, EconomyService economyService, LogManager logManager) {
-        this.eventManager = eventManager;
-        this.achievementService = achievementService;
-        this.economyService = economyService;
-        this.logManager = logManager;
-    }
 
     public void stopHunt() {
         this.activeCode = null;
