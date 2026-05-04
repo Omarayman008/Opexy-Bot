@@ -7,6 +7,7 @@ import lombok.Setter;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.components.label.Label;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
@@ -40,9 +41,9 @@ public class JawlahManager extends ListenerAdapter {
     public void initiateSetup(net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent event) {
         Modal modal = Modal.create("jawlah_setup_modal", "إعـــدادات لـــعـــبـــة جـــولـــة")
                 .addComponents(
-                        ActionRow.of(TextInput.create("game_name", "اســـم الـــلـــعـــبـــة", TextInputStyle.SHORT).setRequired(true).setPlaceholder("مـــثـــال: تـــحـــدي الـــعـــمـــالـــقـــة").build()),
-                        ActionRow.of(TextInput.create("team_a_name", "اســـم الـــفـــريـــق الأول", TextInputStyle.SHORT).setRequired(true).setPlaceholder("مـــثـــال: فـــريـــق الـــصـــقـــور").build()),
-                        ActionRow.of(TextInput.create("team_b_name", "اســـم الـــفـــريـــق الـــثـــانـــي", TextInputStyle.SHORT).setRequired(true).setPlaceholder("مـــثـــال: فـــريـــق الـــنـــســـور").build())
+                        Label.of("اســـم الـــلـــعـــبـــة", TextInput.create("game_name", TextInputStyle.SHORT).setRequired(true).setPlaceholder("مـــثـــال: تـــحـــدي الـــعـــمـــالـــقـــة").build()),
+                        Label.of("اســـم الـــفـــريـــق الأول", TextInput.create("team_a_name", TextInputStyle.SHORT).setRequired(true).setPlaceholder("مـــثـــال: فـــريـــق الـــصـــقـــور").build()),
+                        Label.of("اســـم الـــفـــريـــق الـــثـــانـــي", TextInput.create("team_b_name", TextInputStyle.SHORT).setRequired(true).setPlaceholder("مـــثـــال: فـــريـــق الـــنـــســـور").build())
                 ).build();
         event.replyModal(modal).queue();
     }
@@ -112,12 +113,6 @@ public class JawlahManager extends ListenerAdapter {
         StringSelectMenu.Builder menu = StringSelectMenu.create("jawlah_subcategory").setPlaceholder("اخـتـر الـفـئـة الـفـرعـيـة...");
 
         switch (cat) {
-            case "songs" -> {
-                menu.addOption("أغاني عربية 🎤", "ar_songs");
-                menu.addOption("أغاني أجنبية 🎸", "en_songs");
-                menu.addOption("أغاني خليجية 🎻", "kh_songs");
-                menu.addOption("خليجيات مترجمة 📝", "kh_trans");
-            }
             case "football" -> {
                 menu.addOption("عين اللاعب 👀", "player_eye");
                 menu.addOption("من اللاعب 👤", "who_player");
@@ -300,7 +295,6 @@ public class JawlahManager extends ListenerAdapter {
                 .addOption("عام 📚", "general")
                 .addOption("إسلاميات 🌙", "islamic")
                 .addOption("فن 🎨", "art")
-                .addOption("أغاني 🎵", "songs")
                 .build();
 
         event.editMessage(new MessageEditBuilder()
