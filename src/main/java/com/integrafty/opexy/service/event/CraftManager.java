@@ -42,30 +42,31 @@ public class CraftManager extends ListenerAdapter {
     }
 
     private static final Map<String, String> ITEMS = Map.ofEntries(
-            Map.entry("W", "<:Oak_Planks:1500856699651756144>"), // Wood/Planks
-            Map.entry("S", "<:stick:1500856140882251877>"), // Stick
-            Map.entry("I", "<:MinecraftIronIngot:1500855306953949237>"), // Iron Ingot
-            Map.entry("G", "<:goldingot:1500855404635361301>"), // Gold Ingot
-            Map.entry("D", "<:dimoand:1500855459811299530>"), // Diamond
-            Map.entry("P", "<:MinecraftSugarCaneItemHDPngDownl:1500856346881429584>"), // Sugar Cane (Paper)
-            Map.entry("B", "<:coblestone_block:1500856755020759102>"), // Cobblestone
-            Map.entry("C", "<:obsadian:1500856426388521097>"), // Obsidian/Coal
-            Map.entry("E", "🔲"), // Empty
-            Map.entry("R", "<:redstone:1500855636454539315>"), // Redstone
-            Map.entry("L", "<:String:1500863278484688906>"), // String
-            Map.entry("F", "<:MinecraftGunpowderpng:1500855744470319146>"), // Gunpowder
-            Map.entry("Q", "<:Quartz:1500863495036600513>"), // Quartz
-            Map.entry("O", "<:obsadian:1500856426388521097>"), // Obsidian
-            Map.entry("T", "<:torch:1500855870840635594>"), // Torch
-            Map.entry("H", "<:EnchantedBookMinecraftPlugin6D:1500855968169328711>"), // Book
-            Map.entry("A", "<:Red_Apple:1500863813019242546>"), // Apple
-            Map.entry("N", "<:Ender_Eye:1500863572694143078>"), // Ender Eye
-            Map.entry("K", "<:Nether_Star:1500863654051188921>"), // Nether Star
-            Map.entry("U", "<:Leather:1500863416661971126>"), // Leather
-            Map.entry("Z", "<:sand:1500856844296654998>"), // Sand
-            Map.entry("V", "<:Glass_Botlle:1500863727724134521>"), // Glass Bottle
-            Map.entry("M", "<:emrald:1500855555009286247>"), // Emerald
-            Map.entry("Y", "<:Hay_Bale:1500857647132315659>")  // Hay Bale
+            Map.entry("W", "<:oak_planks:1500879889119707266>"), // Wood/Planks
+            Map.entry("S", "<:stick:1500879473992794212>"), // Stick
+            Map.entry("I", "<:Minecraft_Iron_Ingot:1500878789402693744>"), // Iron Ingot
+            Map.entry("G", "<:gold_ingot:1500878971410055330>"), // Gold Ingot
+            Map.entry("D", "<:dimoand:1500878887662518334>"), // Diamond
+            Map.entry("P", "<:Minecraft_Sugar_Cane_Item__HD_Pn:1500879626824585426>"), // Sugar Cane (Paper)
+            Map.entry("B", "<:coble_stone:1500879838041608243>"), // Cobblestone
+            Map.entry("C", "<:obsadian:1500879689659584643>"), // Obsidian/Coal
+            Map.entry("E", "🔳"), // Empty
+            Map.entry("R", "<:red_stone:1500879139010383913>"), // Redstone
+            Map.entry("L", "<:string:1500880235510497360>"), // String
+            Map.entry("F", "<:Minecraft_Gunpowder_pngremovebgp:1500879430367707366>"), // Gunpowder
+            Map.entry("Q", "<:quartz:1500880509960589404>"), // Quartz
+            Map.entry("O", "<:obsadian:1500879689659584643>"), // Obsidian
+            Map.entry("T", "<:torch:1500879281654464652>"), // Torch
+            Map.entry("H", "<:Enchanted_Book__Minecraft_Plugin:1500879162246828203>"), // Book
+            Map.entry("A", "<:red_apple:1500880776655540285>"), // Apple
+            Map.entry("N", "<:ender_eye:1500880557641568347>"), // Ender Eye
+            Map.entry("K", "<:neather_star:1500880657986097172>"), // Nether Star
+            Map.entry("U", "<:leather:1500880346206568498>"), // Leather
+            Map.entry("Z", "<:sand:1500879926696607846>"), // Sand
+            Map.entry("V", "<:water_empty_bottle:1500880709315723428>"), // Glass Bottle
+            Map.entry("M", "<:emraled_ingot:1500879037868806237>"), // Emerald
+            Map.entry("Y", "<:hay_bale:1500880117302562856>"), // Hay Bale
+            Map.entry("J", "<:feather:1500880285431238807>")  // Feather
     );
 
     @RequiredArgsConstructor
