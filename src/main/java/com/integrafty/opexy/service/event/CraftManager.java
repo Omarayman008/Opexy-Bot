@@ -149,16 +149,14 @@ public class CraftManager extends ListenerAdapter {
         userGuilds.put(userId, guild.getIdLong());
 
         StringBuilder sb = new StringBuilder();
-        sb.append("```\n");
-        sb.append("   1   2   3\n");
+        sb.append("**      1      2      3**\n");
         for (int i = 0; i < 3; i++) {
-            sb.append(i + 1).append(" ");
+            sb.append("**").append(i + 1).append("**  ");
             for (int j = 0; j < 3; j++) {
-                sb.append("[").append(ITEMS.get(recipe.grid[i][j])).append("]");
+                sb.append(ITEMS.get(recipe.grid[i][j])).append(" ");
             }
             sb.append("\n");
         }
-        sb.append("```");
 
         // LOGGING
         String logDetails = String.format("### 🛠️ فعالية الصناعة: بدء (فردية)\n▫️ **اللاعب:** %s\n▫️ **الصعوبة:** %s\n▫️ **الجائزة:** %d opex", 
