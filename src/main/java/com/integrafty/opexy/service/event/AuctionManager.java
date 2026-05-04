@@ -220,12 +220,12 @@ public class AuctionManager extends ListenerAdapter {
             String displayedPrize = currentPrize;
             if (currentPrize.equals("📦 صندوق عشوائي")) {
                 String[] randomItems = {
-                    "💎 100,000 Opex", 
-                    "🔥 Netherite Ingot", 
-                    "🥔 بطاطس مسمومة (Poisonous Potato)", 
-                    "🦴 عظمة كلب (Bone)", 
-                    "🍎 Apple", 
-                    "💩 Rotten Flesh"
+                    "💎 <:dimoand:1500878887662518334> (10x Diamonds)", 
+                    "⭐ <:neather_star:1500880657986097172> (Nether Star)", 
+                    "🏜️ <:sand:1500879926696607846> (1x Sand)", 
+                    "🪵 <:stick:1500879473992794212> (1x Stick)", 
+                    "🪨 <:coble_stone:1500879838041608243> (1x Cobblestone)", 
+                    "🍏 <:red_apple:1500880776655540285> (Apple)"
                 };
                 displayedPrize = "📦 صندوق عشوائي ➔ (" + randomItems[new java.util.Random().nextInt(randomItems.length)] + ")";
             }
