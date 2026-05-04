@@ -9,10 +9,7 @@ import net.dv8tion.jda.api.components.buttons.Button;
 import org.springframework.stereotype.Service;
 
 import java.awt.Color;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 @Service
 public class PipePuzzleManager extends ListenerAdapter {
@@ -87,14 +84,17 @@ public class PipePuzzleManager extends ListenerAdapter {
             cursors.remove(userId);
             gameSizes.remove(userId);
             
-            economyService.addBalance(String.valueOf(userId), event.getGuild().getId(), reward);
+            String guildId = event.getGuild() != null ? event.getGuild().getId() : "global";
+            economyService.addBalance(String.valueOf(userId), guildId, reward);
 
             event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
                     .setComponents(com.integrafty.opexy.utils.EmbedUtil.success("تم الحل", "🎉 مبروك! لقد قمت بحل اللغز بنجاح!\n💰 الجائزة: **" + reward + "** Opex"))
                     .useComponentsV2(true).build())
                     .useComponentsV2(true).queue();
             
-            achievementService.updateStats(userId, event.getGuild(), s -> s.setPipeWins(s.getPipeWins() + 1));
+            if (event.getGuild() != null) {
+                achievementService.updateStats(userId, event.getGuild(), s -> s.setPipeWins(s.getPipeWins() + 1));
+            }
         } else {
             event.reply("❌ المسار غير مكتمل! تأكد من أن جميع الأنابيب متصلة ببعضها البعض.").setEphemeral(true).queue();
         }
@@ -128,52 +128,36 @@ public class PipePuzzleManager extends ListenerAdapter {
                 .useComponentsV2(true).build())
                 .useComponentsV2(true).queue();
     }
-
     private char[][] generateGrid(int size) {
         char[][] grid = new char[size][size];
         char[] allPieces = {'═', '║', '╔', '╗', '╝', '╚'};
         
-        // 1. Fill everything with random pieces
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 grid[i][j] = allPieces[random.nextInt(allPieces.length)];
             }
         }
 
-        // 2. Generate a random path from (0,0) to (size-1, size-1)
-        java.util.List<int[]> path = new java.util.ArrayList<>();
+        List<int[]> path = new ArrayList<>();
         int currR = 0, currC = 0;
         path.add(new int[]{currR, currC});
         
         while (currR < size - 1 || currC < size - 1) {
-            boolean moveDown = random.nextBoolean();
-            if (moveDown && currR < size - 1) currR++;
+            if (random.nextBoolean() && currR < size - 1) currR++;
             else if (currC < size - 1) currC++;
-            else if (currR < size - 1) currR++; // Fallback if reached edge
-            
+            else currR++;
             path.add(new int[]{currR, currC});
         }
 
-        // 3. Force connectivity along the path
-        // (0,0) must connect TOP (start) and next step
-        int[] next = path.get(1);
-        if (next[0] == 1) grid[0][0] = '║'; // Connects Top/Bottom
-        else grid[0][0] = '╔'; // Connects Top (we'll treat start as top) and Right
-        // Wait, '╔' connects Right and Bottom. 
-        // Let's use a mapping logic for pieces.
-        
         for (int k = 0; k < path.size(); k++) {
             int[] curr = path.get(k);
             int prevR = (k == 0) ? -1 : path.get(k-1)[0];
-            int prevC = (k == 0) ? 0 : path.get(k-1)[1]; // Start effectively comes from above
-            
+            int prevC = (k == 0) ? 0 : path.get(k-1)[1];
             int nextR = (k == path.size() - 1) ? curr[0] + 1 : path.get(k+1)[0];
-            int nextC = (k == path.size() - 1) ? curr[1] : path.get(k+1)[1]; // End effectively goes down
-            
+            int nextC = (k == path.size() - 1) ? curr[1] : path.get(k+1)[1];
             grid[curr[0]][curr[1]] = getPieceConnecting(prevR - curr[0], prevC - curr[1], nextR - curr[0], nextC - curr[1]);
         }
         
-        // 4. Scramble the grid
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 int rotations = random.nextInt(4);
@@ -182,7 +166,6 @@ public class PipePuzzleManager extends ListenerAdapter {
                 }
             }
         }
-        
         return grid;
     }
 
