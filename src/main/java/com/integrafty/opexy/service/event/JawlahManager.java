@@ -499,9 +499,6 @@ public class JawlahManager extends ListenerAdapter {
 
         if (!isA && !isB && uid != game.organizerId) return;
 
-        // Turn check
-        if ((game.turnA && !isA) || (!game.turnA && !isB)) return;
-
         String content = event.getMessage().getContentRaw().trim();
         String answer = game.getCurrentQuestion().answer;
 

@@ -54,7 +54,8 @@ public class CraftManager extends ListenerAdapter {
             Map.entry("R", "<:red_stone:1500879139010383913>"), // Redstone
             Map.entry("L", "<:string:1500880235510497360>"), // String
             Map.entry("F", "<:Minecraft_Gunpowder_pngremovebgp:1500879430367707366>"), // Gunpowder
-            Map.entry("Q", "⬜"), // Quartz/Glass (Using white square for glass)
+            Map.entry("Q", "<:quartz:1500880509960589404>"), // Quartz
+            Map.entry("X", "<:glass:1500880071466942586>"), // Glass Block
             Map.entry("O", "<:obsadian:1500879689659584643>"), // Obsidian
             Map.entry("T", "<:torch:1500879281654464652>"), // Torch
             Map.entry("H", "<:Enchanted_Book__Minecraft_Plugin:1500879162246828203>"), // Book
@@ -108,7 +109,7 @@ public class CraftManager extends ListenerAdapter {
             new Recipe(new String[][]{{"I", "I", "I"}, {"I", "I", "I"}, {"E", "E", "E"}}, List.of("درع", "chestplate", "درع حديد", "الدرع", "درع الحديد", "تشيست بليت"), "درع حديد", Difficulty.HARD),
             new Recipe(new String[][]{{"G", "G", "G"}, {"G", "A", "G"}, {"G", "G", "G"}}, List.of("تفاحة ذهبية", "golden apple", "تفاحة ذهب", "قولدن ابل"), "تفاحة ذهبية", Difficulty.HARD),
             new Recipe(new String[][]{{"O", "O", "O"}, {"O", "N", "O"}, {"O", "O", "O"}}, List.of("صندوق اندر", "ender chest", "اندر تشيست"), "صندوق اندر", Difficulty.HARD),
-            new Recipe(new String[][]{{"Q", "Q", "Q"}, {"Q", "K", "Q"}, {"O", "O", "O"}}, List.of("بيكون", "beacon", "منارة", "بيكن"), "بيكون", Difficulty.HARD),
+            new Recipe(new String[][]{{"X", "X", "X"}, {"X", "K", "X"}, {"O", "O", "O"}}, List.of("بيكون", "beacon", "منارة", "بيكن"), "بيكون", Difficulty.HARD),
             new Recipe(new String[][]{{"F", "Z", "F"}, {"Z", "F", "Z"}, {"F", "Z", "F"}}, List.of("تي ان تي", "tnt", "متفجرات"), "TNT", Difficulty.HARD),
             new Recipe(new String[][]{{"F", "E", "E"}, {"S", "E", "E"}, {"J", "E", "E"}}, List.of("سهم", "arrow", "سهام"), "سهم", Difficulty.HARD),
 
@@ -132,7 +133,7 @@ public class CraftManager extends ListenerAdapter {
             new Recipe(new String[][]{{"W", "S", "W"}, {"W", "S", "W"}, {"E", "E", "E"}}, List.of("سياج", "fence", "سور"), "سياج خشبي", Difficulty.MEDIUM),
             new Recipe(new String[][]{{"S", "W", "S"}, {"S", "W", "S"}, {"E", "E", "E"}}, List.of("بوابة سياج", "fence gate", "بوابة"), "بوابة سياج", Difficulty.MEDIUM),
             new Recipe(new String[][]{{"B", "B", "B"}, {"B", "L", "B"}, {"B", "R", "B"}}, List.of("ديسبنسر", "dispenser", "موزع"), "ديسبنسر", Difficulty.HARD),
-            new Recipe(new String[][]{{"G", "G", "G"}, {"Q", "Q", "Q"}, {"W", "W", "W"}}, List.of("حساس ضوء", "daylight sensor"), "حساس ضوء الشمس", Difficulty.HARD),
+            new Recipe(new String[][]{{"X", "X", "X"}, {"Q", "Q", "Q"}, {"W", "W", "W"}}, List.of("حساس ضوء", "daylight sensor"), "حساس ضوء الشمس", Difficulty.HARD),
             new Recipe(new String[][]{{"I", "I", "I"}, {"I", "I", "I"}, {"I", "I", "I"}}, List.of("بلوك حديد", "iron block"), "بلوك حديد", Difficulty.MEDIUM),
             new Recipe(new String[][]{{"G", "G", "G"}, {"G", "G", "G"}, {"G", "G", "G"}}, List.of("بلوك ذهب", "gold block"), "بلوك ذهب", Difficulty.MEDIUM),
             new Recipe(new String[][]{{"D", "D", "D"}, {"D", "D", "D"}, {"D", "D", "D"}}, List.of("بلوك دايموند", "diamond block"), "بلوك دايموند", Difficulty.HARD),
