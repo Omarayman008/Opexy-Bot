@@ -18,10 +18,10 @@ public class JawlahCommand implements SlashCommand {
     private final JawlahManager jawlahManager;
     private final EventManager eventManager;
 
-    @Value("${discord.role.hype-manager}")
+    @Value("${opexy.roles.hype-manager}")
     private String hypeManagerId;
 
-    @Value("${discord.role.hype-events}")
+    @Value("${opexy.roles.hype-events}")
     private String hypeEventsId;
 
     @Override
