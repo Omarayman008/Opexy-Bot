@@ -12,13 +12,16 @@ import org.springframework.stereotype.Service;
 
 import java.awt.Color;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class PipePuzzleManager extends ListenerAdapter {
 
-    private final Map<Long, char[][]> games = new HashMap<>();
-    private final Map<Long, int[]> cursors = new HashMap<>();
-    private final Map<Long, Integer> gameSizes = new HashMap<>();
+    private final Map<Long, char[][]> games = new ConcurrentHashMap<>();
+    private final Map<Long, int[]> cursors = new ConcurrentHashMap<>();
+    private final Map<Long, Integer> gameSizes = new ConcurrentHashMap<>();
     private final AchievementService achievementService;
     private final EconomyService economyService;
     private final LogManager logManager;
@@ -37,7 +40,10 @@ public class PipePuzzleManager extends ListenerAdapter {
             return;
 
         long userId = event.getUser().getIdLong();
+        log.info("[PipePuzzle] Interaction from user {}: ID={}", userId, id);
+        
         if (!games.containsKey(userId)) {
+            log.warn("[PipePuzzle] Game not found for user {}", userId);
             event.reply("❌ انتهت صلاحية هذه اللعبة أو تم إعادة تشغيل البوت. يرجى البدء بلعبة جديدة.").setEphemeral(true).queue();
             return;
         }
@@ -113,6 +119,7 @@ public class PipePuzzleManager extends ListenerAdapter {
     }
 
     public String startNewGame(long userId, int size, net.dv8tion.jda.api.entities.Guild guild) {
+        log.info("[PipePuzzle] Starting new game for user {} with size {}", userId, size);
         char[][] grid = generateGrid(size);
         games.put(userId, grid);
         cursors.put(userId, new int[] { 1, 1 });
