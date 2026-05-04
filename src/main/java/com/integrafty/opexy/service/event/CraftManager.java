@@ -42,22 +42,22 @@ public class CraftManager extends ListenerAdapter {
     }
 
     private static final Map<String, String> ITEMS = Map.ofEntries(
-            Map.entry("W", "🪵"), // Wood/Planks
-            Map.entry("S", "🥢"), // Stick
-            Map.entry("I", "🪙"), // Iron Ingot
-            Map.entry("G", "🧈"), // Gold Ingot
-            Map.entry("D", "💎"), // Diamond
-            Map.entry("P", "⬜"), // Paper
-            Map.entry("B", "🧱"), // Brick/Stone
-            Map.entry("C", "⬛"), // Coal/Obsidian
+            Map.entry("W", "<:Oak_Planks:1500856699651756144>"), // Wood/Planks
+            Map.entry("S", "<:stick:1500856140882251877>"), // Stick
+            Map.entry("I", "<:MinecraftIronIngot:1500855306953949237>"), // Iron Ingot
+            Map.entry("G", "<:goldingot:1500855404635361301>"), // Gold Ingot
+            Map.entry("D", "<:dimoand:1500855459811299530>"), // Diamond
+            Map.entry("P", "<:MinecraftSugarCaneItemHDPngDownl:1500856346881429584>"), // Sugar Cane (Paper)
+            Map.entry("B", "<:coblestone_block:1500856755020759102>"), // Cobblestone
+            Map.entry("C", "<:obsadian:1500856426388521097>"), // Obsidian/Coal
             Map.entry("E", "🔲"), // Empty
-            Map.entry("R", "🔴"), // Redstone
-            Map.entry("L", "🧵"), // Leather/String
-            Map.entry("F", "🔥"), // Flint/Blaze Powder
-            Map.entry("Q", "💎"), // Quartz (using Diamond for now or a white emoji)
-            Map.entry("O", "🟣"), // Obsidian
-            Map.entry("T", "🕯️"), // Torch/Fire
-            Map.entry("H", "📖")  // Book
+            Map.entry("R", "<:redstone:1500855636454539315>"), // Redstone
+            Map.entry("L", "🧵"), // String (Default for now)
+            Map.entry("F", "<:MinecraftGunpowderpng:1500855744470319146>"), // Gunpowder
+            Map.entry("Q", "<:wihte_wool:1500857723540209674>"), // White Wool (Quartz alternative)
+            Map.entry("O", "<:obsadian:1500856426388521097>"), // Obsidian
+            Map.entry("T", "<:torch:1500855870840635594>"), // Torch
+            Map.entry("H", "<:EnchantedBookMinecraftPlugin6D:1500855968169328711>")  // Book
     );
 
     @RequiredArgsConstructor
