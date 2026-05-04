@@ -278,8 +278,8 @@ public class JawlahManager extends ListenerAdapter {
                 ))
                 .useComponentsV2(true);
 
-        if (event instanceof ButtonInteractionEvent bie) bie.editMessage(edit.build()).useComponentsV2(true).queue();
-        else if (event instanceof StringSelectInteractionEvent ssie) ssie.editMessage(edit.build()).useComponentsV2(true).queue();
+        if (event instanceof ButtonInteractionEvent bie) bie.editMessage(edit.build()).queue();
+        else if (event instanceof StringSelectInteractionEvent ssie) ssie.editMessage(edit.build()).queue();
     }
 
     @Override
@@ -421,9 +421,9 @@ public class JawlahManager extends ListenerAdapter {
                 .useComponentsV2(true);
 
         if (event instanceof ButtonInteractionEvent bie) {
-            bie.editMessage(edit.build()).useComponentsV2(true).queue(m -> game.setBoardMessageId(m.getIdLong()));
+            bie.editMessage(edit.build()).queue(m -> game.setBoardMessageId(m.getIdLong()));
         } else if (event instanceof StringSelectInteractionEvent ssie) {
-            ssie.editMessage(edit.build()).useComponentsV2(true).queue(m -> game.setBoardMessageId(m.getIdLong()));
+            ssie.editMessage(edit.build()).queue(m -> game.setBoardMessageId(m.getIdLong()));
         }
     }
 
@@ -537,7 +537,7 @@ public class JawlahManager extends ListenerAdapter {
                 .useComponentsV2(true);
 
         jda.getTextChannelById(game.getChannelId()).editMessageById(game.getBoardMessageId(), edit.build())
-            .useComponentsV2(true).queue(null, e -> {});
+            .queue(null, e -> {});
     }
 
     @Getter @Setter
