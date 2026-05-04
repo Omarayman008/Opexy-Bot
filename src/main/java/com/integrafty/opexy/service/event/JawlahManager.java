@@ -130,7 +130,7 @@ public class JawlahManager extends ListenerAdapter {
         Button joinB = Button.danger("jawlah_join_b", "انضمام لـ " + game.teamBName + " 🔴")
                 .withDisabled(game.teamBPlayers.size() >= game.maxPlayersPerTeam);
 
-        MessageEditBuilder edit = new MessageEditBuilder()
+        MessageCreateBuilder create = new MessageCreateBuilder()
                 .setComponents(EmbedUtil.containerBranded("SETUP", "تـــجـــهـــيـــز الـــفـــرق والـــمـــســـاعـــدات", body, EmbedUtil.BANNER_MAIN,
                         ActionRow.of(joinA, joinB),
                         ActionRow.of(
@@ -144,9 +144,9 @@ public class JawlahManager extends ListenerAdapter {
                 .useComponentsV2(true);
 
         if (event instanceof ButtonInteractionEvent bie) {
-            bie.editMessage(edit.build()).queue();
+            bie.editMessage(MessageEditBuilder.fromCreateData(create.build()).build()).queue();
         } else if (event instanceof ModalInteractionEvent mie) {
-            mie.reply(MessageCreateBuilder.fromEditData(edit.build()).build()).queue();
+            mie.reply(create.build()).queue();
         }
     }
 
