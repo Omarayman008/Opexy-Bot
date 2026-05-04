@@ -149,14 +149,18 @@ public class CraftManager extends ListenerAdapter {
         userGuilds.put(userId, guild.getIdLong());
 
         StringBuilder sb = new StringBuilder();
-        sb.append("**      1      2      3**\n");
+        sb.append("      **1**            **2**            **3**\n");
+        sb.append("▬▬▬▬▬▬▬▬▬▬▬▬\n");
         for (int i = 0; i < 3; i++) {
             sb.append("**").append(i + 1).append("**  ");
             for (int j = 0; j < 3; j++) {
-                sb.append(ITEMS.get(recipe.grid[i][j])).append(" ");
+                String item = ITEMS.get(recipe.grid[i][j]);
+                // If it's a custom emoji, add extra spaces around it to make it look larger/centered
+                sb.append("   ").append(item).append("   ");
             }
-            sb.append("\n");
+            sb.append("\n\n"); // Double newline for row spacing
         }
+        sb.append("▬▬▬▬▬▬▬▬▬▬▬▬");
 
         // LOGGING SYSTEM
         String logDetails = String.format("### 🛠️ فعالية الصناعة: بدء (فردية)\n▫️ **اللاعب:** %s\n▫️ **الصعوبة:** %s\n▫️ **الجائزة:** %d opex", 
