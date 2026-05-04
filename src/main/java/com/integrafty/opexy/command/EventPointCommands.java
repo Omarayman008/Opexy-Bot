@@ -42,6 +42,10 @@ public class EventPointCommands implements MultiSlashCommand {
         list.add(Commands.slash("points", "عـــرض نـــقـــاط الـــفـــعـــالـــيـــات لـــك أو لـــلـــجـــمـــيـــع")
                 .addOption(OptionType.USER, "user", "الـــعـــضـــو (اخـــتـــيـــاري)", false));
 
+        list.add(Commands.slash("rest-points", "تـــصـــفـــيـــر نـــقـــاط الـــفـــعـــالـــيـــات لـــلـــجـــمـــيـــع أو لـــعـــضـــو مـــعـــيـــن")
+                .addOption(OptionType.USER, "user", "الـــعـــضـــو (اخـــتـــيـــاري)", false)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.KICK_MEMBERS)));
+
         return list;
     }
 
@@ -53,6 +57,7 @@ public class EventPointCommands implements MultiSlashCommand {
             case "add-point" -> handleAddPoint(event);
             case "remove-point" -> handleRemovePoint(event);
             case "points" -> handlePoints(event);
+            case "rest-points" -> handleResetPoints(event);
         }
     }
 
@@ -128,6 +133,30 @@ public class EventPointCommands implements MultiSlashCommand {
 
             event.reply(new MessageCreateBuilder()
                     .setComponents(EmbedUtil.containerBranded("EVENTS", "Points Status", body, EmbedUtil.BANNER_MAIN))
+                    .useComponentsV2(true).build()).queue();
+        }
+    }
+
+    private void handleResetPoints(SlashCommandInteractionEvent event) {
+        OptionMapping userOpt = event.getOption("user");
+
+        if (userOpt == null) {
+            // Reset Everyone
+            userRepository.resetAllEventPointsByGuildId(event.getGuild().getId());
+            event.reply(new MessageCreateBuilder()
+                    .setComponents(EmbedUtil.success("EVENTS RESET", "✅ تـــم تـــصـــفـــيـــر نـــقـــاط الـــفـــعـــالـــيـــات لـــجـــمـــيـــع الأعـــضـــاء بـــنـــجـــاح!"))
+                    .useComponentsV2(true).build()).queue();
+        } else {
+            // Reset specific user
+            Member target = userOpt.getAsMember();
+            if (target == null) return;
+
+            UserEntity user = getOrCreateUser(target.getId(), event.getGuild().getId());
+            user.setEventPoints(0);
+            userRepository.save(user);
+
+            event.reply(new MessageCreateBuilder()
+                    .setComponents(EmbedUtil.success("POINTS RESET", "✅ تـــم تـــصـــفـــيـــر نـــقـــاط الـــعـــضـــو " + target.getAsMention() + " بـــنـــجـــاح!"))
                     .useComponentsV2(true).build()).queue();
         }
     }
