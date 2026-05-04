@@ -514,7 +514,7 @@ public class JawlahManager extends ListenerAdapter {
                 if (game.isPitActive()) game.scoreA = Math.max(0, game.scoreA - points);
             }
 
-            event.getMessage().reply("✅ إجابة صحيحة! أحسنت.").queue();
+            event.getMessage().reply("✅ إجابة صحيحة يا " + event.getAuthor().getAsMention() + "! أحسنت.").queue();
             game.setCurrentQuestion(null);
             game.setGoldenQuestion(false);
             game.setPitActive(false);

@@ -256,12 +256,14 @@ public class CraftManager extends ListenerAdapter {
 
             if (hook != null) {
                 hook.editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+                        .setContent(event.getAuthor().getAsMention())
                         .setComponents(EmbedUtil.success("CRAFTING SUCCESS", "`=---------------- SUCCESS ----------------=`\n\n" + successMsg))
                         .useComponentsV2(true)
                         .build()).queue();
                 event.getMessage().delete().queue(null, e -> {});
             } else {
                 event.getChannel().sendMessage(new MessageCreateBuilder()
+                        .setContent(event.getAuthor().getAsMention())
                         .setComponents(EmbedUtil.success("CRAFTING MASTER", successMsg))
                         .useComponentsV2(true)
                         .build()).queue();
