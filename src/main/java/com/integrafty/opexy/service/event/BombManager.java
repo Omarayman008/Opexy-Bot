@@ -27,9 +27,9 @@ public class BombManager extends ListenerAdapter {
         MEDIUM(15, 10, "وسط"),
         HARD(20, 5, "صعب");
 
-        final int reward;
-        final int seconds;
-        final String displayName;
+        public final int reward;
+        public final int seconds;
+        public final String displayName;
         Difficulty(int r, int s, String d) { this.reward = r; this.seconds = s; this.displayName = d; }
     }
 

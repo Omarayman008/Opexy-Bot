@@ -29,8 +29,8 @@ public class CraftManager extends ListenerAdapter {
         MEDIUM(30, "وسط"),
         HARD(40, "صعب");
 
-        final int reward;
-        final String displayName;
+        public final int reward;
+        public final String displayName;
         Difficulty(int r, String d) { this.reward = r; this.displayName = d; }
     }
 
