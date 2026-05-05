@@ -129,6 +129,10 @@ public class NotificationScheduler {
         TextChannel channel = jda.getTextChannelById(LIVE_CHANNEL_ID);
         if (channel == null) return;
 
+        // Update state BEFORE queuing to prevent duplicates in next cycle
+        entity.setLastContentId(contentId);
+        notificationRepository.save(entity);
+
         String body = String.format("### %s is Live on %s!\n**%s**\n\nClick the button below to join the stream.", entity.getDisplayName(), platform, title);
         Container container = EmbedUtil.containerBranded(platform, "Live Stream", body, thumbnail, ActionRow.of(Button.link(url, "Watch Stream")));
 
@@ -140,10 +144,7 @@ public class NotificationScheduler {
             
             channel.sendMessage(builder.build())
                 .useComponentsV2(true)
-                .queue(msg -> {
-                    entity.setLastContentId(contentId);
-                    notificationRepository.save(entity);
-                });
+                .queue();
         });
     }
 
@@ -155,6 +156,11 @@ public class NotificationScheduler {
         }
 
         log.info("Sending video notification for {} to channel {}", entity.getDisplayName(), VIDEO_CHANNEL_ID);
+        
+        // Update state BEFORE queuing to prevent duplicates in next cycle
+        entity.setLastContentId(contentId);
+        notificationRepository.save(entity);
+
         String body = String.format("### New Video from %s!\n**%s**\n\nClick the button below to watch the video.", entity.getDisplayName(), title);
         Container container = EmbedUtil.containerBranded("YOUTUBE", "New Upload", body, thumbnail, ActionRow.of(Button.link(url, "Watch Video")));
 
@@ -166,11 +172,7 @@ public class NotificationScheduler {
             
             channel.sendMessage(builder.build())
                 .useComponentsV2(true)
-                .queue(msg -> {
-                    entity.setLastContentId(contentId);
-                    notificationRepository.save(entity);
-                    log.info("Video notification sent successfully for {}", entity.getDisplayName());
-                });
+                .queue(msg -> log.info("Video notification sent successfully for {}", entity.getDisplayName()));
         });
     }
 }
