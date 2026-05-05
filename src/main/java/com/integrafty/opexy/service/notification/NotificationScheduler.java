@@ -33,7 +33,7 @@ public class NotificationScheduler {
     private static final String LIVE_ROLE_MENTION = "<@&1487196786488770610>";
     private static final String VIDEO_ROLE_MENTION = "<@&1500269236583399454>";
 
-    @Scheduled(fixedRate = 300000) // 5 Minutes
+    @Scheduled(fixedRate = 120000) // 2 Minutes
     public void checkNotifications() {
         log.info("Starting notification check cycle...");
         List<NotificationEntity> entities = notificationRepository.findAll();
@@ -122,14 +122,13 @@ public class NotificationScheduler {
         Container container = EmbedUtil.containerBranded(platform, "Live Stream", body, thumbnail, ActionRow.of(Button.link(url, "Watch Stream")));
 
         MessageCreateBuilder builder = new MessageCreateBuilder()
+            .setContent(LIVE_ROLE_MENTION)
             .setComponents(container)
             .useComponentsV2(true);
 
-        channel.sendMessage(LIVE_ROLE_MENTION).queue(ping -> {
-            channel.sendMessage(builder.build()).useComponentsV2(true).queue(msg -> {
-                entity.setLastContentId(contentId);
-                notificationRepository.save(entity);
-            });
+        channel.sendMessage(builder.build()).useComponentsV2(true).queue(msg -> {
+            entity.setLastContentId(contentId);
+            notificationRepository.save(entity);
         });
     }
 
@@ -146,15 +145,14 @@ public class NotificationScheduler {
         Container container = EmbedUtil.containerBranded("YOUTUBE", "New Upload", body, thumbnail, ActionRow.of(Button.link(url, "Watch Video")));
 
         MessageCreateBuilder builder = new MessageCreateBuilder()
+            .setContent(VIDEO_ROLE_MENTION)
             .setComponents(container)
             .useComponentsV2(true);
 
-        channel.sendMessage(VIDEO_ROLE_MENTION).queue(ping -> {
-            channel.sendMessage(builder.build()).useComponentsV2(true).queue(msg -> {
-                entity.setLastContentId(contentId);
-                notificationRepository.save(entity);
-                log.info("Video notification sent successfully for {}", entity.getDisplayName());
-            }, err -> log.error("Failed to send video container for {}: {}", entity.getDisplayName(), err.getMessage()));
-        }, err -> log.error("Failed to send video role ping for {}: {}", entity.getDisplayName(), err.getMessage()));
+        channel.sendMessage(builder.build()).useComponentsV2(true).queue(msg -> {
+            entity.setLastContentId(contentId);
+            notificationRepository.save(entity);
+            log.info("Video notification sent successfully for {}", entity.getDisplayName());
+        }, err -> log.error("Failed to send video notification for {}: {}", entity.getDisplayName(), err.getMessage()));
     }
 }

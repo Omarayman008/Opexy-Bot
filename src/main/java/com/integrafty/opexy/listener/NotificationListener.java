@@ -34,10 +34,10 @@ public class NotificationListener extends ListenerAdapter {
     private final YouTubeService youtubeService;
     private final KickService kickService;
 
-    @PostConstruct
+    /*@PostConstruct
     public void init() {
         jda.addEventListener(this);
-    }
+    }*/
 
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {

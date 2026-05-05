@@ -44,10 +44,10 @@ public class WordFilterCommand extends ListenerAdapter implements SlashCommand {
     @Value("${opexy.roles.op-staff}")
     private String opStaffRoleId;
 
-    @PostConstruct
+    /*@PostConstruct
     public void init() {
         jda.addEventListener(this);
-    }
+    }*/
 
     @Override
     public String getName() { return "banned-words"; }

@@ -29,11 +29,6 @@ public class MessageListener extends ListenerAdapter {
 
     private final LogManager logManager;
 
-    @PostConstruct
-    public void init() {
-        jda.addEventListener(this);
-    }
-
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         if (!event.isFromGuild()) return;
