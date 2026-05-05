@@ -129,22 +129,21 @@ public class NotificationScheduler {
         TextChannel channel = jda.getTextChannelById(LIVE_CHANNEL_ID);
         if (channel == null) return;
 
-        net.dv8tion.jda.api.EmbedBuilder eb = new net.dv8tion.jda.api.EmbedBuilder()
-            .setAuthor(platform + " ・ LIVE STREAM", null, null)
-            .setTitle(title)
-            .setDescription(String.format("### %s is Live now!\n\nJoin the broadcast via the link below.", entity.getDisplayName()))
-            .setImage(thumbnail)
-            .setColor(EmbedUtil.SUCCESS)
-            .setFooter("\u25AA UNIFIED TERMINAL \u30FB HIGHCORE AGENCY \u30FB " + platform.toUpperCase() + " \u25AA");
+        String body = String.format("### %s is Live on %s!\n**%s**\n\nClick the button below to join the stream.", entity.getDisplayName(), platform, title);
+        Container container = EmbedUtil.containerBranded(platform, "Live Stream", body, thumbnail, ActionRow.of(Button.link(url, "Watch Stream")));
 
-        MessageCreateBuilder builder = new MessageCreateBuilder()
-            .setContent(LIVE_ROLE_MENTION)
-            .setEmbeds(eb.build())
-            .setComponents(ActionRow.of(Button.link(url, "Watch Stream")));
-
-        channel.sendMessage(builder.build()).queue(msg -> {
-            entity.setLastContentId(contentId);
-            notificationRepository.save(entity);
+        // Send ping first, then the rich message
+        channel.sendMessage(LIVE_ROLE_MENTION).queue(ping -> {
+            MessageCreateBuilder builder = new MessageCreateBuilder()
+                .setComponents(container)
+                .useComponentsV2(true);
+            
+            channel.sendMessage(builder.build())
+                .useComponentsV2(true)
+                .queue(msg -> {
+                    entity.setLastContentId(contentId);
+                    notificationRepository.save(entity);
+                });
         });
     }
 
@@ -156,24 +155,22 @@ public class NotificationScheduler {
         }
 
         log.info("Sending video notification for {} to channel {}", entity.getDisplayName(), VIDEO_CHANNEL_ID);
-        
-        net.dv8tion.jda.api.EmbedBuilder eb = new net.dv8tion.jda.api.EmbedBuilder()
-            .setAuthor("YOUTUBE ・ NEW UPLOAD", null, null)
-            .setTitle(title)
-            .setDescription(String.format("### New Video from %s!\n\nCheck out the latest upload on the channel.", entity.getDisplayName()))
-            .setImage(thumbnail)
-            .setColor(EmbedUtil.ACCENT)
-            .setFooter("\u25AA UNIFIED TERMINAL \u30FB HIGHCORE AGENCY \u25AA");
+        String body = String.format("### New Video from %s!\n**%s**\n\nClick the button below to watch the video.", entity.getDisplayName(), title);
+        Container container = EmbedUtil.containerBranded("YOUTUBE", "New Upload", body, thumbnail, ActionRow.of(Button.link(url, "Watch Video")));
 
-        MessageCreateBuilder builder = new MessageCreateBuilder()
-            .setContent(VIDEO_ROLE_MENTION)
-            .setEmbeds(eb.build())
-            .setComponents(ActionRow.of(Button.link(url, "Watch Video")));
-
-        channel.sendMessage(builder.build()).queue(msg -> {
-            entity.setLastContentId(contentId);
-            notificationRepository.save(entity);
-            log.info("Video notification sent successfully for {}", entity.getDisplayName());
-        }, err -> log.error("Failed to send video notification for {}: {}", entity.getDisplayName(), err.getMessage()));
+        // Send ping first, then the rich message
+        channel.sendMessage(VIDEO_ROLE_MENTION).queue(ping -> {
+            MessageCreateBuilder builder = new MessageCreateBuilder()
+                .setComponents(container)
+                .useComponentsV2(true);
+            
+            channel.sendMessage(builder.build())
+                .useComponentsV2(true)
+                .queue(msg -> {
+                    entity.setLastContentId(contentId);
+                    notificationRepository.save(entity);
+                    log.info("Video notification sent successfully for {}", entity.getDisplayName());
+                });
+        });
     }
 }
