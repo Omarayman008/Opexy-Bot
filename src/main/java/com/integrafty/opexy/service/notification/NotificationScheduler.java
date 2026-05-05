@@ -129,16 +129,19 @@ public class NotificationScheduler {
         TextChannel channel = jda.getTextChannelById(LIVE_CHANNEL_ID);
         if (channel == null) return;
 
-        String body = String.format("### %s is Live on %s!\n**%s**\n\nClick the button below to join the stream.", entity.getDisplayName(), platform, title);
-
-        Container container = EmbedUtil.containerBranded(platform, "Live Stream", body, thumbnail, ActionRow.of(Button.link(url, "Watch Stream")));
+        net.dv8tion.jda.api.EmbedBuilder eb = new net.dv8tion.jda.api.EmbedBuilder()
+            .setTitle("► " + platform + " ・ Live Stream")
+            .setDescription(String.format("### %s is Live now!\n**%s**\n\n[Click here to watch the stream](%s)", entity.getDisplayName(), title, url))
+            .setImage(thumbnail)
+            .setColor(EmbedUtil.SUCCESS)
+            .setFooter("UNIFIED TERMINAL • HIGHCORE AGENCY");
 
         MessageCreateBuilder builder = new MessageCreateBuilder()
             .setContent(LIVE_ROLE_MENTION)
-            .setComponents(container)
-            .useComponentsV2(true);
+            .setEmbeds(eb.build())
+            .setComponents(ActionRow.of(Button.link(url, "Watch Stream")));
 
-        channel.sendMessage(builder.build()).useComponentsV2(true).queue(msg -> {
+        channel.sendMessage(builder.build()).queue(msg -> {
             entity.setLastContentId(contentId);
             notificationRepository.save(entity);
         });
@@ -152,16 +155,20 @@ public class NotificationScheduler {
         }
 
         log.info("Sending video notification for {} to channel {}", entity.getDisplayName(), VIDEO_CHANNEL_ID);
-        String body = String.format("### New Video from %s!\n**%s**\n\nClick the button below to watch the video.", entity.getDisplayName(), title);
-
-        Container container = EmbedUtil.containerBranded("YOUTUBE", "New Upload", body, thumbnail, ActionRow.of(Button.link(url, "Watch Video")));
+        
+        net.dv8tion.jda.api.EmbedBuilder eb = new net.dv8tion.jda.api.EmbedBuilder()
+            .setTitle("► YOUTUBE ・ New Upload")
+            .setDescription(String.format("### New Video from %s!\n**%s**\n\n[Click here to watch the video](%s)", entity.getDisplayName(), title, url))
+            .setImage(thumbnail)
+            .setColor(EmbedUtil.ACCENT)
+            .setFooter("UNIFIED TERMINAL • HIGHCORE AGENCY");
 
         MessageCreateBuilder builder = new MessageCreateBuilder()
             .setContent(VIDEO_ROLE_MENTION)
-            .setComponents(container)
-            .useComponentsV2(true);
+            .setEmbeds(eb.build())
+            .setComponents(ActionRow.of(Button.link(url, "Watch Video")));
 
-        channel.sendMessage(builder.build()).useComponentsV2(true).queue(msg -> {
+        channel.sendMessage(builder.build()).queue(msg -> {
             entity.setLastContentId(contentId);
             notificationRepository.save(entity);
             log.info("Video notification sent successfully for {}", entity.getDisplayName());
