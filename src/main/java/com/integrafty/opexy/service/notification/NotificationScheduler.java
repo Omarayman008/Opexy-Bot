@@ -101,7 +101,7 @@ public class NotificationScheduler {
             }
         }
 
-        youtubeService.getLatestVideo(entity.getChannelId()).ifPresent(json -> {
+        youtubeService.getLatestVideo(entity.getChannelId()).ifPresentOrElse(json -> {
             String videoId = json.get("videoId").getAsString();
             log.info("YouTube check for {}: latestVideoId={}, lastContentId={}", entity.getDisplayName(), videoId, entity.getLastContentId());
             if (!videoId.equals(entity.getLastContentId())) {
@@ -110,6 +110,18 @@ public class NotificationScheduler {
                 String url = "https://youtube.com/watch?v=" + videoId;
                 sendVideoNotification(entity, videoId, url, title, thumbnail);
             }
+        }, () -> {
+            log.info("YouTube check for {}: No videos found via RSS. Attempting fallback scrape...", entity.getDisplayName());
+            youtubeService.scrapeLatestVideo(entity.getChannelId()).ifPresent(json -> {
+                String videoId = json.get("videoId").getAsString();
+                log.info("YouTube fallback scrape for {}: latestVideoId={}, lastContentId={}", entity.getDisplayName(), videoId, entity.getLastContentId());
+                if (!videoId.equals(entity.getLastContentId())) {
+                    String title = json.get("title").getAsString();
+                    String thumbnail = json.get("thumbnail").getAsString();
+                    String url = "https://youtube.com/watch?v=" + videoId;
+                    sendVideoNotification(entity, videoId, url, title, thumbnail);
+                }
+            });
         });
     }
 

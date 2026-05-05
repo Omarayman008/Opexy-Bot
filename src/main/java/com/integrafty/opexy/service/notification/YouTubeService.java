@@ -119,6 +119,45 @@ public class YouTubeService {
         return null;
     }
 
+    public Optional<JsonObject> scrapeLatestVideo(String channelId) {
+        try {
+            String url = "https://www.youtube.com/channel/" + channelId + "/videos";
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+            headers.set("Accept-Language", "en-US,en;q=0.9");
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            String html = response.getBody();
+            
+            if (html != null) {
+                // Look for "videoId":"..."
+                Pattern pId = Pattern.compile("\"videoId\":\"([a-zA-Z0-9_-]+)\"");
+                Matcher mId = pId.matcher(html);
+                
+                if (mId.find()) {
+                    String videoId = mId.group(1);
+                    JsonObject video = new JsonObject();
+                    video.addProperty("videoId", videoId);
+                    
+                    // Try to find title nearby
+                    Pattern pTitle = Pattern.compile("\"title\":\\{\"runs\":\\[\\{\"text\":\"(.*?)\"");
+                    Matcher mTitle = pTitle.matcher(html);
+                    if (mTitle.find()) {
+                        video.addProperty("title", mTitle.group(1));
+                    } else {
+                        video.addProperty("title", "New Video");
+                    }
+                    
+                    video.addProperty("thumbnail", "https://i.ytimg.com/vi/" + videoId + "/hqdefault.jpg");
+                    return Optional.of(video);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("YouTube Scraper: Failed for {}: {}", channelId, e.getMessage());
+        }
+        return Optional.empty();
+    }
+
     private String extractValue(String xml, String regex) {
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(xml);
