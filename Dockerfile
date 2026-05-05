@@ -9,7 +9,7 @@ COPY . .
 RUN mvn package -DskipTests -B
 
 # Run stage
-FROM eclipse-temurin:17-jre-focal
+FROM eclipse-temurin:17-jre-jammy
 COPY --from=build /app/target/opexy-1.0.0.jar /app/opexy-bot.jar
 WORKDIR /app
 EXPOSE 8080

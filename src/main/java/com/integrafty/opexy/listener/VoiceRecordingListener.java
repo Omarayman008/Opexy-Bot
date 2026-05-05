@@ -136,9 +136,11 @@ public class VoiceRecordingListener extends ListenerAdapter implements SlashComm
         if (joinedChannel != null && !event.getMember().getUser().isBot()) {
             if (!ALLOWED_VOICE_CHANNELS.contains(joinedChannel.getIdLong())) return;
 
-            if (!audioManager.isConnected()) {
-                // Connect if not connected
-                audioManager.openAudioConnection(joinedChannel);
+                // Connect if not connected or connected to wrong channel
+                AudioChannel current = audioManager.getConnectedChannel();
+                if (current == null || current.getIdLong() != joinedChannel.getIdLong()) {
+                    audioManager.openAudioConnection(joinedChannel);
+                }
                 
                 // Set active text channel to where the bot "should" report
                 if (joinedChannel instanceof net.dv8tion.jda.api.entities.channel.middleman.MessageChannel msgChannel) {
