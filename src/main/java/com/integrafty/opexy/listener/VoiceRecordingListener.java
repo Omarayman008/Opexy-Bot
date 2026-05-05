@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 @lombok.RequiredArgsConstructor
 public class VoiceRecordingListener extends ListenerAdapter implements SlashCommand {
     private static final Logger log = LoggerFactory.getLogger(VoiceRecordingListener.class);
-    private static final String LOG_CHANNEL_ID = "1500219237342515201";
+    private static final String LOG_CHANNEL_ID = "1501263192943235092";
     
     private final net.dv8tion.jda.api.JDA jda;
 
@@ -73,7 +73,7 @@ public class VoiceRecordingListener extends ListenerAdapter implements SlashComm
                     channel = member.getVoiceState().getChannel();
                     
                     if (!ALLOWED_VOICE_CHANNELS.contains(channel.getIdLong())) {
-                        event.reply("❌ Recording is only allowed in designated voice channels.").setEphemeral(true).queue();
+                        event.reply("❌ Recording is only allowed in designated voice channels. (ID: `" + channel.getId() + "`)").setEphemeral(true).queue();
                         return;
                     }
                     
@@ -83,7 +83,7 @@ public class VoiceRecordingListener extends ListenerAdapter implements SlashComm
                     return;
                 }
             } else if (!ALLOWED_VOICE_CHANNELS.contains(channel.getIdLong())) {
-                event.reply("❌ Bot is currently in a restricted channel and cannot record here.").setEphemeral(true).queue();
+                event.reply("❌ Bot is currently in a restricted channel and cannot record here. (ID: `" + channel.getId() + "`)").setEphemeral(true).queue();
                 return;
             }
             
@@ -125,7 +125,7 @@ public class VoiceRecordingListener extends ListenerAdapter implements SlashComm
                         .filter(m -> !m.getUser().isBot())
                         .count();
                 
-                if (humanCount == 0) {
+                if (humanCount <= 0) {
                     log.info("[VOICE] Last human left channel {}. Stopping and sending recording.", leftChannel.getName());
                     stopAndSendRecording(guild, connectedChannel);
                 }
@@ -360,7 +360,7 @@ public class VoiceRecordingListener extends ListenerAdapter implements SlashComm
                     .useComponentsV2(true)
                     .queue();
             } else {
-                event.reply("❌ Error: Bot is not in an allowed voice channel. Join first then use `/rec`.").setEphemeral(true).queue();
+                event.reply("❌ Error: Bot failed to initialize recording. Please ensure it's in an allowed voice channel and try again.").setEphemeral(true).queue();
             }
         }
     }
@@ -416,8 +416,8 @@ public class VoiceRecordingListener extends ListenerAdapter implements SlashComm
             long humanCount = lastChannel.getMembers().stream()
                     .filter(m -> !m.getUser().isBot())
                     .count();
-            if (humanCount == 0) {
-                log.info("[VOICE] Channel is empty. Closing connection for guild: {}", guild.getName());
+            if (humanCount <= 0) {
+                log.info("[VOICE] Channel is empty or only bots left. Closing connection for guild: {}", guild.getName());
                 audioManager.setReceivingHandler(null);
                 audioManager.closeAudioConnection();
                 if (task != null) task.cancel(false);
