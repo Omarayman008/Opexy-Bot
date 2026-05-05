@@ -33,7 +33,7 @@ public class NotificationScheduler {
     private static final String LIVE_ROLE_MENTION = "<@&1487196786488770610>";
     private static final String VIDEO_ROLE_MENTION = "<@&1500269236583399454>";
 
-    @Scheduled(fixedRate = 120000) // 2 Minutes
+    @Scheduled(fixedRate = 60000) // 1 Minute
     public void checkNotifications() {
         log.info("Starting notification check cycle...");
         List<NotificationEntity> entities = notificationRepository.findAll();
@@ -130,11 +130,12 @@ public class NotificationScheduler {
         if (channel == null) return;
 
         net.dv8tion.jda.api.EmbedBuilder eb = new net.dv8tion.jda.api.EmbedBuilder()
-            .setTitle("► " + platform + " ・ Live Stream")
-            .setDescription(String.format("### %s is Live now!\n**%s**\n\n[Click here to watch the stream](%s)", entity.getDisplayName(), title, url))
+            .setAuthor(platform + " ・ LIVE STREAM", null, null)
+            .setTitle(title)
+            .setDescription(String.format("### %s is Live now!\n\nJoin the broadcast via the link below.", entity.getDisplayName()))
             .setImage(thumbnail)
             .setColor(EmbedUtil.SUCCESS)
-            .setFooter("UNIFIED TERMINAL • HIGHCORE AGENCY");
+            .setFooter("\u25AA UNIFIED TERMINAL \u30FB HIGHCORE AGENCY \u30FB " + platform.toUpperCase() + " \u25AA");
 
         MessageCreateBuilder builder = new MessageCreateBuilder()
             .setContent(LIVE_ROLE_MENTION)
@@ -157,11 +158,12 @@ public class NotificationScheduler {
         log.info("Sending video notification for {} to channel {}", entity.getDisplayName(), VIDEO_CHANNEL_ID);
         
         net.dv8tion.jda.api.EmbedBuilder eb = new net.dv8tion.jda.api.EmbedBuilder()
-            .setTitle("► YOUTUBE ・ New Upload")
-            .setDescription(String.format("### New Video from %s!\n**%s**\n\n[Click here to watch the video](%s)", entity.getDisplayName(), title, url))
+            .setAuthor("YOUTUBE ・ NEW UPLOAD", null, null)
+            .setTitle(title)
+            .setDescription(String.format("### New Video from %s!\n\nCheck out the latest upload on the channel.", entity.getDisplayName()))
             .setImage(thumbnail)
             .setColor(EmbedUtil.ACCENT)
-            .setFooter("UNIFIED TERMINAL • HIGHCORE AGENCY");
+            .setFooter("\u25AA UNIFIED TERMINAL \u30FB HIGHCORE AGENCY \u25AA");
 
         MessageCreateBuilder builder = new MessageCreateBuilder()
             .setContent(VIDEO_ROLE_MENTION)
