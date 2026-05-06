@@ -145,20 +145,19 @@ public class NotificationScheduler {
         entity.setLastContentId(contentId);
         notificationRepository.save(entity);
 
-        net.dv8tion.jda.api.EmbedBuilder eb = new net.dv8tion.jda.api.EmbedBuilder()
-            .setImage(thumbnail)
-            .setAuthor(platform + " ・ LIVE STREAM", null, null)
-            .setTitle(title)
-            .setDescription(LIVE_ROLE_MENTION + "\n\n### " + entity.getDisplayName() + " is Live now!\nJoin the broadcast via the link below.")
-            .setColor(EmbedUtil.SUCCESS)
-            .setFooter("\u25AA UNIFIED TERMINAL \u30FB HIGHCORE AGENCY \u30FB " + platform.toUpperCase() + " \u25AA");
+        String body = String.format("%s\n\n### %s is Live on %s!\n**%s**\n\nClick the button below to join the stream.", LIVE_ROLE_MENTION, entity.getDisplayName(), platform, title);
+        Container container = EmbedUtil.containerBranded(platform, "Live Stream", body, thumbnail, ActionRow.of(Button.link(url, "Watch Stream")));
 
-        MessageCreateBuilder builder = new MessageCreateBuilder()
-            .setContent(LIVE_ROLE_MENTION)
-            .setEmbeds(eb.build())
-            .setComponents(ActionRow.of(Button.link(url, "Watch Stream")));
-
-        channel.sendMessage(builder.build()).queue();
+        // Separate ping to actually trigger the notification
+        channel.sendMessage(LIVE_ROLE_MENTION).queue(p -> {
+            MessageCreateBuilder builder = new MessageCreateBuilder()
+                .setComponents(container)
+                .useComponentsV2(true);
+            
+            channel.sendMessage(builder.build())
+                .useComponentsV2(true)
+                .queue();
+        });
     }
 
     private void sendVideoNotification(NotificationEntity entity, String contentId, String url, String title, String thumbnail) {
@@ -168,19 +167,19 @@ public class NotificationScheduler {
         entity.setLastContentId(contentId);
         notificationRepository.save(entity);
 
-        net.dv8tion.jda.api.EmbedBuilder eb = new net.dv8tion.jda.api.EmbedBuilder()
-            .setImage(thumbnail)
-            .setAuthor("YOUTUBE ・ NEW UPLOAD", null, null)
-            .setTitle(title)
-            .setDescription(VIDEO_ROLE_MENTION + "\n\n### New Video from " + entity.getDisplayName() + "!\nCheck out the latest upload on the channel.")
-            .setColor(EmbedUtil.ACCENT)
-            .setFooter("\u25AA UNIFIED TERMINAL \u30FB HIGHCORE AGENCY \u25AA");
+        log.info("Sending video notification for {} to channel {}", entity.getDisplayName(), VIDEO_CHANNEL_ID);
+        String body = String.format("%s\n\n### New Video from %s!\n**%s**\n\nClick the button below to watch the video.", VIDEO_ROLE_MENTION, entity.getDisplayName(), title);
+        Container container = EmbedUtil.containerBranded("YOUTUBE", "New Upload", body, thumbnail, ActionRow.of(Button.link(url, "Watch Video")));
 
-        MessageCreateBuilder builder = new MessageCreateBuilder()
-            .setContent(VIDEO_ROLE_MENTION)
-            .setEmbeds(eb.build())
-            .setComponents(ActionRow.of(Button.link(url, "Watch Video")));
-
-        channel.sendMessage(builder.build()).queue();
+        // Separate ping to actually trigger the notification
+        channel.sendMessage(VIDEO_ROLE_MENTION).queue(p -> {
+            MessageCreateBuilder builder = new MessageCreateBuilder()
+                .setComponents(container)
+                .useComponentsV2(true);
+            
+            channel.sendMessage(builder.build())
+                .useComponentsV2(true)
+                .queue(msg -> log.info("Video notification sent successfully for {}", entity.getDisplayName()));
+        });
     }
 }
