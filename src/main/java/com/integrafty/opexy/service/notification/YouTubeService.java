@@ -83,9 +83,15 @@ public class YouTubeService {
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
             String html = response.getBody();
             if (html != null) {
-                Pattern p = Pattern.compile("channelId\":\"(UC[a-zA-Z0-9_-]+)\"");
+                // Try multiple patterns used by YouTube
+                Pattern p = Pattern.compile("\"(?:channelId|browseId|externalId)\":\"(UC[a-zA-Z0-9_-]+)\"");
                 Matcher m = p.matcher(html);
                 if (m.find()) return m.group(1);
+                
+                // Fallback: look for canonical link
+                Pattern pCanon = Pattern.compile("<link rel=\"canonical\" href=\"https://www.youtube.com/channel/(UC[a-zA-Z0-9_-]+)\"");
+                Matcher mCanon = pCanon.matcher(html);
+                if (mCanon.find()) return mCanon.group(1);
             }
         } catch (Exception e) {
             log.warn("YouTube Resolver: Failed for {} - {}", input, e.getMessage());
