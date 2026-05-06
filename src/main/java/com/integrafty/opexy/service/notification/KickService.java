@@ -62,8 +62,17 @@ public class KickService {
                         
                         // Create a dummy livestream object for the scheduler
                         JsonObject dummyLive = new JsonObject();
-                        dummyLive.addProperty("id", cleanUsername + "_live_" + System.currentTimeMillis() / 3600000); // Hourly unique ID
                         dummyLive.addProperty("session_title", "Live on KICK!");
+                        
+                        // Extract real Stream ID from HTML (e.g., "livestream":{"id":123456)
+                        Pattern pId = Pattern.compile("\"livestream\":\\{\"id\":(\\d+)");
+                        Matcher mId = pId.matcher(html);
+                        if (mId.find()) {
+                            dummyLive.addProperty("id", mId.group(1));
+                        } else {
+                            // Fallback to hourly ID if real ID not found (unlikely)
+                            dummyLive.addProperty("id", cleanUsername + "_live_" + System.currentTimeMillis() / 3600000);
+                        }
                         
                         // Try to extract real title if possible
                         Pattern pTitle = Pattern.compile("\"session_title\":\"(.*?)\"");
