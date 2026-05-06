@@ -55,9 +55,26 @@ public class KickService {
                 if (json.has("solution")) {
                     String html = json.getAsJsonObject("solution").get("response").getAsString();
                     
-                    // Robust Live Detection: Check for is_live:true AND ensure the main livestream object isn't null
-                    // This avoids false positives from sidebar/recommended channels
-                    boolean isLive = html.contains("\"is_live\":true") && !html.contains("\"livestream\":null");
+                    // Targeted Live Detection: Look for the username and check the livestream object immediately following it
+                    boolean isLive = false;
+                    String usernamePattern = "\"username\":\"" + cleanUsername + "\"";
+                    int userIndex = html.indexOf(usernamePattern);
+                    
+                    if (userIndex != -1) {
+                        // Find the next "livestream" key after the username
+                        int liveIndex = html.indexOf("\"livestream\":", userIndex);
+                        if (liveIndex != -1 && liveIndex - userIndex < 5000) { // Should be relatively close
+                            String sub = html.substring(liveIndex + 13, Math.min(liveIndex + 30, html.length()));
+                            if (sub.trim().startsWith("{")) {
+                                isLive = true;
+                            }
+                        }
+                    }
+                    
+                    // Fallback to broader check if targeted check fails but we are reasonably sure
+                    if (!isLive && html.contains("\"is_live\":true") && html.contains("playback_url") && html.contains(cleanUsername)) {
+                        isLive = true;
+                    }
 
                     if (isLive) {
                         log.info("Kick: {} appears to be LIVE (HTML match)", cleanUsername);
