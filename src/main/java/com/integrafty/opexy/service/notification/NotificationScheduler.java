@@ -34,6 +34,7 @@ public class NotificationScheduler {
     private static final String VIDEO_ROLE_MENTION = "<@&1500269236583399454>";
 
     @Scheduled(fixedRate = 60000) // 1 Minute
+    @org.springframework.transaction.annotation.Transactional
     public void checkNotifications() {
         log.info("Starting notification check cycle...");
         List<NotificationEntity> entities = notificationRepository.findAll();
@@ -61,6 +62,12 @@ public class NotificationScheduler {
     private void handleKick(NotificationEntity entity) {
         kickService.getStreamStatus(entity.getChannelId()).ifPresent(livestream -> {
             String streamId = livestream.get("id").getAsString();
+            if (entity.getLastContentId() == null) {
+                // First run - set baseline
+                entity.setLastContentId(streamId);
+                notificationRepository.save(entity);
+                return;
+            }
             if (!streamId.equals(entity.getLastContentId())) {
                 String title = livestream.get("session_title").getAsString();
                 String thumbnail = livestream.getAsJsonObject("thumbnail").get("url").getAsString();
@@ -68,15 +75,16 @@ public class NotificationScheduler {
                 sendLiveNotification(entity, streamId, url, title, thumbnail, "KICK");
             }
         });
-        if (!kickService.getStreamStatus(entity.getChannelId()).isPresent()) {
-            entity.setLastContentId(null);
-            notificationRepository.save(entity);
-        }
     }
 
     private void handleTwitch(NotificationEntity entity) {
         twitchService.getStreamStatus(entity.getChannelId()).ifPresent(json -> {
             String streamId = json.get("id").getAsString();
+            if (entity.getLastContentId() == null) {
+                entity.setLastContentId(streamId);
+                notificationRepository.save(entity);
+                return;
+            }
             if (!streamId.equals(entity.getLastContentId())) {
                 String title = json.get("title").getAsString();
                 String thumbnail = json.get("thumbnail_url").getAsString().replace("{width}", "1280").replace("{height}", "720");
@@ -87,23 +95,25 @@ public class NotificationScheduler {
     }
 
     private void handleYouTube(NotificationEntity entity) {
-        // AUTO-FIX: If ID is not a UC... ID, try to resolve it once and save for future cycles
         if (entity.getChannelId() != null && !entity.getChannelId().startsWith("UC")) {
-            log.info("Attempting to resolve YouTube channel ID for {}", entity.getChannelId());
             String resolved = youtubeService.resolveChannelId(entity.getChannelId());
             if (resolved != null && resolved.startsWith("UC")) {
                 entity.setChannelId(resolved);
                 notificationRepository.save(entity);
-                log.info("Resolved and saved YouTube channel ID for {}: {}", entity.getDisplayName(), resolved);
             } else {
-                log.warn("Could not resolve YouTube channel ID for {}, skipping this cycle.", entity.getDisplayName());
                 return;
             }
         }
 
         youtubeService.getLatestVideo(entity.getChannelId()).ifPresentOrElse(json -> {
             String videoId = json.get("videoId").getAsString();
-            log.info("YouTube check for {}: latestVideoId={}, lastContentId={}", entity.getDisplayName(), videoId, entity.getLastContentId());
+            if (entity.getLastContentId() == null) {
+                // Baseline - don't notify for old videos
+                entity.setLastContentId(videoId);
+                notificationRepository.save(entity);
+                log.info("Baseline set for YouTube {}: {}", entity.getDisplayName(), videoId);
+                return;
+            }
             if (!videoId.equals(entity.getLastContentId())) {
                 String title = json.get("title").getAsString();
                 String thumbnail = json.get("thumbnail").getAsString();
@@ -111,10 +121,13 @@ public class NotificationScheduler {
                 sendVideoNotification(entity, videoId, url, title, thumbnail);
             }
         }, () -> {
-            log.info("YouTube check for {}: No videos found via RSS. Attempting fallback scrape...", entity.getDisplayName());
             youtubeService.scrapeLatestVideo(entity.getChannelId()).ifPresent(json -> {
                 String videoId = json.get("videoId").getAsString();
-                log.info("YouTube fallback scrape for {}: latestVideoId={}, lastContentId={}", entity.getDisplayName(), videoId, entity.getLastContentId());
+                if (entity.getLastContentId() == null) {
+                    entity.setLastContentId(videoId);
+                    notificationRepository.save(entity);
+                    return;
+                }
                 if (!videoId.equals(entity.getLastContentId())) {
                     String title = json.get("title").getAsString();
                     String thumbnail = json.get("thumbnail").getAsString();
@@ -129,20 +142,19 @@ public class NotificationScheduler {
         TextChannel channel = jda.getTextChannelById(LIVE_CHANNEL_ID);
         if (channel == null) return;
 
-        // Update state BEFORE sending
         entity.setLastContentId(contentId);
         notificationRepository.save(entity);
 
         net.dv8tion.jda.api.EmbedBuilder eb = new net.dv8tion.jda.api.EmbedBuilder()
+            .setImage(thumbnail)
             .setAuthor(platform + " ・ LIVE STREAM", null, null)
             .setTitle(title)
             .setDescription(LIVE_ROLE_MENTION + "\n\n### " + entity.getDisplayName() + " is Live now!\nJoin the broadcast via the link below.")
-            .setImage(thumbnail)
             .setColor(EmbedUtil.SUCCESS)
             .setFooter("\u25AA UNIFIED TERMINAL \u30FB HIGHCORE AGENCY \u30FB " + platform.toUpperCase() + " \u25AA");
 
         MessageCreateBuilder builder = new MessageCreateBuilder()
-            .setContent(LIVE_ROLE_MENTION) // Still need content to actually ping
+            .setContent(LIVE_ROLE_MENTION)
             .setEmbeds(eb.build())
             .setComponents(ActionRow.of(Button.link(url, "Watch Stream")));
 
@@ -151,30 +163,24 @@ public class NotificationScheduler {
 
     private void sendVideoNotification(NotificationEntity entity, String contentId, String url, String title, String thumbnail) {
         TextChannel channel = jda.getTextChannelById(VIDEO_CHANNEL_ID);
-        if (channel == null) {
-            log.error("Video channel not found: {}", VIDEO_CHANNEL_ID);
-            return;
-        }
+        if (channel == null) return;
 
-        log.info("Sending video notification for {} to channel {}", entity.getDisplayName(), VIDEO_CHANNEL_ID);
-        
-        // Update state BEFORE sending
         entity.setLastContentId(contentId);
         notificationRepository.save(entity);
 
         net.dv8tion.jda.api.EmbedBuilder eb = new net.dv8tion.jda.api.EmbedBuilder()
+            .setImage(thumbnail)
             .setAuthor("YOUTUBE ・ NEW UPLOAD", null, null)
             .setTitle(title)
             .setDescription(VIDEO_ROLE_MENTION + "\n\n### New Video from " + entity.getDisplayName() + "!\nCheck out the latest upload on the channel.")
-            .setImage(thumbnail)
             .setColor(EmbedUtil.ACCENT)
             .setFooter("\u25AA UNIFIED TERMINAL \u30FB HIGHCORE AGENCY \u25AA");
 
         MessageCreateBuilder builder = new MessageCreateBuilder()
-            .setContent(VIDEO_ROLE_MENTION) // Still need content to actually ping
+            .setContent(VIDEO_ROLE_MENTION)
             .setEmbeds(eb.build())
             .setComponents(ActionRow.of(Button.link(url, "Watch Video")));
 
-        channel.sendMessage(builder.build()).queue(msg -> log.info("Video notification sent successfully for {}", entity.getDisplayName()));
+        channel.sendMessage(builder.build()).queue();
     }
 }
