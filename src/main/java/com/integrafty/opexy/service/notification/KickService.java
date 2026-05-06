@@ -14,6 +14,8 @@ import org.springframework.web.client.RestTemplate;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -31,15 +33,15 @@ public class KickService {
         String flaresolverrUrl = System.getenv().getOrDefault("FLARESOLVERR_URL", DEFAULT_FLARESOLVERR_URL);
         
         try {
-            String targetUrl = "https://kick.com/api/v1/channels/" + cleanUsername;
+            // Target the main channel page instead of the API for better bypass compatibility
+            String targetUrl = "https://kick.com/" + cleanUsername;
             
-            // Construct FlareSolverr request body
             JsonObject requestBody = new JsonObject();
             requestBody.addProperty("cmd", "request.get");
             requestBody.addProperty("url", targetUrl);
             requestBody.addProperty("maxTimeout", 60000);
 
-            log.info("Checking Kick: {} via FlareSolverr at {}", cleanUsername, flaresolverrUrl);
+            log.info("Checking Kick HTML: {} via FlareSolverr", cleanUsername);
             
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
@@ -51,29 +53,30 @@ public class KickService {
             if (body != null && response.getStatusCode().is2xxSuccessful()) {
                 JsonObject json = JsonParser.parseString(body).getAsJsonObject();
                 if (json.has("solution")) {
-                    JsonObject solution = json.getAsJsonObject("solution");
-                    String responseString = solution.get("response").getAsString().trim();
+                    String html = json.getAsJsonObject("solution").get("response").getAsString();
                     
-                    // Log a snippet of the response to see if it's HTML or JSON
-                    log.debug("FlareSolverr raw response snippet for {}: {}", cleanUsername, 
-                        responseString.substring(0, Math.min(responseString.length(), 100)));
+                    // Look for the livestream data in the HTML (it's often embedded in a script tag as JSON)
+                    // We look for a pattern like "is_live":true or within the livestream object
+                    if (html.contains("\"is_live\":true") || (html.contains("livestream") && html.contains("\"id\":"))) {
+                        log.info("Kick: {} appears to be LIVE (HTML match)", cleanUsername);
+                        
+                        // Create a dummy livestream object for the scheduler
+                        JsonObject dummyLive = new JsonObject();
+                        dummyLive.addProperty("id", cleanUsername + "_live_" + System.currentTimeMillis() / 3600000); // Hourly unique ID
+                        dummyLive.addProperty("session_title", "Live on KICK!");
+                        
+                        // Try to extract real title if possible
+                        Pattern pTitle = Pattern.compile("\"session_title\":\"(.*?)\"");
+                        Matcher mTitle = pTitle.matcher(html);
+                        if (mTitle.find()) dummyLive.addProperty("session_title", mTitle.group(1));
 
-                    if (responseString.startsWith("{") || responseString.startsWith("[")) {
-                        JsonObject kickData = JsonParser.parseString(responseString).getAsJsonObject();
-                        if (kickData.has("livestream") && !kickData.get("livestream").isJsonNull()) {
-                            log.info("Kick: {} is LIVE", cleanUsername);
-                            return Optional.of(kickData.getAsJsonObject("livestream"));
-                        }
-                        log.info("Kick: {} is currently offline", cleanUsername);
-                    } else {
-                        log.warn("Kick: Received HTML instead of JSON for {}. FlareSolverr might still be solving the challenge.", cleanUsername);
+                        return Optional.of(dummyLive);
                     }
+                    log.info("Kick: {} is currently offline", cleanUsername);
                 }
-            } else {
-                log.warn("FlareSolverr: Non-OK response for {}. Status: {}", cleanUsername, response.getStatusCode());
             }
         } catch (Exception e) {
-            log.error("FlareSolverr Error for {}: {}", cleanUsername, e.getMessage());
+            log.error("FlareSolverr Scraping Error for {}: {}", cleanUsername, e.getMessage());
         }
         return Optional.empty();
     }
