@@ -26,14 +26,11 @@ public class YouTubeService {
     public Optional<JsonObject> getLatestVideo(String channelId) {
         try {
             String resolvedId = channelId;
-
             if (!channelId.startsWith("UC")) {
                 resolvedId = resolveChannelId(channelId);
             }
 
-            // Only use channel_id URL — ?user= is deprecated and always returns 404
-            if (!resolvedId.startsWith("UC")) {
-                log.warn("YouTube RSS: Could not resolve channel ID for {}, skipping.", channelId);
+            if (resolvedId == null || !resolvedId.startsWith("UC")) {
                 return Optional.empty();
             }
 
@@ -50,15 +47,17 @@ public class YouTubeService {
                 video.addProperty("thumbnail", "https://i.ytimg.com/vi/" + video.get("videoId").getAsString() + "/hqdefault.jpg");
 
                 return Optional.of(video);
+            } else {
+                log.info("YouTube RSS: No entry found in XML for {}", resolvedId);
             }
         } catch (Exception e) {
-            log.warn("YouTube RSS: Could not fetch videos for {}: {}", channelId, e.getMessage());
+            log.warn("YouTube RSS: Failed for {} - {}", channelId, e.getMessage());
         }
         return Optional.empty();
     }
 
     public String resolveChannelId(String input) {
-        // Step 1: Try oembed (Official metadata API)
+        // Step 1: Try oembed
         try {
             String handle = input.startsWith("@") ? input : "@" + input;
             String oembedUrl = "https://www.youtube.com/oembed?url=https://www.youtube.com/" + handle + "&format=json";
@@ -72,9 +71,7 @@ public class YouTubeService {
                     }
                 }
             }
-        } catch (Exception e) {
-            // oembed failed, move to scraping
-        }
+        } catch (Exception e) {}
 
         // Step 2: Scrape HTML for channelId
         try {
@@ -91,36 +88,14 @@ public class YouTubeService {
                 if (m.find()) return m.group(1);
             }
         } catch (Exception e) {
-            log.warn("YouTube Resolver (Scrape): Failed for {}: {}", input, e.getMessage());
+            log.warn("YouTube Resolver: Failed for {} - {}", input, e.getMessage());
         }
-
-        // Step 3: Try RSS feed directly with @handle
-        try {
-            String handle = input.startsWith("@") ? input : "@" + input;
-            String rssUrl = "https://www.youtube.com/feeds/videos.xml?user=" + handle.replace("@", "");
-            // This is intentionally not used for fetch — just here as last-resort channel page scrape
-            String url = "https://www.youtube.com/" + handle;
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("User-Agent", "Mozilla/5.0");
-            headers.set("Accept-Language", "en-US,en;q=0.9");
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
-            String html = response.getBody();
-            if (html != null) {
-                Pattern p = Pattern.compile("\"externalId\":\"(UC[a-zA-Z0-9_-]+)\"");
-                Matcher m = p.matcher(html);
-                if (m.find()) return m.group(1);
-            }
-        } catch (Exception e) {
-            log.warn("YouTube Resolver (Fallback): Failed for {}: {}", input, e.getMessage());
-        }
-
-        // Resolution failed — return null so caller can skip
         return null;
     }
 
     public Optional<JsonObject> scrapeLatestVideo(String channelId) {
         try {
+            // Target /videos tab to avoid "Featured Video" on the home page which causes duplication
             String url = "https://www.youtube.com/channel/" + channelId + "/videos";
             HttpHeaders headers = new HttpHeaders();
             headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
@@ -130,26 +105,11 @@ public class YouTubeService {
             String html = response.getBody();
             
             if (html != null) {
-                // Target the videoRenderer block specifically to avoid menu items like "Keyboard shortcuts"
-                Pattern pVideo = Pattern.compile("\"videoRenderer\":\\{\"videoId\":\"([a-zA-Z0-9_-]+)\".*?\"title\":\\{\"runs\":\\[\\{\"text\":\"(.*?)\"");
-                Matcher mVideo = pVideo.matcher(html);
-                
-                if (mVideo.find()) {
-                    String videoId = mVideo.group(1);
-                    String title = mVideo.group(2);
-                    
-                    JsonObject video = new JsonObject();
-                    video.addProperty("videoId", videoId);
-                    video.addProperty("title", title);
-                    video.addProperty("thumbnail", "https://i.ytimg.com/vi/" + videoId + "/hqdefault.jpg");
-                    
-                    log.info("YouTube Scraper Found: {} ({})", title, videoId);
-                    return Optional.of(video);
-                }
-                
-                // Fallback for different layout (gridVideoRenderer)
+                // Focus on gridVideoRenderer which represents the actual video list items
+                // This prevents picking up Sidebar/Menu/Featured items
                 Pattern pGrid = Pattern.compile("\"gridVideoRenderer\":\\{\"videoId\":\"([a-zA-Z0-9_-]+)\".*?\"title\":\\{\"runs\":\\[\\{\"text\":\"(.*?)\"");
                 Matcher mGrid = pGrid.matcher(html);
+                
                 if (mGrid.find()) {
                     String videoId = mGrid.group(1);
                     String title = mGrid.group(2);
@@ -159,12 +119,26 @@ public class YouTubeService {
                     video.addProperty("title", title);
                     video.addProperty("thumbnail", "https://i.ytimg.com/vi/" + videoId + "/hqdefault.jpg");
                     
-                    log.info("YouTube Scraper (Grid) Found: {} ({})", title, videoId);
+                    log.info("YouTube Scraper Found: {} ({})", title, videoId);
+                    return Optional.of(video);
+                }
+
+                // Generic videoRenderer fallback (still looking for video items)
+                Pattern pVideo = Pattern.compile("\"videoRenderer\":\\{\"videoId\":\"([a-zA-Z0-9_-]+)\".*?\"title\":\\{\"runs\":\\[\\{\"text\":\"(.*?)\"");
+                Matcher mVideo = pVideo.matcher(html);
+                if (mVideo.find()) {
+                    String videoId = mVideo.group(1);
+                    String title = mVideo.group(2);
+                    
+                    JsonObject video = new JsonObject();
+                    video.addProperty("videoId", videoId);
+                    video.addProperty("title", title);
+                    video.addProperty("thumbnail", "https://i.ytimg.com/vi/" + videoId + "/hqdefault.jpg");
                     return Optional.of(video);
                 }
             }
         } catch (Exception e) {
-            log.warn("YouTube Scraper: Failed for {}: {}", channelId, e.getMessage());
+            log.warn("YouTube Scraper: Failed for {} - {}", channelId, e.getMessage());
         }
         return Optional.empty();
     }
