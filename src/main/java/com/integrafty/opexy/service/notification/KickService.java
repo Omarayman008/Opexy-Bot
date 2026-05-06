@@ -26,16 +26,21 @@ public class KickService {
             String encoded = URLEncoder.encode(targetUrl, StandardCharsets.UTF_8);
             String scraperUrl = "https://api.scraperapi.com/?api_key=" + SCRAPER_API_KEY + "&url=" + encoded + "&render=true";
 
+            log.info("Checking Kick stream status for: {}", username);
             String body = restTemplate.getForObject(scraperUrl, String.class);
             if (body != null) {
                 JsonObject json = JsonParser.parseString(body).getAsJsonObject();
                 if (json.has("livestream") && !json.get("livestream").isJsonNull()) {
+                    log.info("Kick: {} is LIVE", username);
                     return Optional.of(json.getAsJsonObject("livestream"));
                 }
+                log.info("Kick: {} is currently offline", username);
                 return Optional.empty();
+            } else {
+                log.warn("Kick: Received empty body from ScraperAPI for {}", username);
             }
         } catch (Exception e) {
-            log.debug("Kick (ScraperAPI): Failed for {}: {}", username, e.getMessage());
+            log.error("Kick (ScraperAPI) Error for {}: {}", username, e.getMessage());
         }
         return Optional.empty();
     }
