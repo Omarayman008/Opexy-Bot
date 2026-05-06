@@ -55,10 +55,6 @@ public class TicketListener extends ListenerAdapter {
         "1487152897773797637"  // department-manager
     );
 
-    @PostConstruct
-    public void init() {
-        jda.addEventListener(this);
-    }
 
     @Override
     public void onStringSelectInteraction(StringSelectInteractionEvent event) {

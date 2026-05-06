@@ -43,10 +43,6 @@ public class StartupListener extends ListenerAdapter {
         "ping_youtube", "1500269236583399454"
     );
 
-    @PostConstruct
-    public void init() {
-        jda.addEventListener(this);
-    }
 
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {

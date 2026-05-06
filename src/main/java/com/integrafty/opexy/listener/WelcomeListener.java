@@ -33,10 +33,6 @@ public class WelcomeListener extends ListenerAdapter {
     @Value("${welcome.channel.id:1487138386258165820}")
     private String welcomeChannelId;
 
-    @PostConstruct
-    public void init() {
-        jda.addEventListener(this);
-    }
 
     @Override
     public void onGuildMemberJoin(GuildMemberJoinEvent event) {

@@ -50,10 +50,6 @@ public class ServerLogListener extends ListenerAdapter {
     private final JDA jda;
     private final LogManager logManager;
 
-    @PostConstruct
-    public void init() {
-        jda.addEventListener(this);
-    }
 
     // ─────────────────────────── join・left・logs ───────────────────────────
 
