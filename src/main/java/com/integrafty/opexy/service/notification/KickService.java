@@ -55,14 +55,44 @@ public class KickService {
                 if (json.has("solution")) {
                     String html = json.getAsJsonObject("solution").get("response").getAsString();
                     
-                    // Human-like Detection: Check Title and Meta Tags first (very reliable)
+                    // Bulletproof Detection Logic
                     String lowerHtml = html.toLowerCase();
                     String lowerUser = cleanUsername.toLowerCase();
-                    
-                    // If the page title or meta description says they are live, they are live.
-                    boolean isLive = lowerHtml.contains("live on kick") || 
-                                     lowerHtml.contains("watching " + lowerUser + " live") ||
-                                     lowerHtml.contains("is_live\":true"); // fallback to JSON
+                    boolean isLive = false;
+
+                    // 1. Meta Tag Check (Highly reliable if present)
+                    if (lowerHtml.contains("watching " + lowerUser + " live")) {
+                        isLive = true;
+                    }
+
+                    // 2. Playback URL Check
+                    if (!isLive && lowerHtml.contains("playback_url") && lowerHtml.contains("/" + lowerUser + "/master.m3u8")) {
+                        isLive = true;
+                    }
+
+                    // 3. Targeted JSON State Check
+                    // Find the user's object and ensure we don't accidentally read a sidebar channel's object
+                    if (!isLive) {
+                        String[] searchKeys = {"\"slug\":\"" + lowerUser + "\"", "\"username\":\"" + lowerUser + "\""};
+                        for (String searchKey : searchKeys) {
+                            int searchIndex = lowerHtml.indexOf(searchKey);
+                            while (searchIndex != -1 && !isLive) {
+                                int livestreamIndex = lowerHtml.indexOf("\"livestream\":{", searchIndex);
+                                
+                                if (livestreamIndex != -1 && (livestreamIndex - searchIndex) < 2000) {
+                                    String inBetween = lowerHtml.substring(searchIndex + searchKey.length(), livestreamIndex);
+                                    // Ensure we haven't crossed into another user's object
+                                    if (!inBetween.contains("\"slug\":") && !inBetween.contains("\"username\":")) {
+                                        int isLiveIndex = lowerHtml.indexOf("\"is_live\":true", livestreamIndex);
+                                        if (isLiveIndex != -1 && (isLiveIndex - livestreamIndex) < 500) {
+                                            isLive = true;
+                                        }
+                                    }
+                                }
+                                searchIndex = lowerHtml.indexOf(searchKey, searchIndex + 1);
+                            }
+                        }
+                    }
 
                     if (isLive) {
                         log.info("Kick: {} appears to be LIVE (HTML match)", cleanUsername);
