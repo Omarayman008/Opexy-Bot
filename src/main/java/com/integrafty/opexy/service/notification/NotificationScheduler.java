@@ -71,7 +71,14 @@ public class NotificationScheduler {
             }
             if (!streamId.equals(entity.getLastContentId())) {
                 String title = livestream.get("session_title").getAsString();
-                String thumbnail = livestream.getAsJsonObject("thumbnail").get("url").getAsString();
+                
+                String thumbnail = "";
+                if (livestream.has("thumbnail") && !livestream.get("thumbnail").isJsonNull()) {
+                    thumbnail = livestream.getAsJsonObject("thumbnail").get("url").getAsString();
+                }
+                
+                log.info("Kick Live: {} | Title: {} | Thumbnail: {}", entity.getDisplayName(), title, thumbnail);
+                
                 String url = "https://kick.com/" + entity.getChannelId();
                 sendLiveNotification(entity, streamId, url, title, thumbnail, "KICK");
             }
