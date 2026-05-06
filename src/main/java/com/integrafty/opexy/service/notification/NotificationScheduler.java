@@ -133,8 +133,8 @@ public class NotificationScheduler {
             }
         }
 
-        // 2. Fallback to latest video
-        youtubeService.getLatestVideo(entity.getChannelId()).ifPresentOrElse(json -> {
+        // 2. Main RSS check (No scraper fallback to prevent old video false positives on 500 errors)
+        youtubeService.getLatestVideo(entity.getChannelId()).ifPresent(json -> {
             String videoId = json.get("videoId").getAsString();
             if (entity.getLastContentId() == null) {
                 // Baseline - don't notify for old videos
@@ -149,21 +149,6 @@ public class NotificationScheduler {
                 String url = "https://youtube.com/watch?v=" + videoId;
                 sendVideoNotification(entity, videoId, url, title, thumbnail);
             }
-        }, () -> {
-            youtubeService.scrapeLatestVideo(entity.getChannelId()).ifPresent(json -> {
-                String videoId = json.get("videoId").getAsString();
-                if (entity.getLastContentId() == null) {
-                    entity.setLastContentId(videoId);
-                    notificationRepository.save(entity);
-                    return;
-                }
-                if (!videoId.equals(entity.getLastContentId())) {
-                    String title = json.get("title").getAsString();
-                    String thumbnail = json.get("thumbnail").getAsString();
-                    String url = "https://youtube.com/watch?v=" + videoId;
-                    sendVideoNotification(entity, videoId, url, title, thumbnail);
-                }
-            });
         });
     }
 
