@@ -55,25 +55,29 @@ public class KickService {
                 if (json.has("solution")) {
                     String html = json.getAsJsonObject("solution").get("response").getAsString();
                     
-                    // Targeted Live Detection: Look for the username and check the livestream object immediately following it
-                    boolean isLive = false;
-                    String usernamePattern = "\"username\":\"" + cleanUsername + "\"";
-                    int userIndex = html.indexOf(usernamePattern);
+                    // Broad & Case-Insensitive Detection: 
+                    // Kick's HTML can be inconsistent with casing (SXB vs sxb) and keys (is_live vs isLive)
+                    String lowerHtml = html.toLowerCase();
+                    String lowerUser = cleanUsername.toLowerCase();
                     
-                    if (userIndex != -1) {
-                        // Find the next "livestream" key after the username
-                        int liveIndex = html.indexOf("\"livestream\":", userIndex);
-                        if (liveIndex != -1 && liveIndex - userIndex < 5000) { // Should be relatively close
-                            String sub = html.substring(liveIndex + 13, Math.min(liveIndex + 30, html.length()));
-                            if (sub.trim().startsWith("{")) {
+                    boolean containsLive = lowerHtml.contains("\"is_live\":true") || 
+                                          lowerHtml.contains("\"islive\":true") || 
+                                          lowerHtml.contains("playback_url");
+                    
+                    boolean isLive = false;
+                    if (containsLive) {
+                        // Check if the live indicator is reasonably close to the username (case-insensitive)
+                        int userIndex = lowerHtml.indexOf("\"username\":\"" + lowerUser + "\"");
+                        if (userIndex == -1) userIndex = lowerHtml.indexOf(lowerUser); // broader check
+                        
+                        if (userIndex != -1) {
+                            // If we find the username and a live indicator anywhere in the HTML, 
+                            // we'll be optimistic but check for "livestream":null nearby to avoid sidebar
+                            int nullIndex = lowerHtml.indexOf("\"livestream\":null", userIndex);
+                            if (nullIndex == -1 || nullIndex - userIndex > 1000) {
                                 isLive = true;
                             }
                         }
-                    }
-                    
-                    // Fallback to broader check if targeted check fails but we are reasonably sure
-                    if (!isLive && html.contains("\"is_live\":true") && html.contains("playback_url") && html.contains(cleanUsername)) {
-                        isLive = true;
                     }
 
                     if (isLive) {
