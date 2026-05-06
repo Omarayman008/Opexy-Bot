@@ -55,19 +55,14 @@ public class KickService {
                 if (json.has("solution")) {
                     String html = json.getAsJsonObject("solution").get("response").getAsString();
                     
-                    // Sniper Detection: Target the main channel's slug and its associated livestream object
+                    // Human-like Detection: Check Title and Meta Tags first (very reliable)
                     String lowerHtml = html.toLowerCase();
                     String lowerUser = cleanUsername.toLowerCase();
                     
-                    // This regex looks for "slug":"username" followed by "livestream":{... "is_live":true
-                    // It's very specific to the main channel's data structure
-                    boolean isLive = Pattern.compile("\"slug\"\\s*:\\s*\"" + lowerUser + "\"[^}]*\"livestream\"\\s*:\\s*\\{\\s*\"id\"[^{}]*\"is_live\"\\s*:\\s*true", 
-                                     Pattern.CASE_INSENSITIVE | Pattern.DOTALL).matcher(html).find();
-                    
-                    // Secondary check: Just in case the structure is slightly different (e.g. metadata)
-                    if (!isLive) {
-                        isLive = lowerHtml.contains("<meta property=\"og:description\" content=\"watching " + lowerUser + " live on kick");
-                    }
+                    // If the page title or meta description says they are live, they are live.
+                    boolean isLive = lowerHtml.contains("live on kick") || 
+                                     lowerHtml.contains("watching " + lowerUser + " live") ||
+                                     lowerHtml.contains("is_live\":true"); // fallback to JSON
 
                     if (isLive) {
                         log.info("Kick: {} appears to be LIVE (HTML match)", cleanUsername);
