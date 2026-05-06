@@ -52,16 +52,22 @@ public class KickService {
                 JsonObject json = JsonParser.parseString(body).getAsJsonObject();
                 if (json.has("solution")) {
                     JsonObject solution = json.getAsJsonObject("solution");
-                    String responseString = solution.get("response").getAsString();
+                    String responseString = solution.get("response").getAsString().trim();
                     
-                    // The response from FlareSolverr for a JSON API is the JSON string itself
-                    JsonObject kickData = JsonParser.parseString(responseString).getAsJsonObject();
-                    
-                    if (kickData.has("livestream") && !kickData.get("livestream").isJsonNull()) {
-                        log.info("Kick: {} is LIVE", cleanUsername);
-                        return Optional.of(kickData.getAsJsonObject("livestream"));
+                    // Log a snippet of the response to see if it's HTML or JSON
+                    log.debug("FlareSolverr raw response snippet for {}: {}", cleanUsername, 
+                        responseString.substring(0, Math.min(responseString.length(), 100)));
+
+                    if (responseString.startsWith("{") || responseString.startsWith("[")) {
+                        JsonObject kickData = JsonParser.parseString(responseString).getAsJsonObject();
+                        if (kickData.has("livestream") && !kickData.get("livestream").isJsonNull()) {
+                            log.info("Kick: {} is LIVE", cleanUsername);
+                            return Optional.of(kickData.getAsJsonObject("livestream"));
+                        }
+                        log.info("Kick: {} is currently offline", cleanUsername);
+                    } else {
+                        log.warn("Kick: Received HTML instead of JSON for {}. FlareSolverr might still be solving the challenge.", cleanUsername);
                     }
-                    log.info("Kick: {} is currently offline", cleanUsername);
                 }
             } else {
                 log.warn("FlareSolverr: Non-OK response for {}. Status: {}", cleanUsername, response.getStatusCode());
