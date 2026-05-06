@@ -130,25 +130,36 @@ public class YouTubeService {
             String html = response.getBody();
             
             if (html != null) {
-                // Look for "videoId":"..."
-                Pattern pId = Pattern.compile("\"videoId\":\"([a-zA-Z0-9_-]+)\"");
-                Matcher mId = pId.matcher(html);
+                // Target the videoRenderer block specifically to avoid menu items like "Keyboard shortcuts"
+                Pattern pVideo = Pattern.compile("\"videoRenderer\":\\{\"videoId\":\"([a-zA-Z0-9_-]+)\".*?\"title\":\\{\"runs\":\\[\\{\"text\":\"(.*?)\"");
+                Matcher mVideo = pVideo.matcher(html);
                 
-                if (mId.find()) {
-                    String videoId = mId.group(1);
+                if (mVideo.find()) {
+                    String videoId = mVideo.group(1);
+                    String title = mVideo.group(2);
+                    
                     JsonObject video = new JsonObject();
                     video.addProperty("videoId", videoId);
-                    
-                    // Try to find title nearby
-                    Pattern pTitle = Pattern.compile("\"title\":\\{\"runs\":\\[\\{\"text\":\"(.*?)\"");
-                    Matcher mTitle = pTitle.matcher(html);
-                    if (mTitle.find()) {
-                        video.addProperty("title", mTitle.group(1));
-                    } else {
-                        video.addProperty("title", "New Video");
-                    }
-                    
+                    video.addProperty("title", title);
                     video.addProperty("thumbnail", "https://i.ytimg.com/vi/" + videoId + "/hqdefault.jpg");
+                    
+                    log.info("YouTube Scraper Found: {} ({})", title, videoId);
+                    return Optional.of(video);
+                }
+                
+                // Fallback for different layout (gridVideoRenderer)
+                Pattern pGrid = Pattern.compile("\"gridVideoRenderer\":\\{\"videoId\":\"([a-zA-Z0-9_-]+)\".*?\"title\":\\{\"runs\":\\[\\{\"text\":\"(.*?)\"");
+                Matcher mGrid = pGrid.matcher(html);
+                if (mGrid.find()) {
+                    String videoId = mGrid.group(1);
+                    String title = mGrid.group(2);
+                    
+                    JsonObject video = new JsonObject();
+                    video.addProperty("videoId", videoId);
+                    video.addProperty("title", title);
+                    video.addProperty("thumbnail", "https://i.ytimg.com/vi/" + videoId + "/hqdefault.jpg");
+                    
+                    log.info("YouTube Scraper (Grid) Found: {} ({})", title, videoId);
                     return Optional.of(video);
                 }
             }
