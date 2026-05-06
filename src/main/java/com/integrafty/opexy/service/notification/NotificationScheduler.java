@@ -105,6 +105,27 @@ public class NotificationScheduler {
             }
         }
 
+        // 1. Check for Live Stream first
+        Optional<JsonObject> liveStream = youtubeService.getLiveStream(entity.getChannelId());
+        if (liveStream.isPresent()) {
+            JsonObject json = liveStream.get();
+            String videoId = json.get("videoId").getAsString();
+            if (entity.getLastContentId() == null) {
+                entity.setLastContentId(videoId);
+                notificationRepository.save(entity);
+                log.info("Baseline set for YouTube Live {}: {}", entity.getDisplayName(), videoId);
+                return;
+            }
+            if (!videoId.equals(entity.getLastContentId())) {
+                String title = json.get("title").getAsString();
+                String thumbnail = json.get("thumbnail").getAsString();
+                String url = "https://youtube.com/watch?v=" + videoId;
+                sendLiveNotification(entity, videoId, url, title, thumbnail, "YOUTUBE");
+                return; // Stop here if we found a live stream
+            }
+        }
+
+        // 2. Fallback to latest video
         youtubeService.getLatestVideo(entity.getChannelId()).ifPresentOrElse(json -> {
             String videoId = json.get("videoId").getAsString();
             if (entity.getLastContentId() == null) {

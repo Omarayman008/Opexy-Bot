@@ -143,6 +143,36 @@ public class YouTubeService {
         return Optional.empty();
     }
 
+    public Optional<JsonObject> getLiveStream(String channelId) {
+        try {
+            String url = "https://www.youtube.com/channel/" + channelId + "/live";
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+            headers.set("Accept-Language", "en-US,en;q=0.9");
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            String html = response.getBody();
+
+            if (html != null && html.contains("\"isLive\":true")) {
+                String videoId = extractValue(html, "\"videoId\":\"([a-zA-Z0-9_-]+)\"");
+                String title = extractValue(html, "\"title\":\"(.*?)\"");
+                
+                if (videoId.isEmpty()) return Optional.empty();
+
+                JsonObject video = new JsonObject();
+                video.addProperty("videoId", videoId);
+                video.addProperty("title", title.isEmpty() ? "Live Stream" : title);
+                video.addProperty("thumbnail", "https://i.ytimg.com/vi/" + videoId + "/hqdefault.jpg");
+                
+                log.info("YouTube Live Found: {} ({})", title, videoId);
+                return Optional.of(video);
+            }
+        } catch (Exception e) {
+            log.debug("YouTube Live Check: Failed for {} - {}", channelId, e.getMessage());
+        }
+        return Optional.empty();
+    }
+
     private String extractValue(String xml, String regex) {
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(xml);
