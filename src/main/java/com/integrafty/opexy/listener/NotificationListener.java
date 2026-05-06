@@ -91,6 +91,9 @@ public class NotificationListener extends ListenerAdapter {
         String id = event.getModalId();
         if (!id.startsWith("modal_notify_")) return;
 
+        // Defer reply because YouTube resolution might take > 3 seconds
+        event.deferReply(true).queue();
+
         String url = event.getValue("url").getAsString();
         String urlLower = url.toLowerCase();
         NotificationEntity entity = new NotificationEntity();
@@ -114,17 +117,26 @@ public class NotificationListener extends ListenerAdapter {
             
             // Resolve to UC... ID right now!
             String resolved = youtubeService.resolveChannelId(rawId);
+            if (resolved == null) {
+                event.getHook().sendMessage("Could not find a valid YouTube channel ID for: " + rawId).setEphemeral(true).queue();
+                return;
+            }
             entity.setChannelId(resolved);
             entity.setDisplayName(rawId); // Keep the handle as display name
         } else {
-            event.reply("Invalid URL!").setEphemeral(true).queue();
+            event.getHook().sendMessage("Invalid URL!").setEphemeral(true).queue();
             return;
         }
 
         if (entity.getDisplayName() == null) entity.setDisplayName(entity.getChannelId());
         
-        notificationRepository.save(entity);
-        event.reply("Successfully added **" + entity.getDisplayName() + "** from " + entity.getPlatform() + "!").setEphemeral(true).queue();
+        try {
+            notificationRepository.save(entity);
+            event.getHook().sendMessage("Successfully added **" + entity.getDisplayName() + "** from " + entity.getPlatform() + "!").setEphemeral(true).queue();
+        } catch (Exception e) {
+            log.error("Failed to save notification entity: {}", e.getMessage());
+            event.getHook().sendMessage("Failed to save to database. The channel might already be added.").setEphemeral(true).queue();
+        }
     }
 
     private String extractFromUrl(String url, String marker) {
