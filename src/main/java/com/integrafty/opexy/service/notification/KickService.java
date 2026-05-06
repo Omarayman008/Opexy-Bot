@@ -55,29 +55,18 @@ public class KickService {
                 if (json.has("solution")) {
                     String html = json.getAsJsonObject("solution").get("response").getAsString();
                     
-                    // Broad & Case-Insensitive Detection: 
-                    // Kick's HTML can be inconsistent with casing (SXB vs sxb) and keys (is_live vs isLive)
+                    // Sniper Detection: Target the main channel's slug and its associated livestream object
                     String lowerHtml = html.toLowerCase();
                     String lowerUser = cleanUsername.toLowerCase();
                     
-                    boolean containsLive = lowerHtml.contains("\"is_live\":true") || 
-                                          lowerHtml.contains("\"islive\":true") || 
-                                          lowerHtml.contains("playback_url");
+                    // This regex looks for "slug":"username" followed by "livestream":{... "is_live":true
+                    // It's very specific to the main channel's data structure
+                    boolean isLive = Pattern.compile("\"slug\"\\s*:\\s*\"" + lowerUser + "\"[^}]*\"livestream\"\\s*:\\s*\\{\\s*\"id\"[^{}]*\"is_live\"\\s*:\\s*true", 
+                                     Pattern.CASE_INSENSITIVE | Pattern.DOTALL).matcher(html).find();
                     
-                    boolean isLive = false;
-                    if (containsLive) {
-                        // Check if the live indicator is reasonably close to the username (case-insensitive)
-                        int userIndex = lowerHtml.indexOf("\"username\":\"" + lowerUser + "\"");
-                        if (userIndex == -1) userIndex = lowerHtml.indexOf(lowerUser); // broader check
-                        
-                        if (userIndex != -1) {
-                            // If we find the username and a live indicator anywhere in the HTML, 
-                            // we'll be optimistic but check for "livestream":null nearby to avoid sidebar
-                            int nullIndex = lowerHtml.indexOf("\"livestream\":null", userIndex);
-                            if (nullIndex == -1 || nullIndex - userIndex > 1000) {
-                                isLive = true;
-                            }
-                        }
+                    // Secondary check: Just in case the structure is slightly different (e.g. metadata)
+                    if (!isLive) {
+                        isLive = lowerHtml.contains("<meta property=\"og:description\" content=\"watching " + lowerUser + " live on kick");
                     }
 
                     if (isLive) {
