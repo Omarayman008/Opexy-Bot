@@ -28,17 +28,19 @@ public class KickService {
 
         String cleanUsername = username.trim();
         try {
-            // Kick API endpoint
+            // Construct the target Kick API URL
             String targetUrl = "https://kick.com/api/v1/channels/" + cleanUsername;
-            String encodedUrl = URLEncoder.encode(targetUrl, StandardCharsets.UTF_8);
+            
+            // Use UriComponentsBuilder for robust URL construction and encoding
+            String scraperUrl = org.springframework.web.util.UriComponentsBuilder
+                    .fromHttpUrl("https://api.scraperapi.com/")
+                    .queryParam("api_key", SCRAPER_API_KEY)
+                    .queryParam("url", targetUrl)
+                    .build()
+                    .toUriString();
 
-            // Note: We don't need &render=true for a JSON API call, it saves credits and
-            // avoids browser overhead
-            String scraperUrl = String.format("https://api.scraperapi.com/?api_key=%s&url=%s", SCRAPER_API_KEY,
-                    encodedUrl);
-
-            log.info("Checking Kick stream status for: {} (via ScraperAPI)", cleanUsername);
-
+            log.info("Checking Kick: {} | Target: {}", cleanUsername, targetUrl);
+            
             ResponseEntity<String> response = restTemplate.getForEntity(scraperUrl, String.class);
             String body = response.getBody();
 
