@@ -55,10 +55,9 @@ public class KickService {
                 if (json.has("solution")) {
                     String html = json.getAsJsonObject("solution").get("response").getAsString();
                     
-                    // Improved Live Detection: Check for multiple indicators in the HTML
-                    boolean isLive = Pattern.compile("\"is_live\"\\s*:\\s*true").matcher(html).find() || 
-                                     html.contains("playback_url") || 
-                                     (html.contains("livestream") && html.contains("\"id\":"));
+                    // Stricter Live Detection: Target the main livestream object specifically
+                    // We look for "livestream":{... and ensure it contains "is_live":true within that object
+                    boolean isLive = Pattern.compile("\"livestream\"\\s*:\\s*\\{[^}]*\"is_live\"\\s*:\\s*true").matcher(html).find();
 
                     if (isLive) {
                         log.info("Kick: {} appears to be LIVE (HTML match)", cleanUsername);
