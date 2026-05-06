@@ -145,19 +145,16 @@ public class NotificationScheduler {
         entity.setLastContentId(contentId);
         notificationRepository.save(entity);
 
-        String body = String.format("%s\n\n### %s is Live on %s!\n**%s**\n\nClick the button below to join the stream.", LIVE_ROLE_MENTION, entity.getDisplayName(), platform, title);
+        String body = String.format("%s\n\n### %s\n**%s is Live now on %s !**\n\nClick the button below to join the stream.", LIVE_ROLE_MENTION, title, entity.getDisplayName(), platform);
         Container container = EmbedUtil.containerBranded(platform, "Live Stream", body, thumbnail, ActionRow.of(Button.link(url, "Watch Stream")));
 
-        // Separate ping to actually trigger the notification
-        channel.sendMessage(LIVE_ROLE_MENTION).queue(p -> {
-            MessageCreateBuilder builder = new MessageCreateBuilder()
-                .setComponents(container)
-                .useComponentsV2(true);
-            
-            channel.sendMessage(builder.build())
-                .useComponentsV2(true)
-                .queue();
-        });
+        MessageCreateBuilder builder = new MessageCreateBuilder()
+            .setComponents(container)
+            .useComponentsV2(true);
+        
+        channel.sendMessage(builder.build())
+            .useComponentsV2(true)
+            .queue();
     }
 
     private void sendVideoNotification(NotificationEntity entity, String contentId, String url, String title, String thumbnail) {
@@ -168,18 +165,15 @@ public class NotificationScheduler {
         notificationRepository.save(entity);
 
         log.info("Sending video notification for {} to channel {}", entity.getDisplayName(), VIDEO_CHANNEL_ID);
-        String body = String.format("%s\n\n### New Video from %s!\n**%s**\n\nClick the button below to watch the video.", VIDEO_ROLE_MENTION, entity.getDisplayName(), title);
+        String body = String.format("%s\n\n### %s\n**New Video from %s !**\n\nClick the button below to watch the video.", VIDEO_ROLE_MENTION, title, entity.getDisplayName());
         Container container = EmbedUtil.containerBranded("YOUTUBE", "New Upload", body, thumbnail, ActionRow.of(Button.link(url, "Watch Video")));
 
-        // Separate ping to actually trigger the notification
-        channel.sendMessage(VIDEO_ROLE_MENTION).queue(p -> {
-            MessageCreateBuilder builder = new MessageCreateBuilder()
-                .setComponents(container)
-                .useComponentsV2(true);
-            
-            channel.sendMessage(builder.build())
-                .useComponentsV2(true)
-                .queue(msg -> log.info("Video notification sent successfully for {}", entity.getDisplayName()));
-        });
+        MessageCreateBuilder builder = new MessageCreateBuilder()
+            .setComponents(container)
+            .useComponentsV2(true);
+        
+        channel.sendMessage(builder.build())
+            .useComponentsV2(true)
+            .queue(msg -> log.info("Video notification sent successfully for {}", entity.getDisplayName()));
     }
 }
