@@ -55,9 +55,12 @@ public class KickService {
                 if (json.has("solution")) {
                     String html = json.getAsJsonObject("solution").get("response").getAsString();
                     
-                    // Look for the livestream data in the HTML (it's often embedded in a script tag as JSON)
-                    // We look for a pattern like "is_live":true or within the livestream object
-                    if (html.contains("\"is_live\":true") || (html.contains("livestream") && html.contains("\"id\":"))) {
+                    // Improved Live Detection: Check for multiple indicators in the HTML
+                    boolean isLive = Pattern.compile("\"is_live\"\\s*:\\s*true").matcher(html).find() || 
+                                     html.contains("playback_url") || 
+                                     (html.contains("livestream") && html.contains("\"id\":"));
+
+                    if (isLive) {
                         log.info("Kick: {} appears to be LIVE (HTML match)", cleanUsername);
                         
                         // Create a dummy livestream object for the scheduler
@@ -65,24 +68,28 @@ public class KickService {
                         dummyLive.addProperty("session_title", "Live on KICK!");
                         
                         // Extract real Stream ID from HTML (e.g., "livestream":{"id":123456)
-                        Pattern pId = Pattern.compile("\"livestream\":\\{\"id\":(\\d+)");
+                        Pattern pId = Pattern.compile("\"livestream\"\\s*:\\s*\\{\\s*\"id\"\\s*:\\s*(\\d+)");
                         Matcher mId = pId.matcher(html);
                         if (mId.find()) {
                             dummyLive.addProperty("id", mId.group(1));
                         } else {
-                            // Fallback to hourly ID if real ID not found (unlikely)
+                            // Fallback to hourly ID if real ID not found
                             dummyLive.addProperty("id", cleanUsername + "_live_" + System.currentTimeMillis() / 3600000);
                         }
                         
                         // Try to extract real title if possible
-                        Pattern pTitle = Pattern.compile("\"session_title\":\"(.*?)\"");
+                        Pattern pTitle = Pattern.compile("\"session_title\"\\s*:\\s*\"(.*?)\"");
                         Matcher mTitle = pTitle.matcher(html);
                         if (mTitle.find()) dummyLive.addProperty("session_title", mTitle.group(1));
 
                         return Optional.of(dummyLive);
                     }
                     log.info("Kick: {} is currently offline", cleanUsername);
+                } else {
+                    log.warn("FlareSolverr response missing 'solution' for {}", cleanUsername);
                 }
+            } else {
+                log.warn("FlareSolverr failed with status {}: {}", response.getStatusCode(), body);
             }
         } catch (Exception e) {
             log.error("FlareSolverr Scraping Error for {}: {}", cleanUsername, e.getMessage());
