@@ -48,7 +48,8 @@ public class BombCommand implements MultiSlashCommand {
                 BombManager.Difficulty difficulty = BombManager.Difficulty.valueOf(diffStr);
                 long userId = event.getUser().getIdLong();
 
-                String hint = bombManager.startBomb(userId, difficulty, event.getGuild(), event.getMember(), event.getHook());
+                String sessionId = event.getId();
+                String hint = bombManager.startBomb(sessionId, userId, difficulty, event.getGuild(), event.getMember());
 
                 String body = String.format("🆘 **تحذير!** تم زرع قنبلة موقوتة خاصة بك يا %s!\n" +
                                 "يجب قطع سلك واحد لإبطال مفعولها. هناك سلك واحد صحيح والبقية ستفجر المكان!\n\n" +
@@ -62,19 +63,19 @@ public class BombCommand implements MultiSlashCommand {
                                 .setComponents(EmbedUtil.containerBranded("DEFUSAL", "⚠️ قنبلة الوقت!", fullBody,
                                                 EmbedUtil.BANNER_MAIN,
                                                 ActionRow.of(
-                                                                Button.danger("wire_red_" + userId, "السلك الأحمر")
+                                                                Button.danger("wire_red_" + sessionId, "السلك الأحمر")
                                                                                 .withEmoji(Emoji.fromUnicode("🔴")),
-                                                                Button.primary("wire_blue_" + userId, "السلك الأزرق")
+                                                                Button.primary("wire_blue_" + sessionId, "السلك الأزرق")
                                                                                 .withEmoji(Emoji.fromUnicode("🔵")),
-                                                                Button.success("wire_green_" + userId, "السلك الأخضر")
+                                                                Button.success("wire_green_" + sessionId, "السلك الأخضر")
                                                                                 .withEmoji(Emoji.fromUnicode("🟢")),
-                                                                Button.secondary("wire_yellow_" + userId,
+                                                                Button.secondary("wire_yellow_" + sessionId,
                                                                                 "السلك الأصفر")
                                                                                 .withEmoji(Emoji.fromUnicode("🟡")),
-                                                                Button.secondary("wire_purple_" + userId,
+                                                                Button.secondary("wire_purple_" + sessionId,
                                                                                 "السلك البنفسجي")
                                                                                 .withEmoji(Emoji.fromUnicode("🟣")))))
                                 .useComponentsV2(true)
-                                .build()).queue(hook -> bombManager.initTimer(userId, difficulty, event));
+                                .build()).queue(hook -> bombManager.initTimer(sessionId, difficulty, event));
         }
 }

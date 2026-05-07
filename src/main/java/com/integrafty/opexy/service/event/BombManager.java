@@ -35,13 +35,14 @@ public class BombManager extends ListenerAdapter {
         Difficulty(int r, int s, String d) { this.reward = r; this.seconds = s; this.displayName = d; }
     }
 
-    private final Map<Long, String> userCorrectWire = new HashMap<>();
-    private final Map<Long, Long> userRewards = new HashMap<>();
-    private final Map<Long, Long> userGuilds = new HashMap<>();
-    private final Map<Long, Difficulty> userDifficulty = new HashMap<>();
-    private final Map<Long, String> userHints = new HashMap<>();
-    private final Map<Long, String> userMentions = new HashMap<>();
-    private final Map<Long, java.util.concurrent.ScheduledFuture<?>> userTimers = new HashMap<>();
+    private final Map<String, String> sessionCorrectWire = new HashMap<>();
+    private final Map<String, Long> sessionRewards = new HashMap<>();
+    private final Map<String, Long> sessionGuilds = new HashMap<>();
+    private final Map<String, Difficulty> sessionDifficulty = new HashMap<>();
+    private final Map<String, String> sessionHints = new HashMap<>();
+    private final Map<String, String> sessionMentions = new HashMap<>();
+    private final Map<String, Long> sessionUserIds = new HashMap<>();
+    private final Map<String, java.util.concurrent.ScheduledFuture<?>> sessionTimers = new HashMap<>();
     private final java.util.concurrent.ScheduledExecutorService scheduler = java.util.concurrent.Executors.newScheduledThreadPool(10);
 
     private static final Map<String, String> WIRE_COLORS = Map.of(
@@ -75,19 +76,20 @@ public class BombManager extends ListenerAdapter {
             )
     );
 
-    public String startBomb(long userId, Difficulty difficulty, Guild guild, Member organizer, net.dv8tion.jda.api.interactions.InteractionHook hook) {
+    public String startBomb(String sessionId, long userId, Difficulty difficulty, Guild guild, Member organizer) {
         List<String> wireIds = new ArrayList<>(WIRE_COLORS.keySet());
         Collections.shuffle(wireIds);
         String correct = wireIds.get(0);
         
-        userCorrectWire.put(userId, correct);
-        userRewards.put(userId, (long) difficulty.reward);
-        userGuilds.put(userId, guild.getIdLong());
-        userDifficulty.put(userId, difficulty);
-        userMentions.put(userId, organizer.getAsMention());
+        sessionCorrectWire.put(sessionId, correct);
+        sessionRewards.put(sessionId, (long) difficulty.reward);
+        sessionGuilds.put(sessionId, guild.getIdLong());
+        sessionDifficulty.put(sessionId, difficulty);
+        sessionMentions.put(sessionId, organizer.getAsMention());
+        sessionUserIds.put(sessionId, userId);
 
         String hint = HARD_HINTS.get(correct).get(new Random().nextInt(3));
-        userHints.put(userId, hint);
+        sessionHints.put(sessionId, hint);
 
         // LOGGING
         String logDetails = String.format("### 💣 فعالية القنبلة: بدء (فردية)\n▫️ **اللاعب:** %s\n▫️ **الصعوبة:** %s\n▫️ **الجائزة:** %d opex\n▫️ **السلك الصحيح:** %s", 
@@ -98,40 +100,41 @@ public class BombManager extends ListenerAdapter {
         return hint;
     }
 
-    public void initTimer(long userId, Difficulty difficulty, net.dv8tion.jda.api.interactions.callbacks.IReplyCallback event) {
+    public void initTimer(String sessionId, Difficulty difficulty, net.dv8tion.jda.api.interactions.callbacks.IReplyCallback event) {
         final int[] timeLeft = {difficulty.seconds};
         
         java.util.concurrent.ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(() -> {
             try {
-                log.debug("[BombTimer] Tick for user: {}", userId);
+                if (!sessionCorrectWire.containsKey(sessionId)) return;
+                log.debug("[BombTimer] Tick for session: {}", sessionId);
                 timeLeft[0]--;
                 
                 if (timeLeft[0] <= 0) {
-                    explode(userId, event.getHook());
+                    explode(sessionId, event.getHook());
                     return;
                 }
 
-                String body = getBombBody(userMentions.get(userId), userHints.get(userId), difficulty.reward, timeLeft[0]);
+                String body = getBombBody(sessionMentions.get(sessionId), sessionHints.get(sessionId), difficulty.reward, timeLeft[0]);
                 
                 event.getHook().editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
                         .setComponents(EmbedUtil.containerBranded("DEFUSAL", "⚠️ قنبلة الوقت!", body, EmbedUtil.BANNER_MAIN,
                                 ActionRow.of(
-                                        Button.danger("wire_red_" + userId, "السلك الأحمر").withEmoji(Emoji.fromUnicode("🔴")),
-                                        Button.primary("wire_blue_" + userId, "السلك الأزرق").withEmoji(Emoji.fromUnicode("🔵")),
-                                        Button.success("wire_green_" + userId, "السلك الأخضر").withEmoji(Emoji.fromUnicode("🟢")),
-                                        Button.secondary("wire_yellow_" + userId, "السلك الأصفر").withEmoji(Emoji.fromUnicode("🟡")),
-                                        Button.secondary("wire_purple_" + userId, "السلك البنفسجي").withEmoji(Emoji.fromUnicode("🟣"))
+                                        Button.danger("wire_red_" + sessionId, "السلك الأحمر").withEmoji(Emoji.fromUnicode("🔴")),
+                                        Button.primary("wire_blue_" + sessionId, "السلك الأزرق").withEmoji(Emoji.fromUnicode("🔵")),
+                                        Button.success("wire_green_" + sessionId, "السلك الأخضر").withEmoji(Emoji.fromUnicode("🟢")),
+                                        Button.secondary("wire_yellow_" + sessionId, "السلك الأصفر").withEmoji(Emoji.fromUnicode("🟡")),
+                                        Button.secondary("wire_purple_" + sessionId, "السلك البنفسجي").withEmoji(Emoji.fromUnicode("🟣"))
                                 )))
                         .useComponentsV2(true)
                         .build()).queue(null, e -> {
-                            log.warn("[BombTimer] Edit failed for {}: {}", userId, e.getMessage());
+                            log.warn("[BombTimer] Edit failed for {}: {}", sessionId, e.getMessage());
                         });
             } catch (Exception e) {
-                log.error("[BombTimer] Error for {}: ", userId, e);
+                log.error("[BombTimer] Error for {}: ", sessionId, e);
             }
         }, 1, 1, java.util.concurrent.TimeUnit.SECONDS);
         
-        userTimers.put(userId, future);
+        sessionTimers.put(sessionId, future);
     }
 
     private String getBombBody(String mention, String hint, int reward, int seconds) {
@@ -146,23 +149,24 @@ public class BombManager extends ListenerAdapter {
                "💰 الجائزة: **%d opex**", safeMention, safeHint, reward);
     }
 
-    private void cancelTimer(long userId) {
-        if (userTimers.containsKey(userId)) {
-            userTimers.get(userId).cancel(true);
-            userTimers.remove(userId);
+    private void cancelTimer(String sessionId) {
+        if (sessionTimers.containsKey(sessionId)) {
+            sessionTimers.get(sessionId).cancel(true);
+            sessionTimers.remove(sessionId);
         }
-        userDifficulty.remove(userId);
-        userHints.remove(userId);
-        userMentions.remove(userId);
+        sessionDifficulty.remove(sessionId);
+        sessionHints.remove(sessionId);
+        sessionMentions.remove(sessionId);
     }
 
-    private void explode(long userId, net.dv8tion.jda.api.interactions.InteractionHook hook) {
-        cancelTimer(userId);
-        if (!userCorrectWire.containsKey(userId)) return;
+    private void explode(String sessionId, net.dv8tion.jda.api.interactions.InteractionHook hook) {
+        cancelTimer(sessionId);
+        if (!sessionCorrectWire.containsKey(sessionId)) return;
 
-        String correct = userCorrectWire.get(userId);
-        userCorrectWire.remove(userId);
-        userRewards.remove(userId);
+        String correct = sessionCorrectWire.get(sessionId);
+        long userId = sessionUserIds.getOrDefault(sessionId, 0L);
+        sessionCorrectWire.remove(sessionId);
+        sessionRewards.remove(sessionId);
 
         String failMsg = String.format("💥 **بـوووم!** انتهى الوقت وانفجرت القنبلة!\n✅ السلك الصحيح كان: **%s**\n❌ حظاً أوفر في المرة القادمة.", WIRE_COLORS.get(correct));
         
@@ -172,10 +176,10 @@ public class BombManager extends ListenerAdapter {
                 .build()).queue();
 
         // LOG FAIL
-        String logFail = String.format("### 💥 فعالية القنبلة: انفجار (فردية - انتهاء الوقت)\n▫️ **اللاعب:** <@%d>\n▫️ **السلك الصحيح كان:** %s", 
-                userId, WIRE_COLORS.get(correct));
+        String logFail = String.format("### 💥 فعالية القنبلة: انفجار (فردية - انتهاء الوقت)\n▫️ **اللاعب:** <@%d>\n▫️ **السلك الصحيح كان:** %s\n▫️ **ID الجلسة:** `%s`", 
+                userId, WIRE_COLORS.get(correct), sessionId);
         
-        Long guildId = userGuilds.get(userId);
+        Long guildId = sessionGuilds.get(sessionId);
         if (guildId != null) {
             net.dv8tion.jda.api.entities.Guild guild = hook.getJDA().getGuildById(guildId);
             if (guild != null) {
@@ -184,7 +188,8 @@ public class BombManager extends ListenerAdapter {
             }
         }
         
-        userGuilds.remove(userId);
+        sessionGuilds.remove(sessionId);
+        sessionUserIds.remove(sessionId);
     }
 
     @Override
@@ -196,14 +201,15 @@ public class BombManager extends ListenerAdapter {
         if (parts.length < 3) return;
 
         String color = parts[1];
-        long userId = Long.parseLong(parts[2]);
+        String sessionId = parts[2];
+        long userId = sessionUserIds.getOrDefault(sessionId, 0L);
 
         if (event.getUser().getIdLong() != userId) {
             event.reply("❌ هذه القنبلة ليست لك!").setEphemeral(true).queue();
             return;
         }
 
-        if (!userCorrectWire.containsKey(userId)) {
+        if (!sessionCorrectWire.containsKey(sessionId)) {
             event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
                     .setComponents(EmbedUtil.error("EXPIRED", "⚠️ هذه القنبلة انتهت صلاحيتها."))
                     .useComponentsV2(true)
@@ -211,14 +217,15 @@ public class BombManager extends ListenerAdapter {
             return;
         }
 
-        cancelTimer(userId);
-        String correctColor = userCorrectWire.get(userId);
-        long reward = userRewards.get(userId);
-        userGuilds.remove(userId);
+        cancelTimer(sessionId);
+        String correctColor = sessionCorrectWire.get(sessionId);
+        long reward = sessionRewards.get(sessionId);
+        sessionGuilds.remove(sessionId);
+        sessionUserIds.remove(sessionId);
 
         if (color.equals(correctColor)) {
-            userCorrectWire.remove(userId);
-            userRewards.remove(userId);
+            sessionCorrectWire.remove(sessionId);
+            sessionRewards.remove(sessionId);
             
             economyService.addBalance(event.getUser().getId(), event.getGuild().getId(), (int) reward);
             achievementService.updateStats(userId, event.getGuild(), s -> s.setBombWins(s.getBombWins() + 1));
@@ -232,14 +239,14 @@ public class BombManager extends ListenerAdapter {
                     .build()).queue();
 
             // LOG WIN
-            String logWin = String.format("### 🏆 فعالية القنبلة: فوز (فردية)\n▫️ **الفائز:** <@%s>\n▫️ **الجائزة:** %d opex\n▫️ **السلك:** %s", 
-                    event.getUser().getId(), reward, WIRE_COLORS.get(color));
+            String logWin = String.format("### 🏆 فعالية القنبلة: فوز (فردية)\n▫️ **الفائز:** <@%s>\n▫️ **الجائزة:** %d opex\n▫️ **السلك:** %s\n▫️ **ID الجلسة:** `%s`", 
+                    event.getUser().getId(), reward, WIRE_COLORS.get(color), sessionId);
             logManager.logEmbed(event.getGuild(), LogManager.LOG_GAMES, 
                     EmbedUtil.createOldLogEmbed("bomb_win", logWin, event.getMember(), null, null, EmbedUtil.SUCCESS));
 
         } else {
-            userCorrectWire.remove(userId);
-            userRewards.remove(userId);
+            sessionCorrectWire.remove(sessionId);
+            sessionRewards.remove(sessionId);
             
             String failMsg = String.format("💥 **بـوووم!** قمت بقطع السلك الخطأ (%s) وانفجرت القنبلة!\n✅ السلك الصحيح كان: **%s**\n❌ حظاً أوفر في المرة القادمة.", 
                     WIRE_COLORS.get(color), WIRE_COLORS.get(correctColor));
@@ -250,8 +257,8 @@ public class BombManager extends ListenerAdapter {
                     .build()).queue();
 
             // LOG FAIL
-            String logFail = String.format("### 💥 فعالية القنبلة: انفجار (فردية)\n▫️ **اللاعب:** <@%s>\n▫️ **السلك المقطوع:** %s\n▫️ **السلك الصحيح كان:** %s", 
-                    event.getUser().getId(), WIRE_COLORS.get(color), WIRE_COLORS.get(correctColor));
+            String logFail = String.format("### 💥 فعالية القنبلة: انفجار (فردية)\n▫️ **اللاعب:** <@%s>\n▫️ **السلك المقطوع:** %s\n▫️ **السلك الصحيح كان:** %s\n▫️ **ID الجلسة:** `%s`", 
+                    event.getUser().getId(), WIRE_COLORS.get(color), WIRE_COLORS.get(correctColor), sessionId);
             logManager.logEmbed(event.getGuild(), LogManager.LOG_GAMES, 
                     EmbedUtil.createOldLogEmbed("bomb_fail", logFail, event.getMember(), null, null, EmbedUtil.DANGER));
         }
