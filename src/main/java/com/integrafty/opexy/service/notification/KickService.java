@@ -33,15 +33,15 @@ public class KickService {
         String flaresolverrUrl = System.getenv().getOrDefault("FLARESOLVERR_URL", DEFAULT_FLARESOLVERR_URL);
         
         try {
-            // Target the main channel page instead of the API for better bypass compatibility
-            String targetUrl = "https://kick.com/" + cleanUsername;
+            // Target the API directly via FlareSolverr to avoid frontend HTML rendering issues
+            String targetUrl = "https://kick.com/api/v1/channels/" + cleanUsername;
             
             JsonObject requestBody = new JsonObject();
             requestBody.addProperty("cmd", "request.get");
             requestBody.addProperty("url", targetUrl);
             requestBody.addProperty("maxTimeout", 60000);
 
-            log.info("Checking Kick HTML: {} via FlareSolverr", cleanUsername);
+            log.info("Checking Kick API: {} via FlareSolverr", cleanUsername);
             
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
@@ -55,66 +55,44 @@ public class KickService {
                 if (json.has("solution")) {
                     String html = json.getAsJsonObject("solution").get("response").getAsString();
                     
-                    // Bulletproof & Space-Insensitive Detection Logic
-                    String lowerHtml = html.toLowerCase();
-                    String lowerUser = cleanUsername.toLowerCase();
-                    boolean isLive = false;
-
-                    // Find all occurrences of the user's slug/username, allowing for spaces in JSON
-                    Matcher userMatcher = Pattern.compile("\"(?:slug|username)\"\\s*:\\s*\"" + lowerUser + "\"").matcher(lowerHtml);
-                    
-                    while (userMatcher.find() && !isLive) {
-                        int start = userMatcher.end();
-                        int end = Math.min(start + 5000, lowerHtml.length());
-                        String chunk = lowerHtml.substring(start, end);
-                        
-                        // Limit the chunk to prevent bleeding into another user's object in the sidebar
-                        Matcher nextUser = Pattern.compile("\"(?:slug|username)\"\\s*:").matcher(chunk);
-                        int limit = chunk.length();
-                        if (nextUser.find()) {
-                            limit = nextUser.start();
-                        }
-                        
-                        String validChunk = chunk.substring(0, limit);
-                        
-                        // Check if this specific user has an active livestream object
-                        boolean hasLivestreamObj = Pattern.compile("\"livestream\"\\s*:\\s*\\{").matcher(validChunk).find();
-                        boolean hasIsLiveTrue = Pattern.compile("\"is_live\"\\s*:\\s*true").matcher(validChunk).find();
-                        
-                        if (hasLivestreamObj && hasIsLiveTrue) {
-                            isLive = true;
-                        }
+                    // The API response will be JSON, but FlareSolverr (headless Chrome) wraps it in HTML
+                    String rawJson = html;
+                    Matcher m = Pattern.compile("<pre[^>]*>(.*?)</pre>", Pattern.DOTALL).matcher(html);
+                    if (m.find()) {
+                        rawJson = m.group(1);
+                    } else {
+                        // Strip HTML tags as fallback
+                        rawJson = html.replaceAll("<[^>]+>", "").trim();
                     }
                     
-                    // Fallback for meta tags (if present)
-                    if (!isLive) {
-                         isLive = lowerHtml.contains("watching " + lowerUser + " live");
-                    }
-
-                    if (isLive) {
-                        log.info("Kick: {} appears to be LIVE (HTML match)", cleanUsername);
-                        
-                        // Create a dummy livestream object for the scheduler
-                        JsonObject dummyLive = new JsonObject();
-                        dummyLive.addProperty("session_title", "Live on KICK!");
-                        
-                        // Extract real Stream ID from HTML (e.g., "livestream":{"id":123456)
-                        Pattern pId = Pattern.compile("\"livestream\"\\s*:\\s*\\{\\s*\"id\"\\s*:\\s*(\\d+)");
-                        Matcher mId = pId.matcher(html);
-                        if (mId.find()) {
-                            dummyLive.addProperty("id", mId.group(1));
-                        } else {
-                            // Fallback to hourly ID if real ID not found
-                            dummyLive.addProperty("id", cleanUsername + "_live_" + System.currentTimeMillis() / 3600000);
+                    try {
+                        JsonObject channelData = JsonParser.parseString(rawJson).getAsJsonObject();
+                        if (channelData.has("livestream") && !channelData.get("livestream").isJsonNull()) {
+                            JsonObject livestream = channelData.getAsJsonObject("livestream");
+                            if (livestream.has("is_live") && livestream.get("is_live").getAsBoolean()) {
+                                log.info("Kick: {} is LIVE (API match)", cleanUsername);
+                                return Optional.of(livestream);
+                            }
                         }
-                        
-                        // Try to extract real title if possible
-                        Pattern pTitle = Pattern.compile("\"session_title\"\\s*:\\s*\"(.*?)\"");
-                        Matcher mTitle = pTitle.matcher(html);
-                        if (mTitle.find()) dummyLive.addProperty("session_title", mTitle.group(1));
-
-                        return Optional.of(dummyLive);
+                    } catch (Exception e) {
+                        log.warn("Kick API Parse Error for {}: {}", cleanUsername, e.getMessage());
+                        // Fallback check if JSON parsing fails for some reason
+                        if (rawJson.contains("\"is_live\":true") || rawJson.contains("\"is_live\": true")) {
+                            log.info("Kick: {} is LIVE (API Text Fallback match)", cleanUsername);
+                            JsonObject dummyLive = new JsonObject();
+                            dummyLive.addProperty("session_title", "Live on KICK!");
+                            
+                            Pattern pId = Pattern.compile("\"id\"\\s*:\\s*(\\d+)");
+                            Matcher mId = pId.matcher(rawJson);
+                            if (mId.find()) {
+                                dummyLive.addProperty("id", mId.group(1));
+                            } else {
+                                dummyLive.addProperty("id", cleanUsername + "_live_" + System.currentTimeMillis() / 3600000);
+                            }
+                            return Optional.of(dummyLive);
+                        }
                     }
+                    
                     log.info("Kick: {} is currently offline", cleanUsername);
                 } else {
                     log.warn("FlareSolverr response missing 'solution' for {}", cleanUsername);
