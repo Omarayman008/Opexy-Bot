@@ -275,10 +275,10 @@ public class JawlahManager extends ListenerAdapter {
         Button joinA = Button.primary("jawlah_join_a", "انضمام لـ " + game.teamAName + " 🔵").withDisabled(game.teamAPlayers.size() >= game.maxPlayersPerTeam);
         Button joinB = Button.danger("jawlah_join_b", "انضمام لـ " + game.teamBName + " 🔴").withDisabled(game.teamBPlayers.size() >= game.maxPlayersPerTeam);
 
-        Button h1 = game.getEnabledHelpers().contains("جاوب جوابين ✌️") ? Button.success("jawlah_help_1", "جاوب جوابين ✌️") : Button.secondary("jawlah_help_1", "جاوب جوابين ✌️");
-        Button h3 = game.getEnabledHelpers().contains("الحفرة ⛳") ? Button.success("jawlah_help_3", "الحفرة ⛳") : Button.secondary("jawlah_help_3", "الحفرة ⛳");
-        Button h4 = game.getEnabledHelpers().contains("اعكس الدور 🔄") ? Button.success("jawlah_help_4", "اعكس الدور 🔄") : Button.secondary("jawlah_help_4", "اعكس الدور 🔄");
-        Button h5 = game.getEnabledHelpers().contains("السؤال الذهبي 🏆") ? Button.success("jawlah_help_5", "السؤال الذهبي 🏆") : Button.secondary("jawlah_help_5", "السؤال الذهبي 🏆");
+        Button h1 = game.usedHelpers.contains("جاوب جوابين ✌️") ? Button.secondary("jawlah_help_1", "جاوب جوابين ✌️").asDisabled() : (game.getEnabledHelpers().contains("جاوب جوابين ✌️") ? Button.success("jawlah_help_1", "جاوب جوابين ✌️") : Button.secondary("jawlah_help_1", "جاوب جوابين ✌️"));
+        Button h3 = game.usedHelpers.contains("الحفرة ⛳") ? Button.secondary("jawlah_help_3", "الحفرة ⛳").asDisabled() : (game.getEnabledHelpers().contains("الحفرة ⛳") ? Button.success("jawlah_help_3", "الحفرة ⛳") : Button.secondary("jawlah_help_3", "الحفرة ⛳"));
+        Button h4 = game.usedHelpers.contains("اعكس الدور 🔄") ? Button.secondary("jawlah_help_4", "اعكس الدور 🔄").asDisabled() : (game.getEnabledHelpers().contains("اعكس الدور 🔄") ? Button.success("jawlah_help_4", "اعكس الدور 🔄") : Button.secondary("jawlah_help_4", "اعكس الدور 🔄"));
+        Button h5 = game.usedHelpers.contains("السؤال الذهبي 🏆") ? Button.secondary("jawlah_help_5", "السؤال الذهبي 🏆").asDisabled() : (game.getEnabledHelpers().contains("السؤال الذهبي 🏆") ? Button.success("jawlah_help_5", "السؤال الذهبي 🏆") : Button.secondary("jawlah_help_5", "السؤال الذهبي 🏆"));
 
         MessageEditBuilder edit = new MessageEditBuilder()
                 .setComponents(EmbedUtil.containerBranded("SETUP", "تـــجـــهـــيـــز الـــفـــرق والـــمـــســـاعـــدات", body, EmbedUtil.BANNER_MAIN,
@@ -324,6 +324,19 @@ public class JawlahManager extends ListenerAdapter {
             }
             game.setSelectedValue(val);
             game.getUsedQuestions().add(key);
+            
+            // Fix repeating questions: pick one that wasn't shown yet
+            String qKey = game.selectedCategory + "_" + game.selectedSubCategory;
+            List<JawlahQuestion> qs = questionBank.getOrDefault(qKey, questionBank.get("general_general_info"));
+            List<JawlahQuestion> available = qs.stream().filter(que -> !game.displayedQuestionTexts.contains(que.text)).toList();
+            if (available.isEmpty()) {
+                event.reply("⚠️ لا يوجد أسئلة متبقية في هذه الفئة!").setEphemeral(true).queue();
+                return;
+            }
+            JawlahQuestion q = available.get(new Random().nextInt(available.size()));
+            game.setCurrentQuestion(q);
+            game.displayedQuestionTexts.add(q.text);
+            
             showQuestionPrompt(event, game);
         }
     }
@@ -375,10 +388,7 @@ public class JawlahManager extends ListenerAdapter {
     }
 
     private void showQuestionPrompt(net.dv8tion.jda.api.interactions.callbacks.IReplyCallback event, JawlahGame game) {
-        String key = game.selectedCategory + "_" + game.selectedSubCategory;
-        List<JawlahQuestion> qs = questionBank.getOrDefault(key, questionBank.get("general_general_info"));
-        JawlahQuestion q = qs.get(new Random().nextInt(qs.size()));
-        game.setCurrentQuestion(q);
+        JawlahQuestion q = game.getCurrentQuestion();
         game.setAttemptsLeft(game.getEnabledHelpers().contains("جاوب جوابين ✌️") ? 2 : 1);
 
         String modifiers = (game.isPitActive() ? "⛳ **الـحـفـرة مـفـعـلـة**\n" : "") + (game.isGoldenQuestion() ? "🏆 **الـسـؤال الـذهـبـي مـفـعـل**\n" : "");
@@ -391,9 +401,9 @@ public class JawlahManager extends ListenerAdapter {
         String body = String.format("### ❓ ســـؤال الـــتـــحـــدي\n\n%s\n\n**الـفـئـة:** `%s` -> `%s`\n**الـقـيـمـة:** `%d` نـقـطـة\n**الـدور لـفـريـق:** %s\n\n📢 **الـسـؤال:** %s\n\n%sيـرجـى كـتـابـة الإجـابـة فـي الـشـات الآن!",
                 timerFormat, arCat, arSub, game.selectedValue, game.turnA ? "🔵 " + game.teamAName : "🔴 " + game.teamBName, q.text, modifiers);
 
-        Button h1 = game.getEnabledHelpers().contains("جاوب جوابين ✌️") ? Button.success("jawlah_help_1", "جاوب جوابين ✌️") : Button.secondary("jawlah_help_1", "جاوب جوابين ✌️");
-        Button h4 = game.getEnabledHelpers().contains("اعكس الدور 🔄") ? Button.success("jawlah_help_4", "اعكس الدور 🔄") : Button.secondary("jawlah_help_4", "اعكس الدور 🔄");
-        Button h5 = game.getEnabledHelpers().contains("السؤال الذهبي 🏆") ? Button.success("jawlah_help_5", "السؤال الذهبي 🏆") : Button.secondary("jawlah_help_5", "السؤال الذهبي 🏆");
+        Button h1 = game.usedHelpers.contains("جاوب جوابين ✌️") ? Button.secondary("jawlah_help_1", "جاوب جوابين ✌️").asDisabled() : (game.getEnabledHelpers().contains("جاوب جوابين ✌️") ? Button.success("jawlah_help_1", "جاوب جوابين ✌️") : Button.secondary("jawlah_help_1", "جاوب جوابين ✌️"));
+        Button h4 = game.usedHelpers.contains("اعكس الدور 🔄") ? Button.secondary("jawlah_help_4", "اعكس الدور 🔄").asDisabled() : (game.getEnabledHelpers().contains("اعكس الدور 🔄") ? Button.success("jawlah_help_4", "اعكس الدور 🔄") : Button.secondary("jawlah_help_4", "اعكس الدور 🔄"));
+        Button h5 = game.usedHelpers.contains("السؤال الذهبي 🏆") ? Button.secondary("jawlah_help_5", "السؤال الذهبي 🏆").asDisabled() : (game.getEnabledHelpers().contains("السؤال الذهبي 🏆") ? Button.success("jawlah_help_5", "السؤال الذهبي 🏆") : Button.secondary("jawlah_help_5", "السؤال الذهبي 🏆"));
 
         MessageEditBuilder edit = new MessageEditBuilder()
                 .setComponents(EmbedUtil.containerBranded("QUESTION", "🔍 جـــاري الـــتـــحـــدي...", body, q.imageUrl != null ? q.imageUrl : EmbedUtil.BANNER_MAIN,
@@ -401,8 +411,17 @@ public class JawlahManager extends ListenerAdapter {
                         ActionRow.of(Button.secondary("jawlah_back", "الـعـودة لـلـوحـة ⬅️"))
                 )).useComponentsV2(true);
 
-        if (event instanceof ButtonInteractionEvent bie) bie.editMessage(edit.build()).queue(msg -> initTimer(game.channelId, seconds));
-        else if (event instanceof StringSelectInteractionEvent ssie) ssie.editMessage(edit.build()).queue(msg -> initTimer(game.channelId, seconds));
+        if (event instanceof ButtonInteractionEvent bie) {
+            bie.editMessage(edit.build()).queue(msg -> {
+                game.lastQuestionMessageId = msg.getIdLong();
+                initTimer(game.channelId, seconds);
+            });
+        } else if (event instanceof StringSelectInteractionEvent ssie) {
+            ssie.editMessage(edit.build()).queue(msg -> {
+                game.lastQuestionMessageId = msg.getIdLong();
+                initTimer(game.channelId, seconds);
+            });
+        }
     }
 
     private void initTimer(long channelId, int seconds) {
@@ -413,6 +432,22 @@ public class JawlahManager extends ListenerAdapter {
                 JawlahGame game = activeGames.get(channelId);
                 if (game == null || game.getCurrentQuestion() == null) { cancelTimer(channelId); return; }
                 timeLeft[0]--;
+                
+                // Update timer in message
+                if (timeLeft[0] > 0 && timeLeft[0] % 2 == 0) { // Update every 2 seconds to avoid rate limits
+                    TextChannel channel = jda.getTextChannelById(channelId);
+                    if (channel != null && game.lastQuestionMessageId != 0) {
+                        String timerFormat = String.format("`=----------------%02d:%02d----------------=`", 0, timeLeft[0]);
+                        channel.retrieveMessageById(game.lastQuestionMessageId).queue(msg -> {
+                            String currentBody = msg.getEmbeds().get(0).getDescription();
+                            if (currentBody != null) {
+                                String newBody = currentBody.replaceAll("`=----------------\\d+:\\d+----------------=`", timerFormat);
+                                msg.editMessageEmbeds(EmbedUtil.containerBranded("QUESTION", "🔍 جـــاري الـــتـــحـــدي...", newBody, msg.getEmbeds().get(0).getImage() != null ? msg.getEmbeds().get(0).getImage().getUrl() : EmbedUtil.BANNER_MAIN).getEmbeds()).queue();
+                            }
+                        }, err -> {});
+                    }
+                }
+
                 if (timeLeft[0] <= 0) {
                     cancelTimer(channelId);
                     TextChannel channel = jda.getTextChannelById(channelId);
@@ -451,13 +486,18 @@ public class JawlahManager extends ListenerAdapter {
     public void stopAllGames() { activeGames.keySet().forEach(id -> stopGame(id)); }
 
     private void distributePrizes(JawlahGame game, net.dv8tion.jda.api.entities.Guild guild) {
+        if (guild == null) return;
         if (game.scoreA > 0 && !game.teamAPlayers.isEmpty()) {
             long perPerson = game.scoreA / game.teamAPlayers.size();
-            game.teamAPlayers.forEach(id -> economyService.addBalance(String.valueOf(id), guild.getId(), perPerson));
+            game.teamAPlayers.forEach(id -> {
+                try { economyService.addBalance(String.valueOf(id), guild.getId(), perPerson); } catch (Exception e) {}
+            });
         }
         if (game.scoreB > 0 && !game.teamBPlayers.isEmpty()) {
             long perPerson = game.scoreB / game.teamBPlayers.size();
-            game.teamBPlayers.forEach(id -> economyService.addBalance(String.valueOf(id), guild.getId(), perPerson));
+            game.teamBPlayers.forEach(id -> {
+                try { economyService.addBalance(String.valueOf(id), guild.getId(), perPerson); } catch (Exception e) {}
+            });
         }
     }
 
@@ -472,6 +512,10 @@ public class JawlahManager extends ListenerAdapter {
             case "jawlah_back" -> sendBoard(event);
             case "jawlah_start_confirm" -> {
                 if (event.getUser().getIdLong() != game.organizerId) { event.reply("❌ عذراً، المنظم فقط يمكنه بدء اللعبة.").setEphemeral(true).queue(); return; }
+                if (game.teamAPlayers.isEmpty() || game.teamBPlayers.isEmpty()) {
+                    event.reply("⚠️ يجب أن يكون هناك لاعب واحد على الأقل في كل فريق للبدء!").setEphemeral(true).queue();
+                    return;
+                }
                 sendBoard(event);
             }
             case "jawlah_stop" -> {
@@ -498,8 +542,13 @@ public class JawlahManager extends ListenerAdapter {
             case "jawlah_help_1" -> {
                 if (event.getUser().getIdLong() != game.organizerId) return;
                 String h = "جاوب جوابين ✌️";
+                if (game.usedHelpers.contains(h)) { event.reply("⚠️ تم استخدام هذه المساعدة بالفعل في هذه اللعبة!").setEphemeral(true).queue(); return; }
+                
                 if (game.getEnabledHelpers().contains(h)) game.getEnabledHelpers().remove(h);
-                else game.getEnabledHelpers().add(h);
+                else {
+                    game.getEnabledHelpers().add(h);
+                    if (game.selectedValue > 0) game.usedHelpers.add(h); // Mark as used if activated during a question
+                }
                 
                 if (game.selectedValue > 0) showQuestionPrompt(event, game);
                 else sendHelpingHandsSelection(event);
@@ -507,12 +556,15 @@ public class JawlahManager extends ListenerAdapter {
             case "jawlah_help_3" -> {
                 if (event.getUser().getIdLong() != game.organizerId) return;
                 String h = "الحفرة ⛳";
+                if (game.usedHelpers.contains(h)) { event.reply("⚠️ تم استخدام هذه المساعدة بالفعل في هذه اللعبة!").setEphemeral(true).queue(); return; }
+
                 if (game.getEnabledHelpers().contains(h)) {
                     game.getEnabledHelpers().remove(h);
                     game.setPitActive(false);
                 } else {
                     game.getEnabledHelpers().add(h);
                     game.setPitActive(true);
+                    if (game.selectedValue > 0) game.usedHelpers.add(h);
                 }
                 
                 if (game.selectedValue > 0) showQuestionPrompt(event, game);
@@ -521,12 +573,15 @@ public class JawlahManager extends ListenerAdapter {
             case "jawlah_help_4" -> {
                 if (event.getUser().getIdLong() != game.organizerId) return;
                 String h = "اعكس الدور 🔄";
+                if (game.usedHelpers.contains(h)) { event.reply("⚠️ تم استخدام هذه المساعدة بالفعل في هذه اللعبة!").setEphemeral(true).queue(); return; }
+
                 if (game.getEnabledHelpers().contains(h)) {
                     game.getEnabledHelpers().remove(h);
-                    game.setTurnA(!game.turnA); // Revert? No, maybe just toggle the effect.
+                    game.setTurnA(!game.turnA);
                 } else {
                     game.getEnabledHelpers().add(h);
                     game.setTurnA(!game.turnA);
+                    if (game.selectedValue > 0) game.usedHelpers.add(h);
                 }
                 
                 if (game.selectedValue > 0) showQuestionPrompt(event, game);
@@ -535,12 +590,15 @@ public class JawlahManager extends ListenerAdapter {
             case "jawlah_help_5" -> {
                 if (event.getUser().getIdLong() != game.organizerId) return;
                 String h = "السؤال الذهبي 🏆";
+                if (game.usedHelpers.contains(h)) { event.reply("⚠️ تم استخدام هذه المساعدة بالفعل في هذه اللعبة!").setEphemeral(true).queue(); return; }
+
                 if (game.getEnabledHelpers().contains(h)) {
                     game.getEnabledHelpers().remove(h);
                     game.setGoldenQuestion(false);
                 } else {
                     game.getEnabledHelpers().add(h);
                     game.setGoldenQuestion(true);
+                    if (game.selectedValue > 0) game.usedHelpers.add(h);
                 }
                 
                 if (game.selectedValue > 0) showQuestionPrompt(event, game);
@@ -617,7 +675,18 @@ public class JawlahManager extends ListenerAdapter {
 
     private boolean isSimilar(String input, String target) {
         if (input == null || target == null) return false;
-        return input.toLowerCase().replaceAll("\\s+", "").equals(target.toLowerCase().replaceAll("\\s+", ""));
+        String s1 = normalize(input);
+        String s2 = normalize(target);
+        return s1.equals(s2);
+    }
+
+    private String normalize(String text) {
+        return text.toLowerCase()
+                .replaceAll("[أإآ]", "ا")
+                .replaceAll("ة", "ه")
+                .replaceAll("ى", "ي")
+                .replaceAll("\\s+", "")
+                .replaceAll("[^\\w\\u0600-\\u06FF]", "");
     }
 
     private void sendBoardAfterDelay(long channelId) {
@@ -666,5 +735,8 @@ public class JawlahManager extends ListenerAdapter {
         private JawlahQuestion currentQuestion;
         private int attemptsLeft = 1;
         public JawlahGame(long channelId, long organizerId) { this.channelId = channelId; this.organizerId = organizerId; }
+        private final Set<String> usedHelpers = new HashSet<>();
+        private long lastQuestionMessageId;
+        private final Set<String> displayedQuestionTexts = new HashSet<>();
     }
 }
