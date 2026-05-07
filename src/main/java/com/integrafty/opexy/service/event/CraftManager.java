@@ -31,7 +31,7 @@ public class CraftManager extends ListenerAdapter {
     private final Map<Long, Long> userGuilds = new HashMap<>();
     private final Map<Long, net.dv8tion.jda.api.interactions.InteractionHook> userHooks = new HashMap<>();
     private final Map<Long, java.util.concurrent.ScheduledFuture<?>> userTimers = new HashMap<>();
-    private final java.util.concurrent.ScheduledExecutorService scheduler = java.util.concurrent.Executors.newScheduledThreadPool(4);
+    private final java.util.concurrent.ScheduledExecutorService scheduler = java.util.concurrent.Executors.newScheduledThreadPool(10);
 
     @PostConstruct
     public void init() {
@@ -209,14 +209,25 @@ public class CraftManager extends ListenerAdapter {
                 }
 
                 String body = getCraftBody(userMentions.get(userId), grid, difficulty.reward, timeLeft[0]);
-                event.getHook().editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
-                        .setComponents(EmbedUtil.containerBranded("CRAFTING", "🛠️ ماذا نصنع؟", body, EmbedUtil.BANNER_MAIN))
-                        .useComponentsV2(true)
-                        .build()).queue(null, e -> {
-                            // Ignore transient errors
-                        });
+                net.dv8tion.jda.api.interactions.InteractionHook hook = event.getHook();
+                
+                // Only attempt edit if hook is not expired
+                if (hook != null && !hook.isExpired()) {
+                    hook.editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+                            .setComponents(EmbedUtil.containerBranded("CRAFTING", "🛠️ ماذا نصنع؟", body, EmbedUtil.BANNER_MAIN))
+                            .useComponentsV2(true)
+                            .build()).queue(null, e -> {
+                                // Silent fail for rate limits or network issues to avoid log spam
+                                // But stop the timer if it's a terminal error like 'Unknown Interaction'
+                                if (e.getMessage() != null && (e.getMessage().contains("Unknown Interaction") || e.getMessage().contains("expired"))) {
+                                    stopTimer(userId);
+                                }
+                            });
+                } else {
+                    stopTimer(userId);
+                }
             } catch (Exception e) {
-                e.printStackTrace();
+                logManager.logInfo("CraftTimer Error: " + e.getMessage());
             }
         }, 1, 1, java.util.concurrent.TimeUnit.SECONDS);
         
