@@ -188,6 +188,7 @@ public class CraftManager extends ListenerAdapter {
         final int[] timeLeft = {difficulty.seconds};
         userHooks.put(userId, event.getHook());
         
+        System.out.println("[CraftTimer] Starting timer for user: " + userId);
         java.util.concurrent.ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(() -> {
             try {
                 timeLeft[0]--;
@@ -211,21 +212,14 @@ public class CraftManager extends ListenerAdapter {
                 String body = getCraftBody(userMentions.get(userId), grid, difficulty.reward, timeLeft[0]);
                 net.dv8tion.jda.api.interactions.InteractionHook hook = event.getHook();
                 
-                // Only attempt edit if hook is not expired
-                if (hook != null && !hook.isExpired()) {
-                    hook.editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
-                            .setComponents(EmbedUtil.containerBranded("CRAFTING", "🛠️ ماذا نصنع؟", body, EmbedUtil.BANNER_MAIN))
-                            .useComponentsV2(true)
-                            .build()).queue(null, e -> {
-                                // Silent fail for rate limits or network issues to avoid log spam
-                                // But stop the timer if it's a terminal error like 'Unknown Interaction'
-                                if (e.getMessage() != null && (e.getMessage().contains("Unknown Interaction") || e.getMessage().contains("expired"))) {
-                                    stopTimer(userId);
-                                }
-                            });
-                } else {
-                    stopTimer(userId);
-                }
+                hook.editOriginal(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+                        .setComponents(EmbedUtil.containerBranded("CRAFTING", "🛠️ ماذا نصنع؟", body, EmbedUtil.BANNER_MAIN))
+                        .useComponentsV2(true)
+                        .build()).queue(null, e -> {
+                            if (e.getMessage() != null && (e.getMessage().contains("Unknown Interaction") || e.getMessage().contains("expired"))) {
+                                stopTimer(userId);
+                            }
+                        });
             } catch (Exception e) {
                 System.out.println("[CraftTimer] Error: " + e.getMessage());
             }
