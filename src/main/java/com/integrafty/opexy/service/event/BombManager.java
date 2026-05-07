@@ -18,6 +18,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@lombok.extern.slf4j.Slf4j
 public class BombManager extends ListenerAdapter {
     private final AchievementService achievementService;
     private final EconomyService economyService;
@@ -102,6 +103,7 @@ public class BombManager extends ListenerAdapter {
         
         java.util.concurrent.ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(() -> {
             try {
+                log.debug("[BombTimer] Tick for user: {}", userId);
                 timeLeft[0]--;
                 
                 if (timeLeft[0] <= 0) {
@@ -122,10 +124,10 @@ public class BombManager extends ListenerAdapter {
                                 )))
                         .useComponentsV2(true)
                         .build()).queue(null, e -> {
-                            // Don't cancel on error
+                            log.warn("[BombTimer] Edit failed for {}: {}", userId, e.getMessage());
                         });
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("[BombTimer] Error for {}: ", userId, e);
             }
         }, 1, 1, java.util.concurrent.TimeUnit.SECONDS);
         
@@ -133,12 +135,15 @@ public class BombManager extends ListenerAdapter {
     }
 
     private String getBombBody(String mention, String hint, int reward, int seconds) {
+        String safeMention = (mention != null) ? mention : "أيها المغامر";
+        String safeHint = (hint != null) ? hint : "لا يوجد تلميح متوفر";
+        
         String timerFormat = String.format("`=----------------%02d:%02d----------------=`", 0, seconds);
         return timerFormat + "\n\n" +
                String.format("🆘 **تحذير!** تم زرع قنبلة موقوتة خاصة بك يا %s!\n" +
                "يجب قطع سلك واحد لإبطال مفعولها. هناك سلك واحد صحيح والبقية ستفجر المكان!\n\n" +
                "🔍 **التلميح:** `%s`\n\n" +
-               "💰 الجائزة: **%d opex**", mention, hint, reward);
+               "💰 الجائزة: **%d opex**", safeMention, safeHint, reward);
     }
 
     private void cancelTimer(long userId) {

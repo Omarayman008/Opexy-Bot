@@ -17,6 +17,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@lombok.extern.slf4j.Slf4j
 public class CraftManager extends ListenerAdapter {
 
     private final JDA jda;
@@ -152,6 +153,10 @@ public class CraftManager extends ListenerAdapter {
     );
 
     public String startCraft(long userId, Difficulty difficulty, Guild guild, Member organizer) {
+        if (userActiveRecipes.containsKey(userId)) {
+            stopTimer(userId);
+        }
+        
         List<Recipe> possible = RECIPES.stream().filter(r -> r.difficulty == difficulty).toList();
         Recipe recipe = possible.get(new Random().nextInt(possible.size()));
         
@@ -188,9 +193,10 @@ public class CraftManager extends ListenerAdapter {
         final int[] timeLeft = {difficulty.seconds};
         userHooks.put(userId, event.getHook());
         
-        System.out.println("[CraftTimer] Starting timer for user: " + userId);
+        log.info("[CraftTimer] Initializing timer for user: {}", userId);
         java.util.concurrent.ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(() -> {
             try {
+                log.debug("[CraftTimer] Tick for user: {}", userId);
                 timeLeft[0]--;
                 
                 if (timeLeft[0] <= 0) {
@@ -216,12 +222,17 @@ public class CraftManager extends ListenerAdapter {
                         .setComponents(EmbedUtil.containerBranded("CRAFTING", "🛠️ ماذا نصنع؟", body, EmbedUtil.BANNER_MAIN))
                         .useComponentsV2(true)
                         .build()).queue(null, e -> {
+                            log.warn("[CraftTimer] Edit failed for {}: {}", userId, e.getMessage());
                             if (e.getMessage() != null && (e.getMessage().contains("Unknown Interaction") || e.getMessage().contains("expired"))) {
                                 stopTimer(userId);
                             }
                         });
+                
+                if (timeLeft[0] % 5 == 0) {
+                    log.info("[CraftTimer] User {} - Time Left: {}", userId, timeLeft[0]);
+                }
             } catch (Exception e) {
-                System.out.println("[CraftTimer] Error: " + e.getMessage());
+                log.error("[CraftTimer] Fatal error for {}: ", userId, e);
             }
         }, 1, 1, java.util.concurrent.TimeUnit.SECONDS);
         
