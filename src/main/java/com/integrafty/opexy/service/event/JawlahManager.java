@@ -497,38 +497,54 @@ public class JawlahManager extends ListenerAdapter {
             }
             case "jawlah_help_1" -> {
                 if (event.getUser().getIdLong() != game.organizerId) return;
-                if (useItem(game.organizerId, event.getGuild(), s -> s.getJawlahDoubleAnswer(), (s, v) -> s.setJawlahDoubleAnswer(v))) {
-                    game.getEnabledHelpers().add("جاوب جوابين ✌️");
-                    if (game.selectedValue > 0) showQuestionPrompt(event, game);
-                    else sendHelpingHandsSelection(event);
-                } else event.reply("❌ لا تملك هذا العنصر!").setEphemeral(true).queue();
+                String h = "جاوب جوابين ✌️";
+                if (game.getEnabledHelpers().contains(h)) game.getEnabledHelpers().remove(h);
+                else game.getEnabledHelpers().add(h);
+                
+                if (game.selectedValue > 0) showQuestionPrompt(event, game);
+                else sendHelpingHandsSelection(event);
             }
             case "jawlah_help_3" -> {
                 if (event.getUser().getIdLong() != game.organizerId) return;
-                if (useItem(game.organizerId, event.getGuild(), s -> s.getJawlahPit(), (s, v) -> s.setJawlahPit(v))) {
+                String h = "الحفرة ⛳";
+                if (game.getEnabledHelpers().contains(h)) {
+                    game.getEnabledHelpers().remove(h);
+                    game.setPitActive(false);
+                } else {
+                    game.getEnabledHelpers().add(h);
                     game.setPitActive(true);
-                    game.getEnabledHelpers().add("الحفرة ⛳");
-                    if (game.selectedValue > 0) showQuestionPrompt(event, game);
-                    else sendHelpingHandsSelection(event);
-                } else event.reply("❌ لا تملك هذا العنصر!").setEphemeral(true).queue();
+                }
+                
+                if (game.selectedValue > 0) showQuestionPrompt(event, game);
+                else sendHelpingHandsSelection(event);
             }
             case "jawlah_help_4" -> {
                 if (event.getUser().getIdLong() != game.organizerId) return;
-                if (useItem(game.organizerId, event.getGuild(), s -> s.getJawlahReverse(), (s, v) -> s.setJawlahReverse(v))) {
+                String h = "اعكس الدور 🔄";
+                if (game.getEnabledHelpers().contains(h)) {
+                    game.getEnabledHelpers().remove(h);
+                    game.setTurnA(!game.turnA); // Revert? No, maybe just toggle the effect.
+                } else {
+                    game.getEnabledHelpers().add(h);
                     game.setTurnA(!game.turnA);
-                    game.getEnabledHelpers().add("اعكس الدور 🔄");
-                    if (game.selectedValue > 0) showQuestionPrompt(event, game);
-                    else sendHelpingHandsSelection(event);
-                } else event.reply("❌ لا تملك هذا العنصر!").setEphemeral(true).queue();
+                }
+                
+                if (game.selectedValue > 0) showQuestionPrompt(event, game);
+                else sendHelpingHandsSelection(event);
             }
             case "jawlah_help_5" -> {
                 if (event.getUser().getIdLong() != game.organizerId) return;
-                if (useItem(game.organizerId, event.getGuild(), s -> s.getJawlahGolden(), (s, v) -> s.setJawlahGolden(v))) {
+                String h = "السؤال الذهبي 🏆";
+                if (game.getEnabledHelpers().contains(h)) {
+                    game.getEnabledHelpers().remove(h);
+                    game.setGoldenQuestion(false);
+                } else {
+                    game.getEnabledHelpers().add(h);
                     game.setGoldenQuestion(true);
-                    game.getEnabledHelpers().add("السؤال الذهبي 🏆");
-                    if (game.selectedValue > 0) showQuestionPrompt(event, game);
-                    else sendHelpingHandsSelection(event);
-                } else event.reply("❌ لا تملك هذا العنصر!").setEphemeral(true).queue();
+                }
+                
+                if (game.selectedValue > 0) showQuestionPrompt(event, game);
+                else sendHelpingHandsSelection(event);
             }
         }
     }
