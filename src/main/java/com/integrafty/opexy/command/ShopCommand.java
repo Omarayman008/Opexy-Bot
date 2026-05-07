@@ -44,13 +44,35 @@ public class ShopCommand extends ListenerAdapter implements SlashCommand {
                 💰 **مضاعف الجوائز (2x Reward)**
                 يضاعف جائزتك القادمة في أي فعالية تفوز بها.
                 **السعر:** 15,000 opex
+
+                ✌️ **جاوب جوابين (Double Answer)**
+                يمنحك محاولة إضافية في جولة.
+                **السعر:** 2,000 opex
+
+                ⛳ **الحفرة (The Pit)**
+                تخصم نقاط من الفريق الآخر في جولة.
+                **السعر:** 3,500 opex
+
+                🔄 **اعكس الدور (Reverse Turn)**
+                تغيير دور الفريق في جولة.
+                **السعر:** 1,500 opex
+
+                🏆 **السؤال الذهبي (Golden Question)**
+                مضاعفة نقاط السؤال الحالي في جولة.
+                **السعر:** 4,000 opex
                 """;
 
         event.reply(new net.dv8tion.jda.api.utils.messages.MessageCreateBuilder()
                 .setComponents(EmbedUtil.containerBranded("SHOP", "متجر الألعاب — Opexy Shop", body, EmbedUtil.BANNER_MAIN,
                         ActionRow.of(
-                                Button.primary("buy_shield", "شراء درع 🛡️"),
-                                Button.success("buy_double", "شراء مضاعف 💰")
+                                Button.primary("buy_shield", "درع 🛡️"),
+                                Button.success("buy_double", "مضاعف 💰"),
+                                Button.secondary("buy_j_double", "جوابين ✌️"),
+                                Button.secondary("buy_j_pit", "الحفرة ⛳"),
+                                Button.secondary("buy_j_reverse", "عكس 🔄")
+                        ),
+                        ActionRow.of(
+                                Button.secondary("buy_j_golden", "ذهبي 🏆")
                         )))
                 .useComponentsV2(true).build())
                 .useComponentsV2(true).queue();
@@ -66,15 +88,7 @@ public class ShopCommand extends ListenerAdapter implements SlashCommand {
         long balance = economyService.getBalance(String.valueOf(userId), guildId);
 
         if (id.equals("buy_shield")) {
-            if (balance < 5000) {
-                event.reply("❌ رصيدك غير كافٍ! تحتاج إلى 5,000 opex.").setEphemeral(true).queue();
-                return;
-            }
-            economyService.subtractBalance(String.valueOf(userId), guildId, 5000);
-            achievementService.updateStats(userId, event.getGuild(), stats -> {
-                stats.setShieldCount(stats.getShieldCount() + 1);
-            });
-            event.reply("✅ تم شراء **درع المافيا** بنجاح! رصيدك الحالي: " + (balance - 5000) + " opex").setEphemeral(true).queue();
+            handlePurchase(event, userId, guildId, balance, 5000, "درع المافيا", stats -> stats.setShieldCount(stats.getShieldCount() + 1));
         } 
         else if (id.equals("buy_double")) {
             if (balance < 15000) {
@@ -83,13 +97,35 @@ public class ShopCommand extends ListenerAdapter implements SlashCommand {
             }
             achievementService.updateStats(userId, event.getGuild(), stats -> {
                 if (stats.isDoubleRewardActive()) {
-                    event.reply("⚠️ لديك مضاعف نشط بالفعل! استهلكه أولاً.").setEphemeral(true).queue();
+                    event.reply("⚠️ لديك مضاعف نشط بالفعل!").setEphemeral(true).queue();
                     return;
                 }
                 economyService.subtractBalance(String.valueOf(userId), guildId, 15000);
                 stats.setDoubleRewardActive(true);
-                event.reply("✅ تم شراء **مضاعف الجوائز** بنجاح! رصيدك الحالي: " + (balance - 15000) + " opex").setEphemeral(true).queue();
+                event.reply("✅ تم شراء **مضاعف الجوائز** بنجاح!").setEphemeral(true).queue();
             });
         }
+        else if (id.equals("buy_j_double")) {
+            handlePurchase(event, userId, guildId, balance, 2000, "جاوب جوابين", stats -> stats.setJawlahDoubleAnswer(stats.getJawlahDoubleAnswer() + 1));
+        }
+        else if (id.equals("buy_j_pit")) {
+            handlePurchase(event, userId, guildId, balance, 3500, "الحفرة", stats -> stats.setJawlahPit(stats.getJawlahPit() + 1));
+        }
+        else if (id.equals("buy_j_reverse")) {
+            handlePurchase(event, userId, guildId, balance, 1500, "اعكس الدور", stats -> stats.setJawlahReverse(stats.getJawlahReverse() + 1));
+        }
+        else if (id.equals("buy_j_golden")) {
+            handlePurchase(event, userId, guildId, balance, 4000, "السؤال الذهبي", stats -> stats.setJawlahGolden(stats.getJawlahGolden() + 1));
+        }
+    }
+
+    private void handlePurchase(ButtonInteractionEvent event, long userId, String guildId, long balance, int price, String itemName, java.util.function.Consumer<com.integrafty.opexy.entity.UserStats> update) {
+        if (balance < price) {
+            event.reply("❌ رصيدك غير كافٍ! تحتاج إلى " + price + " opex.").setEphemeral(true).queue();
+            return;
+        }
+        economyService.subtractBalance(String.valueOf(userId), guildId, price);
+        achievementService.updateStats(userId, event.getGuild(), update);
+        event.reply("✅ تم شراء **" + itemName + "** بنجاح!").setEphemeral(true).queue();
     }
 }

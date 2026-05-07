@@ -60,6 +60,18 @@ public class UserStats {
     @Column(name = "double_reward", columnDefinition = "boolean default false")
     private boolean doubleRewardActive = false;
 
+    @Column(name = "jawlah_double", columnDefinition = "int default 0")
+    private int jawlahDoubleAnswer = 0;
+
+    @Column(name = "jawlah_pit", columnDefinition = "int default 0")
+    private int jawlahPit = 0;
+
+    @Column(name = "jawlah_reverse", columnDefinition = "int default 0")
+    private int jawlahReverse = 0;
+
+    @Column(name = "jawlah_golden", columnDefinition = "int default 0")
+    private int jawlahGolden = 0;
+
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
 
@@ -104,4 +116,16 @@ public class UserStats {
 
     public boolean isDoubleRewardActive() { return doubleRewardActive; }
     public void setDoubleRewardActive(boolean doubleRewardActive) { this.doubleRewardActive = doubleRewardActive; }
+
+    public int getJawlahDoubleAnswer() { return jawlahDoubleAnswer; }
+    public void setJawlahDoubleAnswer(int jawlahDoubleAnswer) { this.jawlahDoubleAnswer = jawlahDoubleAnswer; }
+
+    public int getJawlahPit() { return jawlahPit; }
+    public void setJawlahPit(int jawlahPit) { this.jawlahPit = jawlahPit; }
+
+    public int getJawlahReverse() { return jawlahReverse; }
+    public void setJawlahReverse(int jawlahReverse) { this.jawlahReverse = jawlahReverse; }
+
+    public int getJawlahGolden() { return jawlahGolden; }
+    public void setJawlahGolden(int jawlahGolden) { this.jawlahGolden = jawlahGolden; }
 }

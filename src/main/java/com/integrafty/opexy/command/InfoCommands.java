@@ -91,7 +91,12 @@ public class InfoCommands implements MultiSlashCommand {
                 ▫️ **Opex Balance:** `%d` 🪙
                 ▫️ **Mafia Shield:** `%d` 🛡️
                 ▫️ **Double Reward:** `%s` 💰
-                """, balance, stats.getShieldCount(), stats.isDoubleRewardActive() ? "Active" : "None");
+                ▫️ **Jawlah (Double):** `%d` ✌️
+                ▫️ **Jawlah (Pit):** `%d` ⛳
+                ▫️ **Jawlah (Reverse):** `%d` 🔄
+                ▫️ **Jawlah (Golden):** `%d` 🏆
+                """, balance, stats.getShieldCount(), stats.isDoubleRewardActive() ? "Active" : "None",
+                stats.getJawlahDoubleAnswer(), stats.getJawlahPit(), stats.getJawlahReverse(), stats.getJawlahGolden());
 
         String desc = String.format("""
                 ### 👤 Operative Identity

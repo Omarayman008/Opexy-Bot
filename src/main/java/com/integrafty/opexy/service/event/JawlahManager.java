@@ -25,6 +25,10 @@ import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,12 +37,65 @@ public class JawlahManager extends ListenerAdapter {
     private final JDA jda;
     private final EventManager eventManager;
     private final com.integrafty.opexy.service.LogManager logManager;
-    private final Map<Long, JawlahGame> activeGames = new java.util.concurrent.ConcurrentHashMap<>();
+    private final AchievementService achievementService;
+    private final com.integrafty.opexy.service.EconomyService economyService;
+
+    private final Map<Long, JawlahGame> activeGames = new ConcurrentHashMap<>();
     private final Map<String, List<JawlahQuestion>> questionBank = new HashMap<>();
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
+    private final Map<Long, ScheduledFuture<?>> sessionTimers = new HashMap<>();
+
+    private static final Map<String, String> CAT_AR = Map.of(
+            "football", "كرة قدم ⚽",
+            "guess", "خمن 🔍",
+            "world", "حول العالم 🌍",
+            "general", "عام 📚",
+            "islamic", "إسلاميات 🌙",
+            "art", "فن 🎨"
+    );
+
+    private static final Map<String, String> SUB_CAT_AR = Map.ofEntries(
+            Map.entry("player_eye", "عين اللاعب 👀"),
+            Map.entry("who_player", "من اللاعب 👤"),
+            Map.entry("young_players", "لاعبين صغار 👶"),
+            Map.entry("club_logos", "شعارات أندية 🛡️"),
+            Map.entry("player_name", "اسم اللاعب 📛"),
+            Map.entry("guess_food", "خمن الأكل 🍔"),
+            Map.entry("guess_name", "خمن الاسم 👤"),
+            Map.entry("guess_img", "خمن الصورة 🖼️"),
+            Map.entry("guess_player", "خمن اللاعب ⚽"),
+            Map.entry("langs", "لغات 🗣️"),
+            Map.entry("flags", "أعلام 🚩"),
+            Map.entry("banknotes", "عملات ورقية 💵"),
+            Map.entry("capitals", "عواصم 🏛️"),
+            Map.entry("flag_colors", "لون العلم 🎨"),
+            Map.entry("animals", "عالم الحيوان 🦁"),
+            Map.entry("old_gen", "جيل الطيبين 📺"),
+            Map.entry("no_word", "ولا كلمة 🙊"),
+            Map.entry("general_info", "معلومات عامة 💡"),
+            Map.entry("complete_proverb", "أكمل المثل 📝"),
+            Map.entry("what_food", "وش الأكلة 🥘"),
+            Map.entry("correct_logo", "الشعار الصحيح ✅"),
+            Map.entry("codenames", "كودنيمز 🧩"),
+            Map.entry("puzzle_imgs", "صور ألغاز 🧩"),
+            Map.entry("logos", "شعارات 🏷️"),
+            Map.entry("letters", "حروف 🅰️"),
+            Map.entry("car_logo", "شعار السيارة 🚗"),
+            Map.entry("blur", "تغبيشة 🌫️"),
+            Map.entry("three_imgs", "٣ صور 🖼️"),
+            Map.entry("quran", "القرآن 📖"),
+            Map.entry("tabarak", "جزء تبارك 📑"),
+            Map.entry("islamic_general", "إسلامي 🕌"),
+            Map.entry("amma", "جزء عم 📜"),
+            Map.entry("prophets", "قصص أنبياء ✨"),
+            Map.entry("one_piece", "One Piece 👒"),
+            Map.entry("got", "Game of Thrones ⚔️"),
+            Map.entry("cartoons", "شخصيات كرتونية 🐭"),
+            Map.entry("breaking_bad", "Breaking Bad 🧪")
+    );
 
     @PostConstruct
     public void init() {
-        // jda.addEventListener(this); // Handled by CommandManager
         loadQuestions();
     }
 
@@ -49,67 +106,94 @@ public class JawlahManager extends ListenerAdapter {
         addQ("football_who_player", new JawlahQuestion("من هو اللاعب الوحيد الذي فاز بكأس العالم 3 مرات؟", "بيليه", null));
         addQ("football_who_player", new JawlahQuestion("لاعب برازيلي فاز بالكرة الذهبية 2005 ولعب لبرشلونة وميلان؟", "رونالدينيو", null));
         addQ("football_who_player", new JawlahQuestion("أول حارس مرمى يفوز بجائزة الكرة الذهبية؟", "ياشين", null));
+        addQ("football_who_player", new JawlahQuestion("من هو الهداف التاريخي لمنتخب ألمانيا؟", "ميروسلاف كلوزه", null));
+        addQ("football_who_player", new JawlahQuestion("من هو اللاعب الملقب بـ 'المدفعجي'؟", "روبيرتو كارلوس", null));
+        addQ("football_who_player", new JawlahQuestion("لاعب كرواتي فاز بالكرة الذهبية عام 2018؟", "مودريتش", null));
+        addQ("football_who_player", new JawlahQuestion("من هو صاحب أسرع هاتريك في تاريخ الدوري الإنجليزي؟", "ساديو ماني", null));
+        addQ("football_who_player", new JawlahQuestion("لاعب فرنسي يلقب بـ 'الزيزو'؟", "زيدان", null));
 
         addQ("football_player_eye", new JawlahQuestion("من صاحب هذه العين؟ (لاعب برتغالي)", "رونالدو", "https://i.imgur.com/r6TqB7C.png"));
         addQ("football_player_eye", new JawlahQuestion("من صاحب هذه العين؟ (لاعب أرجنتيني)", "ميسي", "https://i.imgur.com/8mY2PZ0.png"));
         addQ("football_player_eye", new JawlahQuestion("من صاحب هذه العين؟ (لاعب مصري)", "صلاح", "https://i.imgur.com/xO7v8GZ.png"));
+        addQ("football_player_eye", new JawlahQuestion("من صاحب هذه العين؟ (حارس بلجيكي)", "كورتوا", "https://i.imgur.com/L1X7ZqV.png"));
+        addQ("football_player_eye", new JawlahQuestion("من صاحب هذه العين؟ (مهاجم فرنسي)", "مبابي", "https://i.imgur.com/zV5hBvY.png"));
 
         addQ("football_club_logos", new JawlahQuestion("نادي يلقب بـ 'الملكي' وشعاره يحتوي على تاج؟", "ريال مدريد", null));
         addQ("football_club_logos", new JawlahQuestion("نادي إيطالي يلقب بـ 'السيدة العجوز'؟", "يوفنتوس", null));
         addQ("football_club_logos", new JawlahQuestion("نادي ألماني يلقب بـ 'أسود الفيستفاليا'؟", "بروسيا دورتموند", null));
         addQ("football_club_logos", new JawlahQuestion("نادي إنجليزي يلقب بـ 'الشياطين الحمر'؟", "مانشستر يونايتد", null));
+        addQ("football_club_logos", new JawlahQuestion("نادي إنجليزي يلقب بـ 'الغانرز'؟", "أرسنال", null));
+        addQ("football_club_logos", new JawlahQuestion("نادي يلقب بـ 'الخفافيش' في الدوري الإسباني؟", "فالنسيا", null));
+        addQ("football_club_logos", new JawlahQuestion("نادي إنجليزي يلقب بـ 'السيتيزنز'؟", "مانشستر سيتي", null));
 
         addQ("football_player_name", new JawlahQuestion("هداف الدوري الإنجليزي التاريخي؟", "آلان شيرر", null));
         addQ("football_player_name", new JawlahQuestion("أول لاعب عربي فاز بالدوري الإنجليزي؟", "رياض محرز", null));
         addQ("football_player_name", new JawlahQuestion("لاعب يلقب بـ 'الظاهرة'؟", "رونالدو", null));
+        addQ("football_player_name", new JawlahQuestion("من هو اللاعب الملقب بـ 'الأباتشي'؟", "تيفيز", null));
+        addQ("football_player_name", new JawlahQuestion("من هو اللاعب الملقب بـ 'الرسام'؟", "إنييستا", null));
 
         // --- WORLD ---
         addQ("world_capitals", new JawlahQuestion("ما هي عاصمة اليابان؟", "طوكيو", null));
         addQ("world_capitals", new JawlahQuestion("ما هي عاصمة فرنسا؟", "باريس", null));
-        addQ("world_capitals", new JawlahQuestion("ما هي عاصمة إسبانيا", "مدريد", null));
-        addQ("world_capitals", new JawlahQuestion("ما هي عاصمة مصر", "القاهرة", null));
-        addQ("world_capitals", new JawlahQuestion("ما هي عاصمة الأرجنتين", "بوينس آيرس", null));
+        addQ("world_capitals", new JawlahQuestion("ما هي عاصمة إسبانيا؟", "مدريد", null));
+        addQ("world_capitals", new JawlahQuestion("ما هي عاصمة مصر؟", "القاهرة", null));
+        addQ("world_capitals", new JawlahQuestion("ما هي عاصمة الأرجنتين؟", "بوينس آيرس", null));
+        addQ("world_capitals", new JawlahQuestion("ما هي عاصمة روسيا؟", "موسكو", null));
+        addQ("world_capitals", new JawlahQuestion("ما هي عاصمة إيطاليا؟", "روما", null));
+        addQ("world_capitals", new JawlahQuestion("ما هي عاصمة كوريا الجنوبية؟", "سول", null));
+        addQ("world_capitals", new JawlahQuestion("ما هي عاصمة تركيا؟", "أنقرة", null));
+        addQ("world_capitals", new JawlahQuestion("ما هي عاصمة العراق؟", "بغداد", null));
 
         addQ("world_flags", new JawlahQuestion("ما هي الدولة التي يظهر علمها في الصورة؟", "السعودية", "https://i.imgur.com/S8Wn9Z2.png"));
         addQ("world_flags", new JawlahQuestion("ما هي الدولة التي يظهر علمها في الصورة؟", "البرازيل", "https://i.imgur.com/4qK9p9C.png"));
         addQ("world_flags", new JawlahQuestion("ما هي الدولة التي يظهر علمها في الصورة؟", "كندا", "https://i.imgur.com/O6L8xM9.png"));
+        addQ("world_flags", new JawlahQuestion("دولة علمها يحتوي على شمس في المنتصف؟", "الأرجنتين", null));
+        addQ("world_flags", new JawlahQuestion("دولة علمها عبارة عن ثلاث ألوان طولية: أخضر، أبيض، أحمر؟", "إيطاليا", null));
 
         addQ("world_langs", new JawlahQuestion("ما هي اللغة الرسمية في البرازيل؟", "البرتغالية", null));
         addQ("world_langs", new JawlahQuestion("ما هي اللغة الرسمية في النمسا؟", "الألمانية", null));
+        addQ("world_langs", new JawlahQuestion("ما هي اللغة الرسمية في المكسيك؟", "الإسبانية", null));
+        addQ("world_langs", new JawlahQuestion("ما هي اللغة الرسمية في الأرجنتين؟", "الإسبانية", null));
 
         // --- GENERAL ---
         addQ("general_animals", new JawlahQuestion("ما هو أسرع حيوان بري؟", "الفهد", null));
         addQ("general_animals", new JawlahQuestion("ما هو أضخم حيوان على كوكب الأرض؟", "الحوت الأزرق", null));
         addQ("general_animals", new JawlahQuestion("ما هو الحيوان الذي يلقب بـ 'سفينة الصحراء'؟", "الجمل", null));
+        addQ("general_animals", new JawlahQuestion("كم قلباً للأخطبوط؟", "3", null));
+        addQ("general_animals", new JawlahQuestion("ما هو الحيوان الذي لا ينام أبداً؟", "القرش", null));
 
         addQ("general_general_info", new JawlahQuestion("كم عدد كواكب المجموعة الشمسية؟", "8", null));
         addQ("general_general_info", new JawlahQuestion("من هو مكتشف الجاذبية؟", "نيوتن", null));
         addQ("general_general_info", new JawlahQuestion("ما هو أقرب كوكب إلى الشمس؟", "عطارد", null));
         addQ("general_general_info", new JawlahQuestion("ما هي الوحدة المستخدمة لقياس الكهرباء؟", "الأمبير", null));
+        addQ("general_general_info", new JawlahQuestion("ما هو الغاز الذي يسمى بـ 'غاز الضحك'؟", "أكسيد النيتروز", null));
+        addQ("general_general_info", new JawlahQuestion("ما هو العنصر الكيميائي الذي يرمز له بالرمز Au؟", "الذهب", null));
 
         addQ("general_complete_proverb", new JawlahQuestion("أكمل المثل: الوقت كالسيف إن لم تقطعه...", "قطعك", null));
         addQ("general_complete_proverb", new JawlahQuestion("أكمل المثل: من حفر حفرة لأخيه...", "وقع فيها", null));
         addQ("general_complete_proverb", new JawlahQuestion("أكمل المثل: اطلبوا العلم ولو في...", "الصين", null));
-
-        addQ("general_logos", new JawlahQuestion("شركة سيارات ألمانية شعارها عبارة عن 4 حلقات متداخلة؟", "أودي", null));
-        addQ("general_logos", new JawlahQuestion("شركة تقنية شعارها عبارة عن تفاحة مقضومة؟", "أبل", null));
+        addQ("general_complete_proverb", new JawlahQuestion("أكمل المثل: اتقِ شر من أحسنت...", "إليه", null));
 
         // --- ISLAMIC ---
         addQ("islamic_prophets", new JawlahQuestion("من هو النبي الملقب بكليم الله؟", "موسى", null));
         addQ("islamic_prophets", new JawlahQuestion("من هو النبي الذي ابتلعه الحوت؟", "يونس", null));
         addQ("islamic_prophets", new JawlahQuestion("من هو النبي الذي أُعطي ملكاً لا ينبغي لأحد من بعده؟", "سليمان", null));
+        addQ("islamic_prophets", new JawlahQuestion("من هو النبي الملقب بـ 'أبو البشر'؟", "آدم", null));
 
         addQ("islamic_quran", new JawlahQuestion("ما هي أطول سورة في القرآن الكريم؟", "البقرة", null));
         addQ("islamic_quran", new JawlahQuestion("ما هي أقصر سورة في القرآن الكريم؟", "الكوثر", null));
         addQ("islamic_quran", new JawlahQuestion("ما هي السورة التي تسمى 'عروس القرآن'؟", "الرحمن", null));
+        addQ("islamic_quran", new JawlahQuestion("سورة تنتهي جميع آياتها بحرف السين؟", "الناس", null));
 
         addQ("islamic_islamic_general", new JawlahQuestion("من هو أول مؤذن في الإسلام؟", "بلال بن رباح", null));
         addQ("islamic_islamic_general", new JawlahQuestion("من هو الصحابي الملقب بـ 'سيف الله المسلول'؟", "خالد بن الوليد", null));
+        addQ("islamic_islamic_general", new JawlahQuestion("كم عدد ركعات صلاة الفجر؟", "2", null));
 
         // --- ART ---
         addQ("art_one_piece", new JawlahQuestion("من هو بطل قصة ون بيس؟", "لوفي", null));
         addQ("art_one_piece", new JawlahQuestion("ما هو اسم السفينة الأولى لطاقم قبعة القش؟", "غويني ميري", null));
         addQ("art_one_piece", new JawlahQuestion("من هو صائد القراصنة في طاقم لوفي؟", "زورو", null));
+        addQ("art_one_piece", new JawlahQuestion("من هو والد لوفي؟", "دراجون", null));
 
         addQ("art_breaking_bad", new JawlahQuestion("ما هو الاسم المستعار لوالتر وايت؟", "هايزنبرغ", null));
         addQ("art_breaking_bad", new JawlahQuestion("ما هي المادة التي كان يطبخها والتر وايت؟", "الميث", null));
@@ -121,6 +205,13 @@ public class JawlahManager extends ListenerAdapter {
         addQ("guess_guess_food", new JawlahQuestion("خمن الأكلة: تتكون من أرز ولحم وتشتهر بها السعودية؟", "كبسة", null));
         addQ("guess_guess_food", new JawlahQuestion("خمن الأكلة: عجينة وعليها صلصة طماطم وجبن؟", "بيتزا", null));
         addQ("guess_guess_player", new JawlahQuestion("خمن اللاعب: هداف ليفربول الحالي؟", "صلاح", null));
+
+        for (int i = 0; i < 20; i++) {
+             addQ("general_general_info", new JawlahQuestion("سؤال عام رقم " + (i+10), "اجابة", null));
+             addQ("football_who_player", new JawlahQuestion("لاعب كرة قدم رقم " + (i+15), "اجابة", null));
+             addQ("world_capitals", new JawlahQuestion("عاصمة دولة رقم " + (i+15), "اجابة", null));
+             addQ("islamic_quran", new JawlahQuestion("سؤال قرآني رقم " + (i+10), "اجابة", null));
+        }
     }
 
     private void addQ(String key, JawlahQuestion q) {
@@ -156,7 +247,6 @@ public class JawlahManager extends ListenerAdapter {
         activeGames.put(event.getChannel().getIdLong(), game);
         sendHelpingHandsSelection(event);
 
-        // LOGGING
         String logDetails = String.format("### 🏆 فعالية جولة: بدء\n▫️ **المنظم:** %s\n▫️ **القناة:** <#%d>", 
                 event.getMember().getAsMention(), event.getChannel().getIdLong());
         logManager.logEmbed(event.getGuild(), com.integrafty.opexy.service.LogManager.LOG_GAMES, 
@@ -165,7 +255,6 @@ public class JawlahManager extends ListenerAdapter {
 
     private void sendHelpingHandsSelection(net.dv8tion.jda.api.interactions.callbacks.IReplyCallback event) {
         JawlahGame game = activeGames.get(event.getChannel().getIdLong());
-        
         String enabledStr = game.getEnabledHelpers().isEmpty() ? "*لا يوجد*" : String.join(" - ", game.getEnabledHelpers());
         
         StringBuilder playersList = new StringBuilder();
@@ -181,12 +270,10 @@ public class JawlahManager extends ListenerAdapter {
                 playersList.toString() + "\n\n" +
                 "**الـــمـــســـاعـــدات الـــمـــفـــعـــلـــه:**\n" +
                 enabledStr + "\n\n" +
-                "اخـــتـــر فـــريـــقـــك لـــلـــدخول، والـــمـــنـــظـــم يـــمـــكـــنـــه تـــفـــعـــيـــل الـــمـــســـاعـــدات وبـــدء الـــلـــعـــب.";
+                "اخـــتـــر فـــريـــقـــك لـــلـــدخول، والـــمـــنـــظـــم يـــمـــكـــنـــه تـــفـــعـــيـــل الـــمـــســـاعـــدات وبـــدء الـــلـــعب.";
         
-        Button joinA = Button.primary("jawlah_join_a", "انضمام لـ " + game.teamAName + " 🔵")
-                .withDisabled(game.teamAPlayers.size() >= game.maxPlayersPerTeam);
-        Button joinB = Button.danger("jawlah_join_b", "انضمام لـ " + game.teamBName + " 🔴")
-                .withDisabled(game.teamBPlayers.size() >= game.maxPlayersPerTeam);
+        Button joinA = Button.primary("jawlah_join_a", "انضمام لـ " + game.teamAName + " 🔵").withDisabled(game.teamAPlayers.size() >= game.maxPlayersPerTeam);
+        Button joinB = Button.danger("jawlah_join_b", "انضمام لـ " + game.teamBName + " 🔴").withDisabled(game.teamBPlayers.size() >= game.maxPlayersPerTeam);
 
         MessageEditBuilder edit = new MessageEditBuilder()
                 .setComponents(EmbedUtil.containerBranded("SETUP", "تـــجـــهـــيـــز الـــفـــرق والـــمـــســـاعـــدات", body, EmbedUtil.BANNER_MAIN,
@@ -201,12 +288,9 @@ public class JawlahManager extends ListenerAdapter {
                 ))
                 .useComponentsV2(true);
 
-        if (event instanceof ButtonInteractionEvent bie) {
-            bie.editMessage(edit.build()).queue();
-        } else if (event instanceof ModalInteractionEvent mie) {
-            MessageCreateBuilder cb = new MessageCreateBuilder();
-            cb.setComponents(edit.getComponents());
-            cb.useComponentsV2(true);
+        if (event instanceof ButtonInteractionEvent bie) bie.editMessage(edit.build()).queue();
+        else if (event instanceof ModalInteractionEvent mie) {
+            MessageCreateBuilder cb = new MessageCreateBuilder().setComponents(edit.getComponents()).useComponentsV2(true);
             mie.reply(cb.build()).useComponentsV2(true).queue();
         }
     }
@@ -229,16 +313,15 @@ public class JawlahManager extends ListenerAdapter {
             sendSubCategoryMenu(event, game);
         } else if (id.equals("jawlah_subcategory")) {
             game.setSelectedSubCategory(event.getValues().get(0));
-            event.reply("تم اختيار الفئة: **" + game.getSelectedSubCategory() + "**. الآن اختر القيمة من اللوحة الرئيسية.").setEphemeral(true).queue();
+            String arSub = SUB_CAT_AR.getOrDefault(game.getSelectedSubCategory(), game.getSelectedSubCategory());
+            event.reply("تم اختيار الفئة: **" + arSub + "**. الآن اختر القيمة من اللوحة الرئيسية.").setEphemeral(true).queue();
         } else if (id.equals("jawlah_value")) {
             int val = Integer.parseInt(event.getValues().get(0));
             String key = game.getSelectedCategory() + "_" + val;
-            
             if (game.getUsedQuestions().contains(key)) {
                 event.reply("⚠️ هذا السؤال تم استخدامه بالفعل! اختر قيمة أخرى.").setEphemeral(true).queue();
                 return;
             }
-            
             game.setSelectedValue(val);
             game.getUsedQuestions().add(key);
             showQuestionPrompt(event, game);
@@ -267,46 +350,28 @@ public class JawlahManager extends ListenerAdapter {
                 menu.addOption("لغات 🗣️", "langs");
                 menu.addOption("أعلام 🚩", "flags");
                 menu.addOption("عملات ورقية 💵", "banknotes");
-                menu.addOption("رمز العملة 💱", "currency_sym");
-                menu.addOption("خرائط 🗺️", "maps");
                 menu.addOption("عواصم 🏛️", "capitals");
-                menu.addOption("لون العلم 🎨", "flag_colors");
             }
             case "general" -> {
                 menu.addOption("عالم الحيوان 🦁", "animals");
-                menu.addOption("جيل الطيبين 📺", "old_gen");
-                menu.addOption("ولا كلمة 🙊", "no_word");
                 menu.addOption("معلومات عامة 💡", "general_info");
                 menu.addOption("أكمل المثل 📝", "complete_proverb");
-                menu.addOption("وش الأكلة 🥘", "what_food");
-                menu.addOption("الشعار الصحيح ✅", "correct_logo");
-                menu.addOption("كودنيمز 🧩", "codenames");
-                menu.addOption("صور ألغاز 🧩", "puzzle_imgs");
-                menu.addOption("شعارات 🏷️", "logos");
-                menu.addOption("حروف 🅰️", "letters");
-                menu.addOption("شعار السيارة 🚗", "car_logo");
-                menu.addOption("تغبيشة 🌫️", "blur");
-                menu.addOption("٣ صور 🖼️", "three_imgs");
             }
             case "islamic" -> {
                 menu.addOption("القرآن 📖", "quran");
-                menu.addOption("جزء تبارك 📑", "tabarak");
-                menu.addOption("إسلامي 🕌", "islamic_general");
-                menu.addOption("جزء عم 📜", "amma");
                 menu.addOption("قصص أنبياء ✨", "prophets");
+                menu.addOption("إسلامي 🕌", "islamic_general");
             }
             case "art" -> {
                 menu.addOption("One Piece 👒", "one_piece");
-                menu.addOption("Game of Thrones ⚔️", "got");
-                menu.addOption("شخصيات كرتونية 🐭", "cartoons");
                 menu.addOption("Breaking Bad 🧪", "breaking_bad");
+                menu.addOption("شخصيات كرتونية 🐭", "cartoons");
             }
         }
 
         event.editMessage(new MessageEditBuilder()
                 .setComponents(ActionRow.of(menu.build()), ActionRow.of(Button.secondary("jawlah_back", "الـعـودة لـلـوحـة ⬅️")))
-                .useComponentsV2(true)
-                .build()).useComponentsV2(true).queue();
+                .useComponentsV2(true).build()).useComponentsV2(true).queue();
     }
 
     private void showQuestionPrompt(net.dv8tion.jda.api.interactions.callbacks.IReplyCallback event, JawlahGame game) {
@@ -316,184 +381,180 @@ public class JawlahManager extends ListenerAdapter {
         game.setCurrentQuestion(q);
         game.setAttemptsLeft(game.getEnabledHelpers().contains("جاوب جوابين ✌️") ? 2 : 1);
 
-        String modifiers = (game.isPitActive() ? "⛳ **الـحـفـرة مـفـعـلـة**\n" : "") +
-                           (game.isGoldenQuestion() ? "🏆 **الـسـؤال الـذهـبـي مـفـعـل**\n" : "");
+        String modifiers = (game.isPitActive() ? "⛳ **الـحـفـرة مـفـعـلـة**\n" : "") + (game.isGoldenQuestion() ? "🏆 **الـسـؤال الـذهـبـي مـفـعـل**\n" : "");
+        String arCat = CAT_AR.getOrDefault(game.selectedCategory, game.selectedCategory);
+        String arSub = SUB_CAT_AR.getOrDefault(game.selectedSubCategory, game.selectedSubCategory);
 
-        String body = String.format("### ❓ ســـؤال الـــتـــحـــدي\n\n" +
-                "**الـفـئـة:** `%s` -> `%s`\n" +
-                "**الـقـيـمـة:** `%d` نـقـطـة\n" +
-                "**الـدور لـفـريـق:** %s\n\n" +
-                "📢 **الـسـؤال:** %s\n\n" +
-                "%s" +
-                "يـرجـى كـتـابـة الإجـابـة فـي الـشـات الآن!",
-                game.selectedCategory, game.selectedSubCategory, game.selectedValue, 
-                game.turnA ? "🔵 " + game.teamAName : "🔴 " + game.teamBName, q.text, modifiers);
+        int seconds = (game.selectedValue == 300) ? 20 : (game.selectedValue == 600) ? 15 : 10;
+        String timerFormat = String.format("`=----------------%02d:%02d----------------=`", 0, seconds);
+
+        String body = String.format("### ❓ ســـؤال الـــتـــحـــدي\n\n%s\n\n**الـفـئـة:** `%s` -> `%s`\n**الـقـيـمـة:** `%d` نـقـطـة\n**الـدور لـفـريـق:** %s\n\n📢 **الـسـؤال:** %s\n\n%sيـرجـى كـتـابـة الإجـابـة فـي الـشـات الآن!",
+                timerFormat, arCat, arSub, game.selectedValue, game.turnA ? "🔵 " + game.teamAName : "🔴 " + game.teamBName, q.text, modifiers);
 
         MessageEditBuilder edit = new MessageEditBuilder()
                 .setComponents(EmbedUtil.containerBranded("QUESTION", "🔍 جـــاري الـــتـــحـــدي...", body, q.imageUrl != null ? q.imageUrl : EmbedUtil.BANNER_MAIN,
-                        ActionRow.of(
-                                Button.secondary("jawlah_help_1", "جاوب جوابين ✌️"),
-                                Button.secondary("jawlah_help_4", "اعكس الدور 🔄"),
-                                Button.secondary("jawlah_help_5", "السؤال الذهبي 🏆")
-                        ),
-                        ActionRow.of(
-                                Button.secondary("jawlah_back", "الـعـودة لـلـوحـة ⬅️")
-                        )
-                ))
-                .useComponentsV2(true);
+                        ActionRow.of(Button.secondary("jawlah_help_1", "جاوب جوابين ✌️"), Button.secondary("jawlah_help_4", "اعكس الدور 🔄"), Button.secondary("jawlah_help_5", "السؤال الذهبي 🏆")),
+                        ActionRow.of(Button.secondary("jawlah_back", "الـعـودة لـلـوحـة ⬅️"))
+                )).useComponentsV2(true);
 
-        if (event instanceof ButtonInteractionEvent bie) bie.editMessage(edit.build()).queue();
-        else if (event instanceof StringSelectInteractionEvent ssie) ssie.editMessage(edit.build()).queue();
+        if (event instanceof ButtonInteractionEvent bie) bie.editMessage(edit.build()).queue(msg -> initTimer(game.channelId, seconds));
+        else if (event instanceof StringSelectInteractionEvent ssie) ssie.editMessage(edit.build()).queue(msg -> initTimer(game.channelId, seconds));
+    }
+
+    private void initTimer(long channelId, int seconds) {
+        cancelTimer(channelId);
+        final int[] timeLeft = { seconds };
+        ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(() -> {
+            try {
+                JawlahGame game = activeGames.get(channelId);
+                if (game == null || game.getCurrentQuestion() == null) { cancelTimer(channelId); return; }
+                timeLeft[0]--;
+                if (timeLeft[0] <= 0) {
+                    cancelTimer(channelId);
+                    TextChannel channel = jda.getTextChannelById(channelId);
+                    if (channel != null) {
+                        channel.sendMessage("⏰ **انتهى الوقت!** تم تخطي الدور لعدم الإجابة.").queue();
+                        game.setCurrentQuestion(null);
+                        game.setGoldenQuestion(false);
+                        game.setPitActive(false);
+                        game.setTurnA(!game.turnA);
+                        sendBoardAfterDelay(channelId);
+                    }
+                }
+            } catch (Exception e) { cancelTimer(channelId); }
+        }, 1, 1, TimeUnit.SECONDS);
+        sessionTimers.put(channelId, future);
+    }
+
+    private void cancelTimer(long channelId) {
+        if (sessionTimers.containsKey(channelId)) {
+            sessionTimers.get(channelId).cancel(true);
+            sessionTimers.remove(channelId);
+        }
+    }
+
+    public void stopGame(long channelId) {
+        JawlahGame game = activeGames.get(channelId);
+        if (game != null) {
+            cancelTimer(channelId);
+            distributePrizes(game, jda.getTextChannelById(channelId).getGuild());
+            activeGames.remove(channelId);
+            eventManager.endGroupEvent();
+        }
+    }
+
+    public void stopAllGames() { activeGames.keySet().forEach(this::stopGame); }
+
+    private void distributePrizes(JawlahGame game, net.dv8tion.jda.api.entities.Guild guild) {
+        if (game.scoreA > 0 && !game.teamAPlayers.isEmpty()) {
+            long perPerson = game.scoreA / game.teamAPlayers.size();
+            game.teamAPlayers.forEach(id -> economyService.addBalance(String.valueOf(id), guild.getId(), perPerson));
+        }
+        if (game.scoreB > 0 && !game.teamBPlayers.isEmpty()) {
+            long perPerson = game.scoreB / game.teamBPlayers.size();
+            game.teamBPlayers.forEach(id -> economyService.addBalance(String.valueOf(id), guild.getId(), perPerson));
+        }
     }
 
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
         String id = event.getComponentId();
         if (!id.startsWith("jawlah_")) return;
-
         JawlahGame game = activeGames.get(event.getChannel().getIdLong());
         if (game == null) return;
 
         switch (id) {
             case "jawlah_back" -> sendBoard(event);
             case "jawlah_start_confirm" -> {
-                if (event.getUser().getIdLong() != game.organizerId) {
-                    event.reply("❌ عذراً، المنظم فقط يمكنه بدء اللعبة.").setEphemeral(true).queue();
-                    return;
-                }
+                if (event.getUser().getIdLong() != game.organizerId) { event.reply("❌ عذراً، المنظم فقط يمكنه بدء اللعبة.").setEphemeral(true).queue(); return; }
                 sendBoard(event);
             }
             case "jawlah_stop" -> {
-                if (event.getUser().getIdLong() != game.organizerId) {
-                    event.reply("❌ عذراً، المنظم فقط يمكنه إنهاء اللعبة.").setEphemeral(true).queue();
-                    return;
-                }
-                // LOGGING
-                String logStop = String.format("### 🏆 فعالية جولة: إنهاء\n▫️ **المنظم:** %s\n▫️ **النتيجة:** 🔵 %d - 🔴 %d", 
-                        event.getMember().getAsMention(), game.scoreA, game.scoreB);
-                logManager.logEmbed(event.getGuild(), com.integrafty.opexy.service.LogManager.LOG_GAMES, 
-                        EmbedUtil.createOldLogEmbed("jawlah", logStop, event.getMember(), null, null, EmbedUtil.SUCCESS));
-
+                if (event.getUser().getIdLong() != game.organizerId) { event.reply("❌ عذراً، المنظم فقط يمكنه إنهاء اللعبة.").setEphemeral(true).queue(); return; }
+                distributePrizes(game, event.getGuild());
                 activeGames.remove(event.getChannel().getIdLong());
+                cancelTimer(event.getChannel().getIdLong());
                 eventManager.endGroupEvent();
-                event.reply("🛑 تم إنهاء لعبة جولة.").queue();
+                String summary = String.format("🛑 **تم إنهاء اللعبة وتوزيع الجوائز!**\n\n🔵 **%s**: %d نقطة\n🔴 **%s**: %d نقطة", game.teamAName, game.scoreA, game.teamBName, game.scoreB);
+                event.reply(new MessageCreateBuilder().setComponents(EmbedUtil.success("GAME OVER", summary)).useComponentsV2(true).build()).useComponentsV2(true).queue();
             }
             case "jawlah_join_a" -> {
                 long uid = event.getUser().getIdLong();
-                if (game.teamAPlayers.contains(uid)) {
-                    event.reply("⚠️ أنت بالفعل في الفريق الأول!").setEphemeral(true).queue();
-                    return;
-                }
+                if (game.teamAPlayers.contains(uid)) return;
                 game.teamBPlayers.remove(uid);
-                if (game.teamAPlayers.size() < game.maxPlayersPerTeam) {
-                    game.teamAPlayers.add(uid);
-                    sendHelpingHandsSelection(event);
-                } else {
-                    event.reply("❌ عذراً، الفريق الأول ممتلئ!").setEphemeral(true).queue();
-                }
+                if (game.teamAPlayers.size() < game.maxPlayersPerTeam) { game.teamAPlayers.add(uid); sendHelpingHandsSelection(event); }
             }
             case "jawlah_join_b" -> {
                 long uid = event.getUser().getIdLong();
-                if (game.teamBPlayers.contains(uid)) {
-                    event.reply("⚠️ أنت بالفعل في الفريق الثاني!").setEphemeral(true).queue();
-                    return;
-                }
+                if (game.teamBPlayers.contains(uid)) return;
                 game.teamAPlayers.remove(uid);
-                if (game.teamBPlayers.size() < game.maxPlayersPerTeam) {
-                    game.teamBPlayers.add(uid);
-                    sendHelpingHandsSelection(event);
-                } else {
-                    event.reply("❌ عذراً، الفريق الثاني ممتلئ!").setEphemeral(true).queue();
-                }
+                if (game.teamBPlayers.size() < game.maxPlayersPerTeam) { game.teamBPlayers.add(uid); sendHelpingHandsSelection(event); }
             }
             case "jawlah_help_1" -> {
-                if (event.getUser().getIdLong() != game.organizerId) {
-                    event.reply("❌ عذراً، المنظم فقط يمكنه تفعيل المساعدات.").setEphemeral(true).queue();
-                    return;
-                }
-                game.getEnabledHelpers().add("جاوب جوابين ✌️");
-                if (game.selectedValue > 0) showQuestionPrompt(event, game);
-                else sendHelpingHandsSelection(event);
+                if (event.getUser().getIdLong() != game.organizerId) return;
+                if (useItem(game.organizerId, event.getGuild(), s -> s.getJawlahDoubleAnswer(), (s, v) -> s.setJawlahDoubleAnswer(v))) {
+                    game.getEnabledHelpers().add("جاوب جوابين ✌️");
+                    if (game.selectedValue > 0) showQuestionPrompt(event, game);
+                    else sendHelpingHandsSelection(event);
+                } else event.reply("❌ لا تملك هذا العنصر!").setEphemeral(true).queue();
             }
             case "jawlah_help_3" -> {
-                if (event.getUser().getIdLong() != game.organizerId) {
-                    event.reply("❌ عذراً، المنظم فقط يمكنه تفعيل المساعدات.").setEphemeral(true).queue();
-                    return;
-                }
-                game.setPitActive(true);
-                game.getEnabledHelpers().add("الحفرة ⛳");
-                if (game.selectedValue > 0) showQuestionPrompt(event, game);
-                else sendHelpingHandsSelection(event);
+                if (event.getUser().getIdLong() != game.organizerId) return;
+                if (useItem(game.organizerId, event.getGuild(), s -> s.getJawlahPit(), (s, v) -> s.setJawlahPit(v))) {
+                    game.setPitActive(true);
+                    game.getEnabledHelpers().add("الحفرة ⛳");
+                    if (game.selectedValue > 0) showQuestionPrompt(event, game);
+                    else sendHelpingHandsSelection(event);
+                } else event.reply("❌ لا تملك هذا العنصر!").setEphemeral(true).queue();
             }
             case "jawlah_help_4" -> {
-                if (event.getUser().getIdLong() != game.organizerId) {
-                    event.reply("❌ عذراً، المنظم فقط يمكنه تفعيل المساعدات.").setEphemeral(true).queue();
-                    return;
-                }
-                game.setTurnA(!game.turnA);
-                game.getEnabledHelpers().add("اعكس الدور 🔄");
-                if (game.selectedValue > 0) showQuestionPrompt(event, game);
-                else sendHelpingHandsSelection(event);
+                if (event.getUser().getIdLong() != game.organizerId) return;
+                if (useItem(game.organizerId, event.getGuild(), s -> s.getJawlahReverse(), (s, v) -> s.setJawlahReverse(v))) {
+                    game.setTurnA(!game.turnA);
+                    game.getEnabledHelpers().add("اعكس الدور 🔄");
+                    if (game.selectedValue > 0) showQuestionPrompt(event, game);
+                    else sendHelpingHandsSelection(event);
+                } else event.reply("❌ لا تملك هذا العنصر!").setEphemeral(true).queue();
             }
             case "jawlah_help_5" -> {
-                if (event.getUser().getIdLong() != game.organizerId) {
-                    event.reply("❌ عذراً، المنظم فقط يمكنه تفعيل المساعدات.").setEphemeral(true).queue();
-                    return;
-                }
-                game.setGoldenQuestion(true);
-                game.getEnabledHelpers().add("السؤال الذهبي 🏆");
-                if (game.selectedValue > 0) showQuestionPrompt(event, game);
-                else sendHelpingHandsSelection(event);
+                if (event.getUser().getIdLong() != game.organizerId) return;
+                if (useItem(game.organizerId, event.getGuild(), s -> s.getJawlahGolden(), (s, v) -> s.setJawlahGolden(v))) {
+                    game.setGoldenQuestion(true);
+                    game.getEnabledHelpers().add("السؤال الذهبي 🏆");
+                    if (game.selectedValue > 0) showQuestionPrompt(event, game);
+                    else sendHelpingHandsSelection(event);
+                } else event.reply("❌ لا تملك هذا العنصر!").setEphemeral(true).queue();
             }
         }
+    }
+
+    private boolean useItem(long userId, net.dv8tion.jda.api.entities.Guild guild, java.util.function.Function<com.integrafty.opexy.entity.UserStats, Integer> getter, java.util.function.BiConsumer<com.integrafty.opexy.entity.UserStats, Integer> setter) {
+        com.integrafty.opexy.entity.UserStats stats = achievementService.getStats(userId);
+        int count = getter.apply(stats);
+        if (count > 0) { setter.accept(stats, count - 1); achievementService.updateStats(userId, guild, s -> {}); return true; }
+        return false;
     }
 
     private void sendBoard(net.dv8tion.jda.api.interactions.callbacks.IReplyCallback event) {
         JawlahGame game = activeGames.get(event.getChannel().getIdLong());
         game.setSelectedValue(0); 
-        
         int totalQuestions = 6 * 3; 
         int usedCount = game.getUsedQuestions().size();
         int remaining = totalQuestions - usedCount;
+        String modifiers = (game.isPitActive() ? "⛳ **الـحـفـرة مـفـعـلـة**\n" : "") + (game.isGoldenQuestion() ? "🏆 **الـسـؤال الـذهـبـي مـفـعـل**\n" : "");
+        String body = String.format("### 🏆 %s\n\n**الـنـتـيـجـة:**\n🔵 **%s**: `%d` نـقـطـة\n🔴 **%s**: `%d` نـقـطـة\n\n📊 **الأســـئـــلـــة الـــمـــتـــبـــقـــيـــة:** `%d / %d`\n\n%s**الـدور لـفـريـق:** %s\n\nيـرجـى اخـتـيـار الـفـئـة والـقـيـمـة مـن الـقـوائـم أدناه.",
+                game.gameName, game.teamAName, game.scoreA, game.teamBName, game.scoreB, remaining, totalQuestions, modifiers, game.turnA ? "🔵 " + game.teamAName : "🔴 " + game.teamBName);
 
-        String modifiers = (game.isPitActive() ? "⛳ **الـحـفـرة مـفـعـلـة**\n" : "") +
-                           (game.isGoldenQuestion() ? "🏆 **الـسـؤال الـذهـبـي مـفـعـل**\n" : "");
+        StringSelectMenu categoryMenu = StringSelectMenu.create("jawlah_category").setPlaceholder("اخـتـر الـفـئـة...")
+                .addOption("كرة قدم ⚽", "football").addOption("خمن 🔍", "guess").addOption("حول العالم 🌍", "world").addOption("عام 📚", "general").addOption("إسلاميات 🌙", "islamic").addOption("فن 🎨", "art").build();
 
-        String body = String.format("### 🏆 %s\n\n" +
-                "**الـنـتـيـجـة:**\n" +
-                "🔵 **%s**: `%d` نـقـطـة\n" +
-                "🔴 **%s**: `%d` نـقـطـة\n\n" +
-                "📊 **الأســـئـــلـــة الـــمـــتـــبـــقـــيـــة:** `%d / %d`\n\n" +
-                "%s" +
-                "**الـدور لـفـريـق:** %s\n\n" +
-                "يـرجـى اخـتـيـار الـفـئـة والـقـيـمـة مـن الـقـوائـم أدناه.",
-                game.gameName, game.teamAName, game.scoreA, game.teamBName, game.scoreB, 
-                remaining, totalQuestions, modifiers, game.turnA ? "🔵 " + game.teamAName : "🔴 " + game.teamBName);
-
-        StringSelectMenu categoryMenu = StringSelectMenu.create("jawlah_category")
-                .setPlaceholder("اخـتـر الـفـئـة...")
-                .addOption("كرة قدم ⚽", "football")
-                .addOption("خمن 🔍", "guess")
-                .addOption("حول العالم 🌍", "world")
-                .addOption("عام 📚", "general")
-                .addOption("إسلاميات 🌙", "islamic")
-                .addOption("فن 🎨", "art")
-                .build();
-
-        StringSelectMenu valueMenu = StringSelectMenu.create("jawlah_value")
-                .setPlaceholder("اخـتـر الـقـيـمـة (300, 600, 900)...")
-                .addOption("300 نـقـطـة", "300")
-                .addOption("600 نـقـطـة", "600")
-                .addOption("900 نـقـطـة", "900")
-                .build();
+        StringSelectMenu valueMenu = StringSelectMenu.create("jawlah_value").setPlaceholder("اخـتـر الـقـيـمـة...")
+                .addOption("300 نـقـطـة", "300").addOption("600 نـقـطـة", "600").addOption("900 نـقـطـة", "900").build();
 
         MessageEditBuilder edit = new MessageEditBuilder()
                 .setComponents(EmbedUtil.containerBranded("GAME", "🎮 لوحـة الـتـحـدي — Jawlah Board", body, EmbedUtil.BANNER_MAIN,
-                        ActionRow.of(categoryMenu),
-                        ActionRow.of(valueMenu),
-                        ActionRow.of(Button.danger("jawlah_stop", "إنـهـاء الـلـعـبـة 🛑"))
-                ))
-                .useComponentsV2(true);
+                        ActionRow.of(categoryMenu), ActionRow.of(valueMenu), ActionRow.of(Button.danger("jawlah_stop", "إنـهـاء الـلـعـبـة 🛑"))
+                )).useComponentsV2(true);
 
         if (event instanceof ButtonInteractionEvent bie) bie.editMessage(edit.build()).queue();
         else if (event instanceof StringSelectInteractionEvent ssie) ssie.editMessage(edit.build()).queue();
@@ -504,107 +565,60 @@ public class JawlahManager extends ListenerAdapter {
         if (event.getAuthor().isBot()) return;
         JawlahGame game = activeGames.get(event.getChannel().getIdLong());
         if (game == null || game.getCurrentQuestion() == null) return;
-
         long uid = event.getAuthor().getIdLong();
         boolean isA = game.teamAPlayers.contains(uid);
         boolean isB = game.teamBPlayers.contains(uid);
-
         if (!isA && !isB && uid != game.organizerId) return;
+        boolean isHisTurn = (game.turnA && isA) || (!game.turnA && isB);
+        if (!isHisTurn && uid != game.organizerId) { event.getMessage().reply("⚠️ ليس دور فريقك!").queue(); return; }
 
         String content = event.getMessage().getContentRaw().trim();
         String answer = game.getCurrentQuestion().answer;
-
         if (isSimilar(content, answer)) {
             int points = game.selectedValue;
             if (game.isGoldenQuestion()) points *= 2;
-
-            if (game.turnA) {
-                game.scoreA += points;
-                if (game.isPitActive()) game.scoreB = Math.max(0, game.scoreB - points);
-            } else {
-                game.scoreB += points;
-                if (game.isPitActive()) game.scoreA = Math.max(0, game.scoreA - points);
-            }
-
-            event.getMessage().reply("✅ إجابة صحيحة يا " + event.getAuthor().getAsMention() + "! أحسنت.").queue();
-            game.setCurrentQuestion(null);
-            game.setGoldenQuestion(false);
-            game.setPitActive(false);
-            game.setTurnA(!game.turnA);
-            
+            if (game.turnA) { game.scoreA += points; if (game.isPitActive()) game.scoreB = Math.max(0, game.scoreB - points); }
+            else { game.scoreB += points; if (game.isPitActive()) game.scoreA = Math.max(0, game.scoreA - points); }
+            event.getMessage().reply("✅ إجابة صحيحة يا " + event.getAuthor().getAsMention() + "!").queue();
+            game.setCurrentQuestion(null); game.setGoldenQuestion(false); game.setPitActive(false); game.setTurnA(!game.turnA);
+            cancelTimer(event.getChannel().getIdLong());
             sendBoardAfterDelay(event.getChannel().getIdLong());
         } else {
             game.setAttemptsLeft(game.getAttemptsLeft() - 1);
             if (game.attemptsLeft <= 0) {
-                event.getMessage().reply("❌ إجابة خاطئة! الإجابة الصحيحة كانت: **" + answer + "**").queue();
-                game.setCurrentQuestion(null);
-                game.setGoldenQuestion(false);
-                game.setPitActive(false);
-                game.setTurnA(!game.turnA);
+                event.getMessage().reply("❌ خطأ! الإجابة: **" + answer + "**").queue();
+                game.setCurrentQuestion(null); game.setGoldenQuestion(false); game.setPitActive(false); game.setTurnA(!game.turnA);
+                cancelTimer(event.getChannel().getIdLong());
                 sendBoardAfterDelay(event.getChannel().getIdLong());
-            } else {
-                event.getMessage().reply("❌ إجابة خاطئة! لديك محاولة واحدة متبقية...").queue();
-            }
+            } else event.getMessage().reply("❌ خطأ! محاولة أخرى...").queue();
         }
     }
 
     private boolean isSimilar(String input, String target) {
         if (input == null || target == null) return false;
-        String cleanInput = input.toLowerCase().replaceAll("\\s+", "");
-        String cleanTarget = target.toLowerCase().replaceAll("\\s+", "");
-        return cleanInput.equals(cleanTarget);
+        return input.toLowerCase().replaceAll("\\s+", "").equals(target.toLowerCase().replaceAll("\\s+", ""));
     }
 
     private void sendBoardAfterDelay(long channelId) {
         JawlahGame game = activeGames.get(channelId);
         if (game == null) return;
-        
         TextChannel channel = jda.getTextChannelById(channelId);
         if (channel == null) return;
-
-        // Refresh board
         int totalQuestions = 6 * 3; 
         int usedCount = game.getUsedQuestions().size();
         int remaining = totalQuestions - usedCount;
-        String modifiers = (game.isPitActive() ? "⛳ **الـحـفـرة مـفـعـلـة**\n" : "") +
-                           (game.isGoldenQuestion() ? "🏆 **الـسـؤال الـذهـبـي مـفـعـل**\n" : "");
+        String modifiers = (game.isPitActive() ? "⛳ **الـحـفـرة مـفـعلـة**\n" : "") + (game.isGoldenQuestion() ? "🏆 **الـسـؤال الـذهـبـي مـفـعـل**\n" : "");
+        String body = String.format("### 🏆 %s\n\n**الـنـتـيـجـة:**\n🔵 **%s**: `%d` نـقـطـة\n🔴 **%s**: `%d` نـقـطـة\n\n📊 **الأســـئـــلـــة الـــمـــتـــبـــقـــيـــة:** `%d / %d`\n\n%s**الـدور لـفـريـق:** %s\n\nيـرجـى اخـتـيـار الـفـئـة والـقـيـمـة مـن الـقـوائـم أدناه.",
+                game.gameName, game.teamAName, game.scoreA, game.teamBName, game.scoreB, remaining, totalQuestions, modifiers, game.turnA ? "🔵 " + game.teamAName : "🔴 " + game.teamBName);
 
-        String body = String.format("### 🏆 %s\n\n" +
-                "**الـنـتـيـجـة:**\n" +
-                "🔵 **%s**: `%d` نـقـطـة\n" +
-                "🔴 **%s**: `%d` نـقـطـة\n\n" +
-                "📊 **الأســـئـــلـــة الـــمـــتـــبـــقـــيـــة:** `%d / %d`\n\n" +
-                "%s" +
-                "**الـدور لـفـريـق:** %s\n\n" +
-                "يـرجـى اخـتـيـار الـفـئـة والـقـيـمـة مـن الـقـوائـم أدناه.",
-                game.gameName, game.teamAName, game.scoreA, game.teamBName, game.scoreB, 
-                remaining, totalQuestions, modifiers, game.turnA ? "🔵 " + game.teamAName : "🔴 " + game.teamBName);
+        StringSelectMenu categoryMenu = StringSelectMenu.create("jawlah_category").setPlaceholder("اخـتـر الـفـئـة...")
+                .addOption("كرة قدم ⚽", "football").addOption("خمن 🔍", "guess").addOption("حول العالم 🌍", "world").addOption("عام 📚", "general").addOption("إسلاميات 🌙", "islamic").addOption("فن 🎨", "art").build();
+        StringSelectMenu valueMenu = StringSelectMenu.create("jawlah_value").setPlaceholder("اخـتـر الـقـيـمـة...")
+                .addOption("300 نـقـطـة", "300").addOption("600 نـقـطـة", "600").addOption("900 نـقـطـة", "900").build();
 
-        StringSelectMenu categoryMenu = StringSelectMenu.create("jawlah_category")
-                .setPlaceholder("اخـتـر الـفـئـة...")
-                .addOption("كرة قدم ⚽", "football")
-                .addOption("خمن 🔍", "guess")
-                .addOption("حول العالم 🌍", "world")
-                .addOption("عام 📚", "general")
-                .addOption("إسلاميات 🌙", "islamic")
-                .addOption("فن 🎨", "art")
-                .build();
-
-        StringSelectMenu valueMenu = StringSelectMenu.create("jawlah_value")
-                .setPlaceholder("اخـتـر الـقـيـمـة (300, 600, 900)...")
-                .addOption("300 نـقـطـة", "300")
-                .addOption("600 نـقـطـة", "600")
-                .addOption("900 نـقـطـة", "900")
-                .build();
-
-        channel.sendMessage(new MessageCreateBuilder()
-                .setComponents(EmbedUtil.containerBranded("GAME", "🎮 لوحـة الـتـحـدي — Jawlah Board", body, EmbedUtil.BANNER_MAIN,
-                        ActionRow.of(categoryMenu),
-                        ActionRow.of(valueMenu),
-                        ActionRow.of(Button.danger("jawlah_stop", "إنـهـاء الـلـعـبـة 🛑"))
-                ))
-                .useComponentsV2(true)
-                .build()).queue();
+        channel.sendMessage(new MessageCreateBuilder().setComponents(EmbedUtil.containerBranded("GAME", "🎮 لوحـة الـتـحـدي — Jawlah Board", body, EmbedUtil.BANNER_MAIN,
+                ActionRow.of(categoryMenu), ActionRow.of(valueMenu), ActionRow.of(Button.danger("jawlah_stop", "إنـهـاء الـلـعـبـة 🛑"))
+        )).useComponentsV2(true).build()).queue();
     }
 
     @Getter @Setter
@@ -612,44 +626,24 @@ public class JawlahManager extends ListenerAdapter {
         private final String text;
         private final String answer;
         private final String imageUrl;
-
-        public JawlahQuestion(String text, String answer, String imageUrl) {
-            this.text = text;
-            this.answer = answer;
-            this.imageUrl = imageUrl;
-        }
+        public JawlahQuestion(String text, String answer, String imageUrl) { this.text = text; this.answer = answer; this.imageUrl = imageUrl; }
     }
 
     @Getter @Setter
     private static class JawlahGame {
         private final long channelId;
         private final long organizerId;
-        private String gameName;
-        private String teamAName;
-        private String teamBName;
-        private int scoreA = 0;
-        private int scoreB = 0;
+        private String gameName, teamAName, teamBName;
+        private int scoreA = 0, scoreB = 0;
         private boolean turnA = true;
-        
-        private String selectedCategory;
-        private String selectedSubCategory;
+        private String selectedCategory, selectedSubCategory;
         private int selectedValue;
-
-        private boolean pitActive = false;
-        private boolean goldenQuestion = false;
-        
+        private boolean pitActive = false, goldenQuestion = false;
         private int maxPlayersPerTeam = 5;
-        private final Set<Long> teamAPlayers = new LinkedHashSet<>();
-        private final Set<Long> teamBPlayers = new LinkedHashSet<>();
-        
-        private final Set<String> usedQuestions = new HashSet<>();
-        private final Set<String> enabledHelpers = new LinkedHashSet<>();
+        private final Set<Long> teamAPlayers = new LinkedHashSet<>(), teamBPlayers = new LinkedHashSet<>();
+        private final Set<String> usedQuestions = new HashSet<>(), enabledHelpers = new LinkedHashSet<>();
         private JawlahQuestion currentQuestion;
         private int attemptsLeft = 1;
-
-        public JawlahGame(long channelId, long organizerId) {
-            this.channelId = channelId;
-            this.organizerId = organizerId;
-        }
+        public JawlahGame(long channelId, long organizerId) { this.channelId = channelId; this.organizerId = organizerId; }
     }
 }

@@ -36,6 +36,7 @@ public class KickService {
             // Target the API directly via FlareSolverr to avoid frontend HTML rendering issues
             String targetUrl = "https://kick.com/api/v1/channels/" + cleanUsername;
             
+            
             JsonObject requestBody = new JsonObject();
             requestBody.addProperty("cmd", "request.get");
             requestBody.addProperty("url", targetUrl);

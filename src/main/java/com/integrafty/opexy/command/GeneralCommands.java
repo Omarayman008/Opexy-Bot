@@ -77,6 +77,7 @@ public class GeneralCommands implements MultiSlashCommand {
                 .addOptions(new net.dv8tion.jda.api.interactions.commands.build.OptionData(OptionType.STRING, "type", "نوع الفعالية المراد إيقافها", false)
                         .addChoice("المزاد (Auction)", "auction")
                         .addChoice("المافيا (Mafia)", "mafia")
+                        .addChoice("جولة (Jawlah)", "jawlah")
                         .addChoice("الكل (All)", "all"))
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR)));
 
@@ -119,6 +120,10 @@ public class GeneralCommands implements MultiSlashCommand {
         }
         if (type.equals("mafia") || type.equals("all")) {
             mafiaManager.stopGame();
+        }
+        
+        if (type.equals("jawlah") || type.equals("all")) {
+            jawlahManager.stopGame(event.getChannel().getIdLong());
         }
         
         if (type.equals("all")) {

@@ -15,9 +15,11 @@ import java.util.function.Consumer;
 public class AchievementService {
 
     private final UserStatsRepository statsRepository;
+    private final com.integrafty.opexy.service.LogManager logManager;
 
-    public AchievementService(UserStatsRepository statsRepository) {
+    public AchievementService(UserStatsRepository statsRepository, com.integrafty.opexy.service.LogManager logManager) {
         this.statsRepository = statsRepository;
+        this.logManager = logManager;
     }
 
     @Value("${opexy.roles.achievements.jinxed-bidder}")
@@ -88,7 +90,22 @@ public class AchievementService {
         if (condition && roleId != null && !roleId.isEmpty()) {
             Role role = member.getGuild().getRoleById(roleId);
             if (role != null && !member.getRoles().contains(role)) {
-                member.getGuild().addRoleToMember(member, role).queue();
+                member.getGuild().addRoleToMember(member, role).queue(v -> {
+                    // Public Notification
+                    String time = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(java.time.LocalDateTime.now());
+                    String logBody = String.format("""
+                            ### 🏆 إنجاز جـــديـــد | NEW ACHIEVEMENT
+                            
+                            ▫️ **الـعـضـو:** %s
+                            ▫️ **الـرتـبـة:** %s
+                            ▫️ **الـوقـت:** `%s`
+                            
+                            تـم مـنـح الـرتـبـة تـلـقـائـيـاً لـتـحـقـيـق شـروط الإنجاز!
+                            """, member.getAsMention(), role.getAsMention(), time);
+                            
+                    logManager.logEmbed(member.getGuild(), com.integrafty.opexy.service.LogManager.LOG_GAMES,
+                            com.integrafty.opexy.utils.EmbedUtil.createOldLogEmbed("achievement", logBody, member, null, null, com.integrafty.opexy.utils.EmbedUtil.SUCCESS));
+                });
             }
         }
     }
