@@ -38,6 +38,7 @@ public class GeneralCommands implements MultiSlashCommand {
     private final com.integrafty.opexy.service.event.EventManager eventManager;
     private final com.integrafty.opexy.service.event.AuctionManager auctionManager;
     private final com.integrafty.opexy.service.event.MafiaManager mafiaManager;
+    private final com.integrafty.opexy.service.event.JawlahManager jawlahManager;
 
     @Override
     public List<SlashCommandData> getCommandDataList() {
