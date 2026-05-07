@@ -417,6 +417,8 @@ public class VoiceListener extends ListenerAdapter {
     @Override
     public void onStringSelectInteraction(StringSelectInteractionEvent event) {
         String id = event.getComponentId();
+        if (!id.startsWith("menu_voice_")) return;
+
         VoiceChannel channel = event.getMember().getVoiceState().getChannel() != null ? event.getMember().getVoiceState().getChannel().asVoiceChannel() : null;
 
         if (channel == null) {
