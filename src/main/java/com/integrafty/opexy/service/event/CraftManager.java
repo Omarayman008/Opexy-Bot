@@ -227,7 +227,7 @@ public class CraftManager extends ListenerAdapter {
                     stopTimer(userId);
                 }
             } catch (Exception e) {
-                logManager.logInfo("CraftTimer Error: " + e.getMessage());
+                System.out.println("[CraftTimer] Error: " + e.getMessage());
             }
         }, 1, 1, java.util.concurrent.TimeUnit.SECONDS);
         
