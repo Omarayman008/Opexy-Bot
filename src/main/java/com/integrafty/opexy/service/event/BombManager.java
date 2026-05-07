@@ -204,7 +204,10 @@ public class BombManager extends ListenerAdapter {
         }
 
         if (!userCorrectWire.containsKey(userId)) {
-            event.editMessage("⚠️ هذه القنبلة انتهت صلاحيتها.").setComponents().queue();
+            event.editMessage(new net.dv8tion.jda.api.utils.messages.MessageEditBuilder()
+                    .setComponents(EmbedUtil.error("EXPIRED", "⚠️ هذه القنبلة انتهت صلاحيتها."))
+                    .useComponentsV2(true)
+                    .build()).queue();
             return;
         }
 
