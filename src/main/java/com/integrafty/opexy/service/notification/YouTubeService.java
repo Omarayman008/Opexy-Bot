@@ -51,7 +51,20 @@ public class YouTubeService {
                 log.info("YouTube RSS: No entry found in XML for {}", resolvedId);
             }
         } catch (Exception e) {
-            log.warn("YouTube RSS: Failed for {} - {}", channelId, e.getMessage());
+            String msg = e.getMessage();
+            if (msg != null) {
+                if (msg.contains("404 Not Found")) {
+                    // Suppress log spam. 404 means the channel has no videos or RSS is disabled.
+                    log.debug("YouTube RSS: 404 Not Found for {}", channelId);
+                } else if (msg.contains("500 Internal Server Error")) {
+                    log.warn("YouTube RSS: Temporary 500 Server Error for {}", channelId);
+                } else {
+                    // Print only the first line of the error to avoid huge HTML blobs
+                    log.warn("YouTube RSS: Failed for {} - {}", channelId, msg.split("\n")[0]);
+                }
+            } else {
+                log.warn("YouTube RSS: Failed for {}", channelId);
+            }
         }
         return Optional.empty();
     }
